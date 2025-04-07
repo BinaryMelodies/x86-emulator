@@ -2837,7 +2837,10 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 	# TODO: remove 32/64-bit support when not present on later CPUs (386/amd64)
 	if discriminator == 'subtable':
 		if mode == '32':
-			print_file(indent + f"switch((opcode = x86_fetch8(prs, emu)))", file = file)
+			if len(path) == 0:
+				print_file(indent + f"switch((opcode = x86_translate_opcode(prs, x86_fetch8(prs, emu))))", file = file)
+			else:
+				print_file(indent + f"switch((opcode = x86_fetch8(prs, emu)))", file = file)
 		elif mode == '8':
 			print_file(indent + f"switch((opcode = x80_fetch8(prs, emu)))", file = file)
 		elif mode == '87':
@@ -3096,6 +3099,7 @@ with open(outfile, 'w') as file:
 						continue
 					fpu = fputypes.get(fpu, fpu) # get FPU structure from alias
 					fpu = fpu['class'] # get FPU class
+					fpu = ARCHITECTURES[fpu].get('name', fpu)
 					if len(fpu_list) == 0:
 						feature_sequence += f"""\n\t\t\t.default_fpu = X87_FPU_{fpu.upper()},"""
 					fpu_list.append(f"(1 << X87_FPU_{fpu.upper()})")
@@ -3137,10 +3141,12 @@ with open(outfile, 'w') as file:
 			feature_sequence += ''.join(f'\n\t\t\t.{feature} = true,' for feature in sorted(noncpuid_features))
 
 			description = architecture['description'].replace('\"', '\\\"')
+			arch_class = architecture['class']
+			arch_class = ARCHITECTURES[arch_class].get('name', arch_class)
 			print(f"""	[X86_CPU_TYPE_{architecture['id'].upper()}] =
 		{{
 			.description = \"{description}\",
-			.cpu_type = X86_CPU_{architecture['class'].upper()},{feature_sequence}
+			.cpu_type = X86_CPU_{arch_class.upper()},{feature_sequence}
 		}},
 """, file = file)
 	print("};", file = file)
@@ -3182,14 +3188,16 @@ with open(outfile, 'w') as file:
 				variant = ', 0'
 			description = architecture['description'].replace('\"', '\\\"')
 			aliases = set()
+			arch_class = architecture['class']
+			arch_class = ARCHITECTURES[arch_class].get('name', arch_class)
 			for alias in architecture.get('aliases', '').split(','):
 				alias = alias.strip()
 				if alias == '':
 					continue
-				print(f'\t{{ "{alias}", "{description}", X87_FPU_{architecture["class"].upper()}{variant} }},', file = file)
+				print(f'\t{{ "{alias}", "{description}", X87_FPU_{arch_class.upper()}{variant} }},', file = file)
 				aliases.add(alias)
 			if architecture["id"].lower() not in aliases:
-				print(f'\t{{ "{architecture["id"].lower()}", "{description}", X87_FPU_{architecture["class"].upper()}{variant} }},', file = file)
+				print(f'\t{{ "{architecture["id"].lower()}", "{description}", X87_FPU_{arch_class.upper()}{variant} }},', file = file)
 	print("};", file = file)
 
 print("Missing features:", sorted(_ALLFEATURES))

@@ -76,6 +76,9 @@ typedef enum x86_cpu_type_t x86_cpu_type_t;
 */
 enum x86_cpu_subtype_t
 {
+	// V25 variants
+	X86_CPU_V25_V25S = 1, // NEC V25 Software Guard
+
 	// 80386 variants
 	X86_CPU_386_386B0 = 1, // stepping B0 of Intel 80386 (IBTS and XBTS support)
 	X86_CPU_386_376, // Intel 80376 (no real mode or 16-bit mode)
@@ -1443,6 +1446,10 @@ struct x86_parser_t
 	x87_fpu_type_t fpu_type;
 	x87_fpu_subtype_t fpu_subtype;
 
+	/* V25 software guard */
+	// a 256 byte array that translates the first byte of each instruction in Secure Mode (MD=0)
+	const uint8_t (* opcode_translation_table)[256];
+
 	/* Current state of the instruction parser, note that there is some redundancy to the information stored here to simplify coding */
 
 	/* Code size (16/32/64) */
@@ -2125,9 +2132,19 @@ static inline bool x86_is_real_mode(x86_state_t * emu)
 	return (emu->cr[0] & X86_CR0_PE) == 0;
 }
 
+static inline unsigned x86_native_state_flag(x86_state_t * emu)
+{
+	return emu->cpu_type != X86_CPU_EXTENDED ? X86_FL_MD : 0;
+}
+
+static inline unsigned x86_emulation_state_flag(x86_state_t * emu)
+{
+	return emu->cpu_type != X86_CPU_EXTENDED ? 0 : X86_FL_MD;
+}
+
 static inline bool x86_is_emulation_mode(x86_state_t * emu)
 {
-	return x86_is_emulation_mode_supported(emu) && (emu->cpu_type != X86_CPU_EXTENDED ? emu->md == 0 : emu->md != 0);
+	return x86_is_emulation_mode_supported(emu) && emu->md == x86_emulation_state_flag(emu);
 }
 
 static inline bool x86_is_long_mode(x86_state_t * emu)

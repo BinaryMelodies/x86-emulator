@@ -189,6 +189,8 @@ void x80_reset(x80_state_t * emu, bool reset)
 	emu->m5_5 = emu->m6_5 = emu->m7_5 = 1;
 }
 
+static uint8_t default_opcode_translation_table[256];
+
 void x86_reset(x86_state_t * emu, bool reset)
 {
 	if(reset)
@@ -365,7 +367,7 @@ void x86_reset(x86_state_t * emu, bool reset)
 		emu->rb = 15;
 	}
 
-	emu->md = emu->cpu_type != X86_CPU_EXTENDED ? X86_FL_MD : 0;
+	emu->md = x86_native_state_flag(emu);
 	if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
 	{
 		emu->md_enabled = false;
@@ -381,6 +383,13 @@ void x86_reset(x86_state_t * emu, bool reset)
 	{
 		emu->x80.cpu_type = X80_CPU_Z80; //X80_CPU_UPD9002;
 		emu->x80.cpu_method = X80_CPUMETHOD_EMULATED;
+	}
+
+	if(emu->cpu_type == X86_CPU_V25 && emu->cpu_traits.cpu_subtype == X86_CPU_V25_V25S)
+	{
+		for(int i = 0; i < 256; i++)
+			default_opcode_translation_table[i] = i;
+		emu->parser->opcode_translation_table = &default_opcode_translation_table;
 	}
 
 	if(emu->cpu_type >= X86_CPU_286)

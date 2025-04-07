@@ -326,8 +326,8 @@ static inline void x86_ice_storeall_286(x86_state_t * emu)
 
 	/* FLAGS register */
 	emu->cf = emu->pf = emu->af = emu->zf = emu->sf = emu->tf = emu->_if = emu->df = emu->of = 0;
-	emu->md = 0;
 	emu->iopl = emu->nt = 0;
+	emu->md = x86_native_state_flag(emu);
 }
 
 static inline void x86_ice_loadall_286(x86_state_t * emu)
@@ -456,8 +456,8 @@ static inline void x86_ice_storeall_386(x86_state_t * emu, uaddr_t offset)
 
 	/* FLAGS register */
 	emu->cf = emu->pf = emu->af = emu->zf = emu->sf = emu->tf = emu->_if = emu->df = emu->of = 0;
-	emu->md = 0;
 	emu->iopl = emu->nt = 0;
+	emu->md = x86_native_state_flag(emu);
 	emu->rf = emu->vm = 0;
 	if(emu->cpu_type >= X86_CPU_486)
 	{

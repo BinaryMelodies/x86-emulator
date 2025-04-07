@@ -267,20 +267,19 @@ static inline uint16_t x86_flags_get16(x86_state_t * emu)
 	}
 	else if(emu->cpu_type == X86_CPU_V25)
 	{
-		// TODO: V25 MD flag
-		return flags | (emu->rb << X86_FL_RB_SHIFT) | 0x8000;
+		return flags | (emu->rb << X86_FL_RB_SHIFT) | emu->md;
 	}
 	else if(emu->cpu_type == X86_CPU_V55)
 	{
 		return flags | (emu->rb << X86_FL_RB_SHIFT);
 	}
-	else if(emu->cpu_type != X86_CPU_EXTENDED)
+	else if(emu->cpu_type == X86_CPU_EXTENDED)
 	{
-		return flags | (emu->iopl << X86_FL_IOPL_SHIFT) | emu->nt;
+		return flags | (emu->iopl << X86_FL_IOPL_SHIFT) | emu->nt | emu->md; // extension, supports 286 flag and the negation of the mode flag
 	}
 	else
 	{
-		return flags | (emu->iopl << X86_FL_IOPL_SHIFT) | emu->nt | emu->md; // extension, supports 286 flag and the negation of the mode flag
+		return flags | (emu->iopl << X86_FL_IOPL_SHIFT) | emu->nt;
 	}
 }
 
@@ -317,7 +316,8 @@ static inline void x86_flags_set16(x86_state_t * emu, uint16_t value)
 	if(emu->cpu_type == X86_CPU_V25)
 	{
 		emu->rb = (value & X86_FL_V25_RB_MASK) >> X86_FL_RB_SHIFT;
-		// TODO: V25 MD flag
+		if(emu->cpu_traits.cpu_subtype == X86_CPU_V25_V25S)
+			emu->md = value & X86_FL_MD;
 	}
 	else if(emu->cpu_type == X86_CPU_V55)
 	{

@@ -457,6 +457,14 @@ static inline void x86_cpuid(x86_state_t * emu)
 	}
 }
 
+static inline uint8_t x86_translate_opcode(x86_parser_t * prs, uint8_t opcode)
+{
+	if(prs->cpu_type == X86_CPU_V25 && prs->cpu_traits.cpu_subtype == X86_CPU_V25_V25S)
+		return (* prs->opcode_translation_table)[opcode];
+	else
+		return opcode;
+}
+
 // used for NEC INS and 80386B0 IBTS
 static inline void x86_bitfield_insert16(x86_state_t * emu, x86_segnum_t segment_number, uaddr_t address, unsigned offset, unsigned length, uint16_t value)
 {

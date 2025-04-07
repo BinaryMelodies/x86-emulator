@@ -2126,7 +2126,7 @@ static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t 
 		x86_push16(emu, x86_flags_get16(emu));
 		emu->_if = 0;
 		emu->tf = 0;
-		emu->md = emu->cpu_type != X86_CPU_EXTENDED ? X86_FL_MD : 0;
+		emu->md = x86_native_state_flag(emu);
 		emu->ac = 0;
 		x86_push16(emu, emu->sr[X86_R_CS].selector);
 		x86_push16(emu, emu->xip);

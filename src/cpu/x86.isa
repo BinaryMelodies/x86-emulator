@@ -239,6 +239,7 @@ SYSCALL_K6	CPUID.EAX=80000001:EDX.11
 SYSCALL_FUN	CPUID.EAX=80000001:EDX.SYSCALL|CPUID.EAX=80000001:EDX.SYSCALL_K6
 TSC	CPUID.EAX=00000001:EDX.4
 TSCP	CPUID.EAX=80000001:EDX.27
+V25S	CPU:V25/V25S
 VME	CPUID.EAX=00000001:EDX.1
 X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 
@@ -384,7 +385,7 @@ X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 62	64,586+	MVEX:	-	feature:	MVEX,!AVX512_F
 62	64,586+	EVEX:	-	feature:	AVX512_F
 63	86	JNB	Jb
-63	v25	BRKN	Ib	# software guard
+63	v25	BRKN	Ib	feature:	V25S
 63	v55	DS2:
 63	v60	exit_v20_emulation
 63	!64,286+	ARPL	Ew, Gw
@@ -666,7 +667,7 @@ F1	286	USR:
 F1	86,186,nec+,!v25,!v55	LOCK:	-	nec:	BUSLOCK:
 F1	386+	INT1	-	feature:	!AMD_SMM
 F1	386,486	SMI	-	feature:	AMD_SMM
-F1	v25	BRKS	Ib	# software guard
+F1	v25	BRKS	Ib	feature:	V25S
 F1	v55	IRAM:
 F2	86+	REPNZ:
 F3	86+	REPZ:
@@ -1845,7 +1846,7 @@ _push16($ip);
 /* TODO: extensions */
 _int(($0 & 0xFF) | X86_EXC_INT_N, 0);
 emu->md_enabled = true;
-emu->md = 0;
+emu->md = x86_emulation_state_flag(emu);
 x86_load_x80_registers(emu);
 
 @instruction BRKEM2
@@ -1856,17 +1857,25 @@ _push16($ip);
 /* TODO: extensions */
 _int(($0 & 0xFF) | X86_EXC_INT_N, 0);
 emu->md_enabled = true;
-emu->md = 0;
+emu->md = x86_emulation_state_flag(emu);
 x86_load_x80_registers(emu);
 emu->full_z80_emulation = true;
 
 @instruction BRKN
 @comment NEC specific
-/* TODO: BRKN */
+_push16($flags);
+_push16($cs);
+_push16($ip);
+_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+emu->md = x86_native_state_flag(emu);
 
 @instruction BRKS
 @comment NEC specific
-/* TODO: BRKS */
+_push16($flags);
+_push16($cs);
+_push16($ip);
+_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+emu->md = x86_emulation_state_flag(emu);
 
 @instruction BRKXA
 @comment NEC specific
@@ -5378,7 +5387,7 @@ $pc = _pop80();
 
 @instruction Z80.RETEM
 emu86->md_enabled = false;
-emu86->md = X86_FL_MD;
+emu86->md = x86_native_state_flag(emu86);
 x86_return_interrupt16(emu86);
 
 @instruction Z80.RETI
@@ -5547,14 +5556,14 @@ if(($a & 0x08) != 0)
 - id: 8086
   description: Intel 8086
   vendor: Intel
-  class: 8086
+  class: 86
   fpu: 8087
   aliases: 8086, i8086, 86, i86, intel8086, intel86, iapx86, mcs86, mcs-86
 
 - id: 8088
   description: Intel 8088
   vendor: Intel
-  class: 8086
+  class: 86
   fpu: 8087
   aliases: 8088, i8088, 88, i88, intel8088, intel88, iapx88
 
@@ -6459,7 +6468,7 @@ if(($a & 0x08) != 0)
 
 - id: upd9002
   description: NEC µPD9002
-  class: upd9002
+  class: 9002
   aliases: upd9002, 9002, pc-88va, pc88va, 88va, pc-88-va, pc88-va, 88-va
 
 - id: v33
@@ -6472,6 +6481,12 @@ if(($a & 0x08) != 0)
   description: NEC V25
   class: v25
   aliases: v25, upd70320, 70320, v35, upd70330, 70330
+
+- id: v25s
+  description: NEC V25 Software Guard
+  class: v25
+  variant: v25s
+  aliases: v25s, upd70327, 70327, v35s, upd70337, 70337
 
 - id: v55
   description: NEC V55PI/V55SC
@@ -6488,7 +6503,7 @@ if(($a & 0x08) != 0)
 - id: extended
   description: Extended
   vendor: custom
-  class: intel
+  class: ext
   features: $skylake
   family: 15
   smmformat: amd64
@@ -6498,7 +6513,7 @@ if(($a & 0x08) != 0)
 - id: 8087
   description: Intel 8087
   type: fpu
-  class: 8087
+  class: 87
   aliases: 8087, i8087, 87, i87
 
 # unreleased
@@ -6506,7 +6521,7 @@ if(($a & 0x08) != 0)
   description: NEC µPD72091
   type: fpu
 # TODO: not much is known
-  class: 8087
+  class: 87
 
 - id: 287
   description: Intel 80287
