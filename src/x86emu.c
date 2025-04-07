@@ -1348,7 +1348,7 @@ static void _x80_port_write(x80_state_t * emu, uint16_t port, uint8_t value)
 	_port_write(NULL, port, &value, 1);
 }
 
-#include "cpu/x86.list.h"
+#include "cpu/x86.list.c"
 
 static inline void setup_x89(x86_state_t * emu, uaddr_t channel_control_block)
 {

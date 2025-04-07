@@ -9,7 +9,7 @@ cpu/x86.gen.c: cpu/generate.py cpu/x86.isa
 	python3 cpu/generate.py cpu/x86.isa
 
 clean:
-	rm -rf ../x86emu cpu/x86.gen.c cpu/x86.list.h
+	rm -rf ../x86emu cpu/x86.gen.c cpu/x86.list.c
 
 distclean: clean
 	rm -rf *~ cpu/*~

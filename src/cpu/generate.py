@@ -3042,7 +3042,7 @@ for architecture in PROCESSORS:
 			fputypes[alias] = architecture
 		fputypes[architecture['id']] = architecture
 
-outfile = os.path.splitext(sys.argv[1])[0] + '.list.h'
+outfile = os.path.splitext(sys.argv[1])[0] + '.list.c'
 
 with open(outfile, 'w') as file:
 	print("""typedef enum x86_cpu_version_t
