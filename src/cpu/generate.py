@@ -3104,12 +3104,22 @@ with open(outfile, 'w') as file:
 						feature_sequence += f"""\n\t\t\t.default_fpu = X87_FPU_{fpu.upper()},"""
 					fpu_list.append(f"(1 << X87_FPU_{fpu.upper()})")
 				feature_sequence += f"""\n\t\t\t.supported_fpu_types = {' | '.join(fpu_list)},"""
+
 			if 'cpuid' in featureset:
-				#print(architecture)
+				if 'highest_function' in architecture:
+					highest_function_number = int(architecture['highest_function'], 16)
+					highest_function = f"\t\t\t\t.eax = 0x{highest_function_number:08X},\n"
+				else:
+					highest_function = "\t\t\t\t.eax = 0x00000001, // TODO\n"
 				feature_sequence += f"""\n\t\t\t.cpuid0 =
 			{{
-				.eax = 0x00000001, // TODO
-				X86_CPUID_VENDOR_{architecture['vendor'].upper()},
+{highest_function}				X86_CPUID_VENDOR_{architecture['vendor'].upper()},
+			}},"""
+				if 'highest_extended_function' in architecture:
+					highest_extended_function_number = 0x80000000 + int(architecture['highest_extended_function'], 16)
+					feature_sequence += f"""\n\t\t\t.cpuid_ext0 =
+			{{
+				.eax = 0x{highest_extended_function_number:08X},
 			}},"""
 
 			for leaf, registers in cpuid_feature_list:

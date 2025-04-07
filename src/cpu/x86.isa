@@ -5629,6 +5629,7 @@ if(($a & 0x08) != 0)
   class: 486
   features: fpu
   family: 4
+  highest_function: 0x01
   aliases: 80486, i80486, 486, i486, intel80486, intel486
 
 - id: 80486a
@@ -5646,6 +5647,7 @@ if(($a & 0x08) != 0)
   class: 486
   features: $80486, -fpu
   family: 4
+  highest_function: 0x01
   aliases: 80486sx, i80486sx, 486sx, i486sx, intel80486sx, intel486sx
 
 - id: 80486sl
@@ -5654,6 +5656,7 @@ if(($a & 0x08) != 0)
   class: 486
   features: $80486
   family: 4
+  highest_function: 0x01
   aliases: 80486sl, i80486sl, 486sl, i486sl, intel80486sl, intel486sl
   smmformat: 80386sl
 
@@ -5672,6 +5675,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p5, rdpmc, cmov, nop_e, pae
   family: 6
+  highest_function: 0x02
   aliases: 80686, i80686, 686, i686, intel80686, intel686, pentiumpro, ppro, p6
   smmformat: p6
 
@@ -5681,6 +5685,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p5, rdpmc, mmx
   family: 5
+  highest_function: 0x01
   aliases: 80586mmx, i80586mmx, 586mmx, i586mmx, intel80586mmx, intel586mmx, pentiummmx, pentium_mmx, pentium-mmx, p5mmx, mmx
   smmformat: p5
 
@@ -5690,6 +5695,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p6, mmx, sep, fxsr
   family: 6
+  highest_function: 0x02
   aliases: pentiumii, pentium2, pentium-2, pentium_2, p6-2, p6_2, p2
   smmformat: p6
 
@@ -5699,6 +5705,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p6_2, sse_non_simd, sse_simd
   family: 6
+  highest_function: 0x03
   aliases: pentiumiii, pentium3, pentium-3, pentium_3, p6-3, p6_3, p3
   smmformat: p6
 
@@ -5723,6 +5730,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p6_3, sse2, clfl
   family: 15
+  highest_function: 0x02
+  highest_extended_function: 0x04
   aliases: pentiumiv, pentium4, pentium-4, pentium_4, p4, p7, netburst, ia32, ia-32, ia_32
   smmformat: p4
 
@@ -5732,6 +5741,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p4, lm, syscall, cx16, nx, sse3
   family: 15
+  highest_function: 0x02
+  highest_extended_function: 0x04
   aliases: prescott, nocona, ia32e, ia-32e, ia_32e, em64t, intel64
   smmformat: amd64
 
@@ -5743,6 +5754,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $prescott, ssse3
   family: 6
+  highest_function: 0x0A
+  highest_extended_function: 0x08
   aliases: core
   smmformat: amd64
 
@@ -5752,6 +5765,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $merom, sse4.1, vtx, vtd
   family: 6
+  highest_function: 0x0A
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: nehalem
@@ -5760,6 +5775,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $penryn, sse4.2, popcnt, ahf64
   family: 6
+  highest_function: 0x0B
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: westmere
@@ -5768,6 +5785,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $nehalem, aes, clmul
   family: 6
+  highest_function: 0x0B
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: sandybridge
@@ -5776,6 +5795,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $westmere, avx, txt
   family: 6
+  highest_function: 0x0B
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: ivybridge
@@ -5784,6 +5805,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $sandybridge, f16c, rdrand
   family: 6
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: haswell
@@ -5792,6 +5815,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $ivybridge, fma3, avx2, bmi1, abm
   family: 6
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: broadwell
@@ -5800,6 +5825,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $haswell, tsx, adx, rdseed, 3dnowp, smap
   family: 6
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: skylake
@@ -5808,6 +5835,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $broadwell, mpx, sgx, avx512_f
   family: 6
+  highest_function: 0x16
+  highest_extended_function: 0x08
   aliases: intel
   smmformat: amd64
 
@@ -5819,6 +5848,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $prescott, ssse3
   family: 6
+  highest_function: 0x0A
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: silvermont
@@ -5827,6 +5858,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $bonnell, sse4.1, sse4.2, aes, rdrand, clmul, vtx, popcnt, ahf64
   family: 6
+  highest_function: 0x0A
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: goldmont
@@ -5835,6 +5868,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $silvermont, sha, pclmul, rdseed, mpx, vtd
   family: 6
+  highest_function: 0x0A
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: gracemont
@@ -5843,6 +5878,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $goldmont, avx, avx2, avx_vnni, fma3
   family: 6
+  highest_function: 0x0A
+  highest_extended_function: 0x08
   smmformat: amd64
 
 # Larrabee and Xeon Phi
