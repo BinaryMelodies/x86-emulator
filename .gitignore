@@ -1,0 +1,10 @@
+
+src/cpu/x86.gen.c
+src/cpu/x86.list.h
+test/*.img
+test/*.com
+test/*.jrc
+test/*.bin
+test/*.hex
+x86emu
+*~
