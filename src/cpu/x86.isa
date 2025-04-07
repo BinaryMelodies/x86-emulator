@@ -1,0 +1,6567 @@
+@architectures
+#### Major architecture categories for instruction sets
+# For pre-CPUID architectures, based on generation
+# For post-CPUID architectures, based on vendor
+
+### Generation 1
+# Intel 8086/8088
+- id: 86
+  name: 8086
+
+# Intel 80186/80187
+- id: 186
+  predecessors:
+  - 86
+
+# Intel 8087 coprocessor
+- id: 87
+  name: 8087
+  type: fpu
+
+# baseline NEC processor extensions
+- id: nec
+  predecessors:
+  - 186
+  generate: no
+
+# NEC V60, x86 emulation
+- id: v60
+  predecessors:
+  - nec
+
+# NEC V20
+- id: v20
+  predecessors:
+  - nec
+  modes:
+  - 8
+
+# NEC µPD9002, used in PC-88 VA
+- id: 9002
+  name: upd9002
+  predecessors:
+  - v20
+  modes:
+  - 8
+
+# NEC V33
+- id: v33
+  predecessors:
+  - nec
+
+# NEC V25
+- id: v25
+  predecessors:
+  - nec
+
+# NEC V55
+- id: v55
+  predecessors:
+  - v25
+
+# NEC coprocessors
+- id: 72091
+  predecessors:
+  - 87
+  type: fpu
+
+#- id: 72191
+#  predecessors:
+#  - 72091, 387
+#  type: fpu
+
+#- id: 72291
+#  type: fpu
+
+### Generation 2
+# Intel 80286
+- id: 286
+  predecessors:
+  - 186
+
+# Intel 80287 coprocessor
+- id: 287
+  predecessors:
+  - 87
+  type: fpu
+
+### Generation 3
+# Intel 80386
+- id: 386
+  predecessors:
+  - 286
+
+# Intel 80387 coprocessor
+- id: 387
+  predecessors:
+  - 287
+  type: fpu
+
+# Cyrix EMC87
+- id: emc87
+  predecessors:
+  - 387
+  type: fpu
+
+# IIT 3c87
+- id: iit
+  predecessors:
+  - 387
+  type: fpu
+
+### Generation 4
+# Intel 80486
+- id: 486
+  predecessors:
+  - 386
+
+# integrated CPUs
+- id: 487
+  predecessors:
+  - 387
+  type: fpu
+
+### Generation 5 and later, separated by vendor
+# generic base 586 feature set, included by all vendors
+- id: 586
+  predecessors:
+  - 486
+  generate: no
+
+# Intel processors
+- id: intel
+  predecessors:
+  - 586
+  modes:
+  - 64
+
+# AMD and NexGen processors
+- id: amd
+  predecessors:
+  - 586
+  modes:
+  - 64
+
+# Cyrix processors and derivatives, including National Semiconductor, VIA and the AMD Geode line
+- id: cyrix
+  predecessors:
+  - 586
+
+# Centaur Technologies/IDT and VIA/Zhaoxin processors
+- id: via
+  predecessors:
+  - 586
+  modes:
+  - 64
+
+# experimental emulator extensions, not found in any commercial chips
+- id: ext
+  name: extended
+  predecessors:
+  - amd
+
+#### 8-bit architectures
+# Intel 8080
+- id: i80
+  type: 8bit
+
+# Intel 8085
+- id: i85
+  type: 8bit
+  predecessors:
+  - i80
+
+# Zilog Z80
+- id: z80
+  type: 8bit
+  predecessors:
+  - i80
+
+@features
+#### List of features controlling whether an instruction is implemented
+# Most of these are controlled by specific CPUID flags, but some of them are dependent on CPU subtype
+# When muliple comma separated values appear, the first one is the actual check
+287XL	FPU:287/287XL
+386B0	CPU:386/386B0
+387SL	FPU:387/387SL
+3DNOW	CPUID.EAX=80000001:EDX.31	# 3DNow!
+3DNOWEXT	CPUID.EAX=80000001:EDX.30	# 3DNow!+ (unsure)
+3DNOWP	CPUID.EAX=80000001:ECX.8
+486A	CPU:486/486A
+ALTINST	altinst
+AMD_SMM	amd_smm
+APX_F	CPUID.EAX=00000007.ECX=00000001:EDX.21
+AVX	CPUID.EAX=00000001:ECX.28
+AVX512_F	CPUID.EAX=00000007.ECX=00000000:EBX.16
+BMI1	CPUID.EAX=00000007.ECX=00000000:EBX.3
+CMOV	CPUID.EAX=00000001:EDX.15
+CPUID	cpuid
+CLFL	CPUID.EAX=00000001:EDX.19
+CR8D	CPUID.EAX=80000001:ECX.4
+CX8	CPUID.EAX=00000001:EDX.8
+CX16	CPUID.EAX=00000001:ECX.13
+CX8/CX16	CPUID.EAX=00000001:EDX.CX8/CPUID.EAX=00000001:ECX.CX16
+DMM	dmm
+DREX	drex
+EMMI	emmi, CPUID.EAX=80000001:EDX.24
+EMULATED	emulated
+FPU	CPUID.EAX=00000001:EDX.0
+FSGSBASE	CPUID.EAX=00000007.ECX=00000000:EBX.0
+FXSR	CPUID.EAX=00000001:EDX.24
+IA64	CPUID.EAX=00000001:EDX.30
+L10M	l10m
+AHF64	CPUID.EAX=80000001:ECX.0
+LM	CPUID.EAX=80000001:EDX.29
+LZCNT	CPUID.EAX=80000001:ECX.5
+MEDIA_GX	media_gx
+MMX	CPUID.EAX=00000001:EDX.23
+MOVBE	CPUID.EAX=00000001:ECX.22
+MSR	CPUID.EAX=00000001:EDX.5
+MVEX	mvex
+NOP_E	multibyte_nop
+NX	CPUID.EAX=80000001:EDX.20
+NX_IA64	CPUID.EAX=00000001:EDX.20 "NX"	# IA64 specific
+PAE	CPUID.EAX=00000001:EDX.6
+PFRCPV	pfrcpv
+POPCNT	CPUID.EAX=00000001:ECX.23
+RDPMC	rdpmc
+RDRAND	CPUID.EAX=00000001:ECX.30
+RDSEED	CPUID.EAX=00000007.ECX=00000000:EBX.18
+RDSHR	rdshr
+SEP	CPUID.EAX=00000001:EDX.11
+SMAP	CPUID.EAX=00000007.ECX=00000000:EBX.20
+SSE_NON_SIMD	sse_non_simd, CPUID.EAX=00000001:EDX.25 "SSE"
+SSE_SIMD	sse_simd, CPUID.EAX=00000001:EDX.25 "SSE"
+SSE2	CPUID.EAX=00000001:EDX.26
+SSE3	CPUID.EAX=00000001:ECX.0
+SYSCALL	CPUID.EAX=80000001:EDX.10
+SYSCALL_K6	CPUID.EAX=80000001:EDX.11
+SYSCALL_FUN	CPUID.EAX=80000001:EDX.SYSCALL|CPUID.EAX=80000001:EDX.SYSCALL_K6
+TSC	CPUID.EAX=00000001:EDX.4
+TSCP	CPUID.EAX=80000001:EDX.27
+VME	CPUID.EAX=00000001:EDX.1
+X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
+
+@instructionset
+# Each entry is encoded as a tab separated record
+# opcode, CPU implementations, mnemonic, list of operands (or "-"), additional options (feature: and alternative syntaxes)
+
+#### List of x86 instructions
+00	86+	ADD	Eb, Gb
+01	86+	ADD	Ev, Gv
+02	86+	ADD	Gb, Eb
+03	86+	ADD	Gv, Ev
+04	86+	ADD	AL, Ib
+05	86+	ADD	rAX, Iz
+06	!64,86+	PUSH	ES
+07	!64,86+	POP	ES
+
+08	86+	OR	Eb, Gb
+09	86+	OR	Ev, Gv
+0A	86+	OR	Gb, Eb
+0B	86+	OR	Gv, Ev
+0C	86+	OR	AL, Ib
+0D	86+	OR	rAX, Iz
+0E	!64,86+	PUSH	CS
+0F	86	POP	CS
+# the instructions prefixed with 0F are listed separately
+
+10	86+	ADC	Eb, Gb	nec:	ADDC	Eb, Gb
+11	86+	ADC	Ev, Gv	nec:	ADDC	Ev, Gv
+12	86+	ADC	Gb, Eb	nec:	ADDC	Gb, Eb
+13	86+	ADC	Gv, Ev	nec:	ADDC	Gv, Ev
+14	86+	ADC	AL, Ib	nec:	ADDC	AL, Ib
+15	86+	ADC	rAX, Iz	nec:	ADDC	rAX, Iz
+16	!64,86+	PUSH	SS
+17	!64,86+	POP	SS
+
+18	86+	SBB	Eb, Gb	nec:	SUBC	Eb, Gb
+19	86+	SBB	Ev, Gv	nec:	SUBC	Ev, Gv
+1A	86+	SBB	Gb, Eb	nec:	SUBC	Gb, Eb
+1B	86+	SBB	Gv, Ev	nec:	SUBC	Gv, Ev
+1C	86+	SBB	AL, Ib	nec:	SUBC	AL, Ib
+1D	86+	SBB	rAX, Iz	nec:	SUBC	rAX, Iz
+1E	!64,86+	PUSH	DS
+1F	!64,86+	POP	DS
+
+20	86+	AND	Eb, Gb
+21	86+	AND	Ev, Gv
+22	86+	AND	Gb, Eb
+23	86+	AND	Gv, Ev
+24	86+	AND	AL, Ib
+25	86+	AND	rAX, Iz
+26	86+	ES:	-	nec:	DS1:
+27	!64,86+	DAA	-	nec:	ADJ4A
+
+28	86+	SUB	Eb, Gb
+29	86+	SUB	Ev, Gv
+2A	86+	SUB	Gb, Eb
+2B	86+	SUB	Gv, Ev
+2C	86+	SUB	AL, Ib
+2D	86+	SUB	rAX, Iz
+2E	86+	CS:	-	nec:	PS:
+2F	!64,86+	DAS	-	nec:	ADJ4S
+
+30	86+	XOR	Eb, Gb
+31	86+	XOR	Ev, Gv
+32	86+	XOR	Gb, Eb
+33	86+	XOR	Gv, Ev
+34	86+	XOR	AL, Ib
+35	86+	XOR	rAX, Iz
+36	86+	SS:
+37	!64,86+	AAA	-	nec:	ADJ4BA
+
+38	86+	CMP	Eb, Gb
+39	86+	CMP	Ev, Gv
+3A	86+	CMP	Gb, Eb
+3B	86+	CMP	Gv, Ev
+3C	86+	CMP	AL, Ib
+3D	86+	CMP	rAX, Iz
+3E	86+	DS:	-	nec:	DS0:
+3F	!64,86+	AAS	-	nec:	ADJBS
+
+40	!64,86+	INC	eAX
+40	64,586+	REX:
+41	!64,86+	INC	eCX
+41	64,586+	REX:
+42	!64,86+	INC	eDX
+42	64,586+	REX:
+43	!64,86+	INC	eBX
+43	64,586+	REX:
+44	!64,86+	INC	eSP
+44	64,586+	REX:
+45	!64,86+	INC	eBP
+45	64,586+	REX:
+46	!64,86+	INC	eSI
+46	64,586+	REX:
+47	!64,86+	INC	eDI
+47	64,586+	REX:
+
+48	!64,86+	DEC	eAX
+48	64,586+	REX:
+49	!64,86+	DEC	eCX
+49	64,586+	REX:
+4A	!64,86+	DEC	eDX
+4A	64,586+	REX:
+4B	!64,86+	DEC	eBX
+4B	64,586+	REX:
+4C	!64,86+	DEC	eSP
+4C	64,586+	REX:
+4D	!64,86+	DEC	eBP
+4D	64,586+	REX:
+4E	!64,86+	DEC	eSI
+4E	64,586+	REX:
+4F	!64,86+	DEC	eDI
+4F	64,586+	REX:
+
+50	86+	PUSH	r0
+51	86+	PUSH	r1
+52	86+	PUSH	r2
+53	86+	PUSH	r3
+54	86+	PUSH	r4
+55	86+	PUSH	r5
+56	86+	PUSH	r6
+57	86+	PUSH	r7
+
+58	86+	POP	r0
+59	86+	POP	r1
+5A	86+	POP	r2
+5B	86+	POP	r3
+5C	86+	POP	r4
+5D	86+	POP	r5
+5E	86+	POP	r6
+5F	86+	POP	r7
+
+60	86	JO	Jb
+60	!64,186+	PUSHAd	-	nec:	PUSH	R
+61	86	JNO	Jb
+61	!64,186+	POPAd	-	nec:	POP	R
+62	86	JB	Jb
+62	!64,186+	BOUND	Gv, Ma	nec:	CHKIND	Gv, Ma
+62	!64,586+	MVEX:	Rb	feature:	MVEX,!AVX512_F	# Note: the Rb operand is only required for parsing purposes
+62	!64,586+	EVEX:	Rb	feature:	AVX512_F	# Note: the Rb operand is only required for parsing purposes
+62	64,intel	L10M62:	-	feature:	L10M,!AVX512_F
+62	64,586+	MVEX:	-	feature:	MVEX,!AVX512_F
+62	64,586+	EVEX:	-	feature:	AVX512_F
+63	86	JNB	Jb
+63	v25	BRKN	Ib	# software guard
+63	v55	DS2:
+63	v60	exit_v20_emulation
+63	!64,286+	ARPL	Ew, Gw
+63	64,586+	MOVSXD	Gv, Ed
+64	86	JZ	Jb
+64	nec+	REPNC:
+64	386+	FS:
+65	86	JNZ	Jb
+65	nec+	REPC:
+65	386+	GS:
+66	86	JBE	Jb
+66	nec+	ESC	E
+66	386+	OPSIZE:
+67	86	JNBE	Jb
+67	nec+	ESC	E
+67	386+	ADSIZE:
+
+68	86	JS	Jb
+68	186+	PUSH	Iz
+69	86	JNS	Jb
+69	186+	IMUL	Gv, Ev, Iz	nec:	MUL	Gv, Ev, Iz
+6A	86	JP	Jb
+6A	186+	PUSH	Ib
+6B	86	JNP	Jb
+6B	186+	IMUL	Gv, Ev, Ib	nec:	MUL	Gv, Ev, Ib
+6C	86	JL	Jb
+6C	186+,!9002	INSb	-	nec:	INMB
+6D	86	JNL	Jb
+6D	186+,!9002	INSz	-	nec:	INMW
+6E	86	JLE	Jb
+6E	186+,!9002	OUTSb	-	nec:	OUTMB
+6F	86	JNLE	Jb
+6F	186+,!9002	OUTSz	-	nec:	OUTMW
+
+70	86+	JO	Jb	nec:	BV	Jb
+71	86+	JNO	Jb	nec:	BNV	Jb
+72	86+	JB	Jb	nec:	BC	Jb
+73	86+	JNB	Jb	nec:	BNC	Jb
+74	86+	JZ	Jb	nec:	BZ	Jb
+75	86+	JNZ	Jb	nec:	BNZ	Jb
+76	86+	JBE	Jb	nec:	BNH	Jb
+77	86+	JNBE	Jb	nec:	BH	Jb
+
+78	86+	JS	Jb	nec:	BN	Jb
+79	86+	JNS	Jb	nec:	BP	Jb
+7A	86+	JP	Jb	nec:	BPE	Jb
+7B	86+	JNP	Jb	nec:	BPO	Jb
+7C	86+	JL	Jb	nec:	BLT	Jb
+7D	86+	JNL	Jb	nec:	BGE	Jb
+7E	86+	JLE	Jb	nec:	BLE	Jb
+7F	86+	JNLE	Jb	nec:	BGT	Jb
+
+80/0	86+	ADD	Eb, Ib
+80/1	86+	OR	Eb, Ib
+80/2	86+	ADC	Eb, Ib	nec:	ADDC	Eb, Ib
+80/3	86+	SBB	Eb, Ib	nec:	SUBC	Eb, Ib
+80/4	86+	AND	Eb, Ib
+80/5	86+	SUB	Eb, Ib
+80/6	86+	XOR	Eb, Ib
+80/7	86+	CMP	Eb, Ib
+81/0	86+	ADD	Ev, Iz
+81/1	86+	OR	Ev, Iz
+81/2	86+	ADC	Ev, Iz	nec:	ADDC	Ev, Iz
+81/3	86+	SBB	Ev, Iz	nec:	SUBC	Ev, Iz
+81/4	86+	AND	Ev, Iz
+81/5	86+	SUB	Ev, Iz
+81/6	86+	XOR	Ev, Iz
+81/7	86+	CMP	Ev, Iz
+82/0	!64,86+	ADD	Eb, Ib
+82/1	!64,86+	OR	Eb, Ib
+82/2	!64,86+	ADC	Eb, Ib	nec:	ADDC	Eb, Ib
+82/3	!64,86+	SBB	Eb, Ib	nec:	SUBC	Eb, Ib
+82/4	!64,86+	AND	Eb, Ib
+82/5	!64,86+	SUB	Eb, Ib
+82/6	!64,86+	XOR	Eb, Ib
+82/7	!64,86+	CMP	Eb, Ib
+83/0	86+	ADD	Ev, Ib
+83/1	86+	OR	Ev, Ib
+83/2	86+	ADC	Ev, Ib	nec:	ADDC	Ev, Ib
+83/3	86+	SBB	Ev, Ib	nec:	SUBC	Ev, Ib
+83/4	86+	AND	Ev, Ib
+83/5	86+	SUB	Ev, Ib
+83/6	86+	XOR	Ev, Ib
+83/7	86+	CMP	Ev, Ib
+
+84	86+	TEST	Eb, Gb
+85	86+	TEST	Ev, Gv
+86	86+	XCHG	Eb, Gb	nec:	XCH	Eb, Gb
+87	86+	XCHG	Ev, Gv	nec:	XCH	Ev, Gv
+
+88	86+	MOV	Eb, Gb
+89	86+	MOV	Ev, Gv
+8A	86+	MOV	Gb, Eb
+8B	86+	MOV	Gv, Ev
+8C	86+	MOV	Mw/Rv, Sw
+8D	86+	LEA	Gv, M	nec:	LDEA	Gv, M
+8E	86+	MOV	Sw, Mw/Rv
+8F	86	POP	Ev
+8F/0	186+	POP	Ev
+8F/1	amd,ext	XOP:	E
+8F/2	amd,ext	XOP:	E
+8F/3	amd,ext	XOP:	E
+8F/4	amd,ext	XOP:	E
+8F/5	amd,ext	XOP:	E
+8F/6	amd,ext	XOP:	E
+8F/7	amd,ext	XOP:	E
+
+90	86+	XCHG	r0, rAX
+91	86+	XCHG	r1, rAX
+92	86+	XCHG	r2, rAX
+93	86+	XCHG	r3, rAX
+94	86+	XCHG	r4, rAX
+95	86+	XCHG	r5, rAX
+96	86+	XCHG	r6, rAX
+97	86+	XCHG	r7, rAX
+
+98	86+	CBW/CWDE/CDQE	-	nec:	CVTBW
+99	86+	CWD/CDQ/CQO	-	nec:	CVTW
+9A	!64,86+	CALLF	Ap
+9B	86+	WAIT	-	nec:	POLL
+9C	86+	PUSHF	-	nec:	PUSH	PSW
+9D	86+	POPF	-	nec:	POP	PSW
+9E	86+	SAHF	-	nec:	MOV	PSW, AH
+9F	!64,86+	LAHF	-	nec:	MOV	AH, PSW
+9F	64,86+	LAHF	-	feature:	AHF64
+
+A0	86+	MOV	AL, Ov
+A1	86+	MOV	rAX, Ov
+A2	86+	MOV	Ov, AL
+A3	86+	MOV	Ov, rAX
+A4	86+	MOVSb	-	nec:	MOVBKB
+A5	86+	MOVSv	-	nec:	MOVBKW
+A6	86+	CMPSb	-	nec:	CMPBKB
+A7	86+	CMPSv	-	nec:	CMPBKW
+
+A8	86+	TEST	AL, Ib
+A9	86+	TEST	rAX, Iz
+AA	86+	STOSb	-	nec:	STMB
+AB	86+	STOSv	-	nec:	STMW
+AC	86+	LODSb	-	nec:	LDMB
+AD	86+	LODSv	-	nec:	LDMW
+AE	86+	SCASb	-	nec:	CMPMB
+AF	86+	SCASv	-	nec:	CMPMW
+
+B0	86+	MOV	R0B, Ib
+B1	86+	MOV	R1B, Ib
+B2	86+	MOV	R2B, Ib
+B3	86+	MOV	R3B, Ib
+B4	86+	MOV	R4B, Ib
+B5	86+	MOV	R5B, Ib
+B6	86+	MOV	R6B, Ib
+B7	86+	MOV	R7B, Ib
+
+B8	86+	MOV	r0, Iv
+B9	86+	MOV	r1, Iv
+BA	86+	MOV	r2, Iv
+BB	86+	MOV	r3, Iv
+BC	86+	MOV	r4, Iv
+BD	86+	MOV	r5, Iv
+BE	86+	MOV	r6, Iv
+BF	86+	MOV	r7, Iv
+
+C0	86	RET	Iw
+C0/0	186+	ROL	Eb, Ib
+C0/1	186+	ROR	Eb, Ib
+C0/2	186+	RCL	Eb, Ib	nec:	ROLC	Eb, Ib
+C0/3	186+	RCR	Eb, Ib	nec:	RORC	Eb, Ib
+C0/4	186+	SHL	Eb, Ib
+C0/5	186+	SHR	Eb, Ib
+C0/6	186+	SHL	Eb, Ib
+C0/7	186+	SAR	Eb, Ib	nec:	SHRA	Eb, Ib
+C1	86	RET
+C1/0	186+	ROL	Ev, Ib
+C1/1	186+	ROR	Ev, Ib
+C1/2	186+	RCL	Ev, Ib	nec:	ROLC	Ev, Ib
+C1/3	186+	RCR	Ev, Ib	nec:	RORC	Ev, Ib
+C1/4	186+	SHL	Ev, Ib
+C1/5	186+	SHR	Ev, Ib
+C1/6	186+	SHL	Ev, Ib
+C1/7	186+	SAR	Ev, Ib	nec:	SHRA	Ev, Ib
+C2	86+	RET	Iw
+C3	86+	RET
+C4	!64,86+	LES	Gv, Mp	nec:	MOV	DS1, Gv, Mp
+C4	!64,586+	VEX3:	Rb	feature:	AVX	# Note: the Rb operand is only required for parsing purposes
+C4	64,586+	VEX3:		feature:	AVX
+C5	!64,86+	LDS	Gv, Mp	nec:	MOV	DS0, Gv, Mp
+C5	!64,586+	VEX2:	Rb		feature:	AVX	# Note: the Rb operand is only required for parsing purposes
+C5	64,586+	VEX2:		feature:	AVX
+C6	86	MOV	Eb, Ib
+C6/0	186+	MOV	Eb, Ib
+C7	86	MOV	Ev, Iz
+C7/0	186+	MOV	Ev, Iz
+
+C8	86	RETF	Iw
+C8	186+	ENTER	Iw, Ib	nec:	PREPARE	Iw, Ib
+C9	86	RETF
+C9	186+	LEAVE	-	nec:	DISPOSE
+CA	86+	RETF	Iw
+CB	86+	RETF
+CC	86+	INT3	-	nec:	BRK	3
+CD	86+	INT	Ub	nec:	BRK	Ub
+CE	!64,86+	INTO	-	nec:	BRKV
+CF	86+	IRET	-	nec:	RETI
+
+D0/0	86+	ROL	Eb, 1
+D0/1	86+	ROR	Eb, 1
+D0/2	86+	RCL	Eb, 1	nec:	ROLC	Eb, 1
+D0/3	86+	RCR	Eb, 1	nec:	RORC	Eb, 1
+D0/4	86+	SHL	Eb, 1
+D0/5	86+	SHR	Eb, 1
+D0/6	86	grp2_6	Eb, 1
+D0/6	186+	SHL	Eb, 1
+D0/7	86+	SAR	Eb, 1	nec:	SHRA	Eb, 1
+D1/0	86+	ROL	Ev, 1
+D1/1	86+	ROR	Ev, 1
+D1/2	86+	RCL	Ev, 1	nec:	ROLC	Ev, 1
+D1/3	86+	RCR	Ev, 1	nec:	RORC	Ev, 1
+D1/4	86+	SHL	Ev, 1
+D1/5	86+	SHR	Ev, 1
+D1/6	86	grp2_6	Ew, 1
+D1/6	186+	SHL	Ev, 1
+D1/7	86+	SAR	Ev, 1	nec:	SHRA	Ev, 1
+D2/0	86+	ROL	Eb, CL
+D2/1	86+	ROR	Eb, CL
+D2/2	86+	RCL	Eb, CL	nec:	ROLC	Eb, CL
+D2/3	86+	RCR	Eb, CL	nec:	RORC	Eb, CL
+D2/4	86+	SHL	Eb, CL
+D2/5	86+	SHR	Eb, CL
+D2/6	86	grp2_6	Eb, CL
+D2/6	186+	SHL	Eb, CL
+D2/7	86+	SAR	Eb, CL	nec:	SHRA	Eb, CL
+D3/0	86+	ROL	Ev, CL
+D3/1	86+	ROR	Ev, CL
+D3/2	86+	RCL	Ev, CL	nec:	ROLC	Ev, CL
+D3/3	86+	RCR	Ev, CL	nec:	RORC	Ev, CL
+D3/4	86+	SHL	Ev, CL
+D3/5	86+	SHR	Ev, CL
+D3/6	86	grp2_6	Ew, CL
+D3/6	186+	SHL	Ev, CL
+D3/7	86+	SAR	Ev, CL	nec:	SHRA	Ev, CL
+D4	!64,86+	AAM	Ub	nec:	CVTBD
+D5	!64,86+	AAD	Ub	nec:	CVTDB
+D5	64,intel,ext	REX2:	-	feature:	APX_F
+D6	!64,86+,!nec	SALC
+D6	nec+,!v55	XLAT	-	nec:	TRANS	# duplicate
+D6	v55	DS3:
+D6	64,intel	L10MD6:	-	feature:	L10M
+D7	86+	XLAT	-	nec:	TRANS
+
+# Escape opcodes, encoded separately
+D8	86+	ESC	E
+D9	86+	ESC	E
+DA	86+	ESC	E
+DB	86+	ESC	E
+DC	86+	ESC	E
+DD	86+	ESC	E
+DE	86+	ESC	E
+DF	86+	ESC	E
+
+E0	86+	LOOPNZ	Jb	nec:	DBNZNE	Jb
+E1	86+	LOOPZ	Jb	nec:	DBNZE	Jb
+E2	86+	LOOP	Jb	nec:	DBNZ	Jb
+E3	86+	JrCXZ	Jb	nec:	BCWZ	Jb
+E4	86+	IN	AL, Ub
+E5	86+	IN	eAX, Ub
+E6	86+	OUT	Ub, AL
+E7	86+	OUT	Ub, eAX
+
+E8	86+	CALL	Jz
+E9	86+	JMP	Jz	nec:	BR	Jz
+EA	!64,86+	JMPF	Ap	nec:	BR	Ap
+EB	86+	JMP	Jb	nec:	BR	Jb
+EC	86+	IN	AL, DX
+ED	86+	IN	eAX, DX
+EE	86+	OUT	DX, AL
+EF	86+	OUT	DX, eAX
+F0	86+	LOCK:	-	nec:	BUSLOCK:
+F1	286	USR:
+F1	86,186,nec+,!v25,!v55	LOCK:	-	nec:	BUSLOCK:
+F1	386+	INT1	-	feature:	!AMD_SMM
+F1	386,486	SMI	-	feature:	AMD_SMM
+F1	v25	BRKS	Ib	# software guard
+F1	v55	IRAM:
+F2	86+	REPNZ:
+F3	86+	REPZ:
+F4	86+	HLT	-	nec:	HALT
+F5	86+	CMC	-	nec:	NOT1	CY
+F6/0	86+	TEST	Eb, Ib
+F6/1	86+	TEST	Eb, Ib
+F6/2	86+	NOT	Eb
+F6/3	86+	NEG	Eb
+F6/4	86+	MUL	Eb	nec:	MULU	Eb
+F6/5	86+	IMUL	Eb	nec:	MUL	Eb
+F6/6	86+	DIV	Eb	nec:	DIVU	Eb
+F6/7	86+	IDIV	Eb	nec:	DIV	Eb
+F7/0	86+	TEST	Ev, Iz
+F7/1	86+	TEST	Ev, Iz
+F7/2	86+	NOT	Ev
+F7/3	86+	NEG	Ev
+F7/4	86+	MUL	Ev	nec:	MULU	Ev
+F7/5	86+	IMUL	Ev	nec:	MUL	Ev
+F7/6	86+	DIV	Ev	nec:	DIVU	Ev
+F7/7	86+	IDIV	Ev	nec:	DIV	Ev
+
+F8	86+	CLC	-	nec:	CLR1	CY
+F9	86+	STC	-	nec:	SET1	CY
+FA	86+	CLI	-	nec:	DI
+FB	86+	STI	-	nec:	EI
+FC	86+	CLD	-	nec:	CLR1	DIR
+FD	86+	STD	-	nec:	SET1	DIR
+FE/0	86+	INC	Eb
+FE/1	86+	DEC	Eb
+FF/0	86+	INC	Ev
+FF/1	86+	DEC	Ev
+FF/2	86+	CALL	Ev
+FF/3	86+	CALLF	Mp
+FF/4	86+	JMP	Ev
+FF/5	86+	JMPF	Mp
+FF/6	86+	PUSH	Ev
+FF/7	86	PUSH	Ev
+FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
+
+0F00/0	286+	SLDT	Mw/Rv
+0F00/1	286+	STR	Mw/Rv
+0F00/2	286+	LLDT	Mw/Rv
+0F00/3	286+	LTR	Mw/Rv
+0F00/4	286+	VERR	Mw/Rv
+0F00/5	286+	VERW	Mw/Rv
+0F00/6	586+	JMPE	Ev	feature:	IA64
+#0F00/7
+0F01/0	286+	SGDT	Mp
+0F01/1	286+	SIDT	Mp
+0F01CA	586+	CLAC		feature:	SMAP
+0F01CB	586+	STAC		feature:	SMAP
+0F01/2	286+	LGDT	Mp
+0F01/3	286+	LIDT	Mp
+0F01/4	286+	SMSW	Mw/Rv
+#0F01/5
+0F01/6	286+	LMSW	Ew
+0F01/7	486+	INVLPG	M
+0F01F8	64,586+	SWAPGS
+0F01F9	586+	RDTSCP		feature:	TSCP
+0F02	286+	LAR	Gz, Ew
+0F03	286+	LSL	Gz, Ew
+0F04	286	STOREALL286
+0F05	286	LOADALL286
+0F05	586+	SYSCALL		feature:	SYSCALL_FUN
+0F06	286+	CLTS
+0F07	386,486	LOADALL386	# Note: Am386/Am486 call this RES3
+0F07	586+	SYSRET		feature:	SYSCALL_FUN
+
+0F08	486+	INVD
+0F09	486+	WBINVD
+#0F0A
+0F0B	286+	UD2
+#0F0C
+#0F0D	487+	NOP	E
+#0F0E
+#0F0F
+
+0F10	386,486	UMOV	Eb, Gb
+0F10	nec+	TEST1	Eb, CL
+0F11	386,486	UMOV	Ev, Gv
+0F11	nec+	TEST1	Ew, CL
+0F12	386,486	UMOV	Gb, Eb
+0F12	nec+	CLR1	Eb, CL
+0F13	386,486	UMOV	Gv, Ev
+0F13	nec+	CLR1	Ew, CL
+0F14	nec+	SET1	Eb, CL
+0F15	nec+	SET1	Ew, CL
+0F16	nec+	NOT1	Eb, CL
+0F17	nec+	NOT1	Ew, CL
+
+0F18	nec+	TEST1	Eb, Ib
+0F18	586+	NOP	E	feature:	NOP_E
+0F19	nec+	TEST1	Ew, Ib
+0F19	586+	NOP	E	feature:	NOP_E
+0F1A	nec+	CLR1	Eb, Ib
+0F1A	586+	NOP	E	feature:	NOP_E
+0F1B	nec+	CLR1	Ew, Ib
+0F1B	586+	NOP	E	feature:	NOP_E
+0F1C	nec+	SET1	Eb, Ib
+0F1C	586+	NOP	E	feature:	NOP_E
+0F1D	nec+	SET1	Ew, Ib
+0F1D	586+	NOP	E	feature:	NOP_E
+0F1E	nec+	NOT1	Eb, Ib
+0F1E	586+	NOP	E	feature:	NOP_E
+0F1F	nec+	NOT1	Ew, Ib
+0F1F	586+	NOP	E	feature:	NOP_E
+
+0F20	nec+	ADD4S
+0F20	386+	MOV	Ry, Cy
+0F21	386+	MOV	Ry, Dy
+0F22	nec+	SUB4S
+0F22	386+	MOV	Cy, Ry
+0F23	386+	MOV	Dy, Ry
+0F24	386,486,cyrix+,ext	MOV	Ry, Ty
+0F25	v25+	MOVSPA
+0F26	nec+	CMP4S
+0F26	386,486,cyrix+,ext	MOV	Ty, Ry
+#0F27
+
+0F28	nec+	ROL4	Eb
+#0F29
+0F2A	nec+	ROR4	Eb
+#0F2B
+#0F2C
+0F2D	v25+	BRKCS	Rw
+#0F2E
+#0F2F
+
+0F30	586+	WRMSR		feature:	MSR
+0F31	nec+,!9002	INS	Rb, Gb
+0F31	586+	RDTSC
+0F32	586+	RDMSR		feature:	MSR
+0F33	nec+,!9002	EXT	Rb, Gb
+#0F33	586+	RDPMC		feature:	RDPMC
+0F34	586+	SYSENTER		feature:	SEP
+0F35	586+	SYSEXIT		feature:	SEP
+0F36	v55	MOV	DS3, Gw, Mp
+0F36	cyrix+	RDSHR	Ed	feature:	RDSHR
+0F37	cyrix+	WRSHR	Ed	feature:	RDSHR
+
+0F38	cyrix+	SMINT		feature:	MMX
+0F38F0	586+,!cyrix	MOVBE	Gv, Ev	feature:	MOVBE
+0F38F1	586+,!cyrix	MOVBE	Ev, Gv	feature:	MOVBE
+0F39	nec+,!9002	INS	Rb, Ib
+0F39	cyrix+	DMINT		feature:	DMM
+0F3A	cyrix+	BB0_RESET		feature:	MEDIA_GX
+0F3A	cyrix+	RDM		feature:	!MEDIA_GX,DMM
+0F3B	nec+,!9002	EXT	Rb, Ib
+0F3B	cyrix+	BB1_RESET		feature:	MEDIA_GX
+0F3C/0	v55	BSCH	Eb
+0F3C	cyrix+	CPU_WRITE		feature:	MEDIA_GX
+0F3D/0	v55	BSCH	Ew
+0F3D	cyrix+	CPU_READ		feature:	MEDIA_GX
+0F3E	v55	MOV	DS2, Gw, Mp
+0F273E	ext	MOV	DS2, Gw, Mp
+0F3F	via+	JMPAI
+
+0F40	586+	CMOVO	Gv, Ev	feature:	CMOV
+0F41	586+	CMOVNO	Gv, Ev	feature:	CMOV
+0F42	586+	CMOVB	Gv, Ev	feature:	CMOV
+0F43	586+	CMOVNB	Gv, Ev	feature:	CMOV
+0F44	586+	CMOVZ	Gv, Ev	feature:	CMOV
+0F45	586+	CMOVNZ	Gv, Ev	feature:	CMOV
+0F46	586+	CMOVBE	Gv, Ev	feature:	CMOV
+0F47	586+	CMOVNBE	Gv, Ev	feature:	CMOV
+
+0F48	586+	CMOVS	Gv, Ev	feature:	CMOV
+0F49	586+	CMOVNS	Gv, Ev	feature:	CMOV
+0F4A	586+	CMOVP	Gv, Ev	feature:	CMOV
+0F4B	586+	CMOVNP	Gv, Ev	feature:	CMOV
+0F4C	586+	CMOVL	Gv, Ev	feature:	CMOV
+0F4D	586+	CMOVNL	Gv, Ev	feature:	CMOV
+0F4E	586+	CMOVLE	Gv, Ev	feature:	CMOV
+0F4F	586+	CMOVNLE	Gv, Ev	feature:	CMOV
+
+#0F50
+#0F51
+#0F52
+#0F53
+#0F54
+#0F55
+#0F56
+#0F57
+
+#0F58
+#0F59
+#0F5A
+#0F5B
+#0F5C
+#0F5D
+#0F5E
+#0F5F
+
+#0F60
+#0F61
+#0F62
+#0F63
+#0F64
+#0F65
+#0F66
+#0F67
+
+#0F68
+#0F69
+#0F6A
+#0F6B
+#0F6C
+#0F6D
+#0F6E
+#0F6F
+
+#0F70
+#0F71
+#0F72
+#0F73
+#0F74
+#0F75
+0F76	v55	PUSH	DS3
+0F77	v55	POP	DS3
+0F77	586+	EMMS		feature:	MMX
+
+#0F78	v55	SCHEOL	-	# v55pi
+0F78	!64,cyrix+,ext	SVDC	M10, Sw
+#0F79	v55	GETBIT	-	# v55pi
+0F79	!64,cyrix+,ext	RSDC	Sw, M10
+#0F7A	v55	CNVTRP	-	# v55pi
+0F7A	!64,cyrix+,ext	SVLDT	M10
+0F7B	!64,cyrix+,ext	RSLDT	M10
+#0F7C	v55	MHDEC	-	# v55pi
+0F7C	!64,cyrix+,ext	SVTS	M10
+#0F7D	v55	MRDEC	-	# v55pi
+0F7D	!64,cyrix+,ext	RSTS	M10
+0F7E	v55	PUSH	DS2
+0F7E	cyrix+	SMINT		feature:	!MMX
+0F7F	v55	POP	DS2
+
+0F80	386+	JO	Jz
+0F81	386+	JNO	Jz
+0F82	386+	JB	Jz
+0F83	386+	JNB	Jz
+0F84	386+	JZ	Jz
+0F85	386+	JNZ	Jz
+0F86	386+	JBE	Jz
+0F87	386+	JNBE	Jz
+
+0F88	386+	JS	Jz
+0F89	386+	JNS	Jz
+0F8A	386+	JP	Jz
+0F8B	386+	JNP	Jz
+0F8C	386+	JL	Jz
+0F8D	386+	JNL	Jz
+0F8E	386+	JLE	Jz
+0F8F	386+	JNLE	Jz
+
+0F90	386+	SETO	Eb
+0F91	v25+	RETRBI
+0F91	386+	SETNO	Eb
+0F92	v25+	FINT
+0F92	386+	SETB	Eb
+#0F93	v55	MHENC	-	# v55pi
+0F93	386+	SETNB	Eb
+0F94	v25+	TSKSW	Rw
+0F94	386+	SETZ	Eb
+0F95	v25+	MOVSPB	Rw
+0F95	386+	SETNZ	Eb
+0F96	v55	RSTWDT	Ib, Ib
+0F96	386+	SETBE	Eb
+#0F97	v55	MRENC	-	# v55pi
+0F97	386+	SETNBE	Eb
+
+0F98	386+	SETS	Eb
+0F99	386+	SETNS	Eb
+#0F9A	v55	ALBIT	-	# v55pi
+0F9A	386+	SETP	Eb
+#0F9B	v55	COLTRP	-	# v55pi
+0F9B	386+	SETNP	Eb
+0F9C	v25+	BTCLR	Ub, Ib, Jb
+0F9C	386+	SETL	Eb
+0F9D	v55	BTCLRL	Ub, Ib, Jb
+0F9D	386+	SETNL	Eb
+0F9E	v25+	STOP
+0F9E	386+	SETLE	Eb
+#0F9F	v55	IDLE	-	# v55sc
+0F9F	386+	SETNLE	Eb
+
+0FA0	386+	PUSH	FS
+0FA1	386+	POP	FS
+0FA2	586+	CPUID	-	feature:	CPUID
+0FA3	386+	BT	Ev, Gv
+0FA4	386+	SHLD	Ev, Gv, Ib
+0FA5	386+	SHLD	Ev, Gv, CL
+0FA6	386	IBTS	Ez, Gz	feature:	386B0	# removed in 386b1
+0FA6	486	CMPXCHG	Eb, Gb	feature:	486A	# moved to 0FB0 in 486b
+0FA7	386	XBTS	Gz, Ez	feature:	386B0	# removed in 386b1
+0FA7	486	CMPXCHG	Ev, Gv	feature:	486A	# moved to 0FB1 in 486b
+
+0FA8	386+	PUSH	GS
+0FA9	386+	POP	GS
+0FAA	386+	RSM
+0FAB	386+	BTS	Ev, Gv
+0FAC	386+	SHRD	Ev, Gv, Ib
+0FAD	386+	SHRD	Ev, Gv, CL
+NP0FAE/0	586+	FXSAVE/FXSAVE64	M	feature:	FXSR	# TODO: parser generator does not generate it
+F30FAE/0	64,586+	RDFSBASE	Ry	feature:	FSGSBASE
+NP0FAE/1	586+	FXRSTOR/FXRSTOR64	M	feature:	FXSR	# TODO: parser generator does not generate it
+F30FAE/1	64,586+	RDGSBASE	Ry	feature:	FSGSBASE
+F30FAE/2	64,586+	WRFSBASE	Ry	feature:	FSGSBASE
+F30FAE/3	64,586+	WRGSBASE	Ry	feature:	FSGSBASE
+#0FAE/4
+#0FAE/5
+#0FAE/6
+#0FAE/7
+0FAF	386+	IMUL	Gv, Ev
+
+0FB0	486+	CMPXCHG	Eb, Gb	feature:	!486A
+0FB1	486+	CMPXCHG	Ev, Gv	feature:	!486A
+0FB2	386+	LSS	Gv, Mp
+0FB3	386+	BTR	Ev, Gv
+0FB4	386+	LFS	Gv, Mp
+0FB5	386+	LGS	Gv, Mp
+0FB6	386+	MOVZX	Gv, Eb
+0FB7	386+	MOVZX	Gv, Ew
+
+0FB8	586+	JMPE	Jz	feature:	IA64,!POPCNT
+F30FB8	586+	POPCNT	Gv, Ev	feature:	POPCNT
+0FB9	286+	UD1
+#0FBA/0
+#0FBA/1
+#0FBA/2
+#0FBA/3
+0FBA/4	386+	BT	Ev, Ib
+0FBA/5	386+	BTS	Ev, Ib
+0FBA/6	386+	BTR	Ev, Ib
+0FBA/7	386+	BTC	Ev, Ib
+0FBB	386+	BTC	Ev, Gv
+0FBC	386+	BSF	Gv, Ev
+F30FBC	586+	TZCNT	Gv, Ev	feature:	BMI1
+0FBD	386+	BSR	Gv, Ev
+F30FBD	586+	LZCNT	Gv, Ev	feature:	LZCNT
+0FBE	386+	MOVSX	Gv, Eb
+0FBF	386+	MOVSX	Gv, Ew
+
+0FC0	486+	XADD	Eb, Gb
+0FC1	486+	XADD	Ev, Gv
+#0FC2
+#0FC3
+#0FC4
+#0FC5
+#0FC6
+#0FC7/0
+0FC7/1	586+	CMPXCHG8B/CMPXCHG16B	Mq/Mo	feature:	CX8/CX16
+#0FC7/2
+#0FC7/3
+#0FC7/4
+#0FC7/5
+0FC7/6	586+	RDRAND	Rv	feature:	RDRAND
+0FC7/7	586+	RDSEED	Rv	feature:	RDSEED
+
+0FC8	486+	BSWAP	r0
+0FC9	486+	BSWAP	r1
+0FCA	486+	BSWAP	r2
+0FCB	486+	BSWAP	r3
+0FCC	486+	BSWAP	r4
+0FCD	486+	BSWAP	r5
+0FCE	486+	BSWAP	r6
+0FCF	486+	BSWAP	r7
+
+#0FD0
+#0FD1
+#0FD2
+#0FD3
+#0FD4
+#0FD5
+#0FD6
+#0FD7
+
+#0FD8
+#0FD9
+#0FDA
+#0FDB
+#0FDC
+#0FDD
+#0FDE
+#0FDF
+
+0FE0	v33	BRKXA	Ub
+0FE0	v55	QHOUT	Iw
+0FE1	v55	QOUT	Iw
+0FE2	v55	QTIN	Iw
+#0FE3
+#0FE4
+#0FE5
+#0FE6
+#0FE7
+
+#0FE8
+#0FE9
+#0FEA
+#0FEB
+#0FEC
+#0FED
+#0FEE
+#0FEF
+
+0FF0	v33	RETXA	Ub
+#0FF1
+#0FF2
+#0FF3
+#0FF4
+#0FF5
+#0FF6
+#0FF7
+
+#0FF8
+#0FF9
+#0FFA
+#0FFB
+#0FFC
+#0FFD
+0FFE	9002	BRKEM2	Ub
+0FFF	v20+,ext	BRKEM	Ub
+0FFF	286+,!ext	UD0
+
+0F2763	ext	DS2:	# extension (V55)
+0F2764	ext	REPNC:	# extension (NEC)
+0F2765	ext	REPC:	# extension (NEC)
+0F27D6	ext	DS3:	# extension (V55)
+0F27F1	ext	IRAM:	# extension (V55)
+0F2736	ext	MOV	DS3, Gw, Mp	# extension (V55)
+0F2776	ext	PUSH	DS3	# extension (V55)
+0F2777	ext	POP	DS3	# extension (V55)
+0F277E	ext	PUSH	DS2	# extension (V55)
+0F277F	ext	POP	DS2	# extension (V55)
+
+#### FPU instructions
+
+D8/0	87+	FADD	mem32real
+D8/0	87+	FADD	ST, ST(i)
+D8/1	87+	FMUL	mem32real
+D8/1	87+	FMUL	ST, ST(i)
+D8/2	87+	FCOM	mem32real
+D8/2	87+	FCOM	ST(i)
+D8/3	87+	FCOMP	mem32real
+D8/3	87+	FCOMP	ST(i)
+D8/4	87+	FSUB	mem32real
+D8/4	87+	FSUB	ST, ST(i)
+D8/5	87+	FSUBR	mem32real
+D8/5	87+	FSUBR	ST, ST(i)
+D8/6	87+	FDIV	mem32real
+D8/6	87+	FDIV	ST, ST(i)
+D8/7	87+	FDIVR	mem32real
+D8/7	87+	FDIVR	ST, ST(i)
+
+D9/0	87+	FLD	mem32real
+D9/0	87+	FLD	ST(i)
+D9/1	72091	FLDENVA	M
+D9/1	87+	FXCH	ST(i)
+D9/2	87+	FST	mem32real
+D9D0	87+	FNOP
+D9/3	87+	FSTP	mem32real
+D9/3	87+	FSTP	ST(i)
+D9/4	87+	FLDENV	M14/M28
+D9E0	87+	FCHS
+D9E1	87+	FABS
+D9E4	87+	FTST
+D9E5	87+	FXAM
+D9E6	emc87	FTSTP
+D9/5	87+	FLDCW	Mw
+D9E8	87+	FLD1
+D9E9	87+	FLDL2T
+D9EA	87+	FLDL2E
+D9EB	87+	FLDPI
+D9EC	87+	FLDLG2
+D9ED	87+	FLDLN2
+D9EE	87+	FLDZ
+D9EF	72091	FLDDTR
+D9/6	87+	FNSTENV	M14/M28
+D9F0	87+	F2XM1
+D9F1	87+	FYL2X
+D9F2	87+	FPTAN
+D9F3	87+	FPATAN
+D9F4	87+	FXTRACT
+D9F5	387+	FPREM1
+D9F6	87+	FDECSTP
+D9F7	87+	FINCSTP
+D9/7	87+	FNSTCW	Mw
+D9F8	87+	FPREM
+D9F9	87+	FYL2XP1
+D9FA	87+	FSQRT
+D9FB	387+	FSINCOS
+D9FB	72091	FREM
+D9FC	87+	FRNDINT
+D9FD	387+	FSCALE
+D9FE	387+	FSIN
+D9FF	387+	FCOS
+
+DA/0	87+	FIADD	Md
+DA/0	487+	FCMOVB	ST, ST(i)
+DA/1	87+	FIMUL	Md
+DA/1	487+	FCMOVE	ST, ST(i)
+DA/2	87+	FICOM	Md
+DA/2	487+	FCMOVBE	ST, ST(i)
+DA/3	87+	FICOMP	Md
+DA/3	487+	FCMOVU	ST, ST(i)
+DA/4	87+	FISUB	Md
+DA/5	87+	FISUBR	Md
+DAE9	387+	FUCOMPP
+DA/6	87+	FIDIV	Md
+DA/7	87+	FIDIVR	Md
+
+DB/0	87+	FILD	Md
+DB/0	487+	FCMOVNB	ST, ST(i)
+DBC0	72091	FXP2
+DBC1	72091	FXPT
+DBC2	72091	FXPE
+DBC4	72091	FLGTX
+DBC5	72091	FLGEX
+DB/1	487+	FISTTP	Md
+DB/1	487+	FCMOVNE	ST, ST(i)
+DB/1	72091	FNSTENVA	M
+DBC8	72091	FSIN
+DBC9	72091	FCOS
+DBCA	72091	FTAN
+DBCE	72091	FATAN
+DB/2	87+	FIST	Md
+DB/2	487+	FCMOVNBE	ST, ST(i)
+DBD2	72091	FTANH
+DB/3	87+	FISTP	Md
+DB/3	487+	FCMOVNU	ST, ST(i)
+DBE0	87+	FNENI
+DBE1	87+	FNDISI
+DBE2	87+	FNCLEX
+DBE3	87+	FNINIT
+DBE4	287+	FSETPM
+#DBE5	287	FRSTPM		feature:	287XL	# Note: OPCODE.TXT claims this is the instruction location, but Intel documentation disagrees
+DB/5	87+	FLD	mem80real
+DB/5	487+	FUCOMI	ST, ST(i)
+DBF4	287	FRSTPM		feature:	287XL
+DB/6	487+	FCOMI	ST, ST(i)
+DB/7	87+	FSTP	mem80real
+DBFC	emc87	FRINT2
+
+DBE8	iit	FSBP0
+DBE9	iit	FSBP3
+DBEA	iit	FSBP2
+DBEB	iit	FSBP1
+DBF1	iit	F4X4
+
+DC/0	87+	FADD	mem64real
+DC/0	87+	FADD	ST(i), ST
+DC/1	87+	FMUL	mem64real
+DC/1	87+	FMUL	ST(i), ST
+DC/2	87+	FCOM	mem64real
+DC/2	87+	FCOM	ST(i)
+DC/3	87+	FCOMP	mem64real
+DC/3	87+	FCOMP	ST(i)
+DC/4	87+	FSUB	mem64real
+DC/4	87+	FSUBR	ST(i), ST
+DC/5	87+	FSUBR	mem64real
+DC/5	87+	FSUB	ST(i), ST
+DC/6	87+	FDIV	mem64real
+DC/6	87+	FDIVR	ST(i), ST
+DC/7	87+	FDIVR	mem64real
+DC/7	87+	FDIV	ST(i), ST
+
+DD/0	87+	FLD	mem64real
+DD/0	87+	FFREE	ST(i)
+DD/1	487+	FISTTP	Md
+DD/1	87+	FXCH	ST(i)
+DD/1	72091	FRSTORA	M
+DD/2	87+	FST	mem64real
+DD/2	87+	FST	ST(i)
+DD/3	87+	FSTP	mem64real
+DD/3	87+	FSTP	ST(i)
+DD/4	87+	FRSTOR	M94/M108
+DD/4	387+	FUCOM	ST(i)
+DD/5	387+	FUCOMP	ST(i)
+DD/5	72091	FLDCWA	M
+DD/6	87+	FNSAVE	M94/M108
+DD/7	87+	FNSTSW	Mw
+DDFC	emc87	FRICHOP
+
+DE/0	87+	FIADD	Mw
+DE/0	87+	FADDP	ST(i), ST
+DE/1	87+	FIMUL	Mw
+DE/1	87+	FMULP	ST(i), ST
+DE/2	87+	FICOM	Mw
+DE/2	87+	FCOMP	ST(i)
+DE/3	87+	FICOMP	Mw
+DED9	87+	FCOMPP
+DE/4	87+	FISUB	Mw
+DE/4	87+	FSUBRP	ST(i), ST
+DE/5	87+	FISUBR	Mw
+DE/5	87+	FSUBP	ST(i), ST
+DE/6	87+	FIDIV	Mw
+DE/6	87+	FDIVRP	ST(i), ST
+DE/7	87+	FIDIVR	Mw
+DE/7	87+	FDIVP	ST(i), ST
+
+DF/0	87+	FILD	Md
+DF/0	87+	FFREEP	ST(i)
+DF/1	487+	FISTTP	Md
+DF/1	87+	FXCH	ST(i)
+DF/1	72091	FNSAVEA	M
+DF/2	87+	FIST	Md
+DF/2	87+	FSTP	ST(i)
+DF/3	87+	FISTP	Md
+DF/3	87+	FSTP	ST(i)
+DF/4	87+	FBLD	mem80dec
+DFE0	287+	FNSTSW	AX
+DFE1	387	FSTDW	AX	feature:	387SL
+DFE2	387	FSTSG	AX	feature:	387SL
+DF/5	87+	FILD	Md
+DF/5	487+	FUCOMIP	ST, ST(i)
+DF/6	87+	FBSTP	mem80dec
+DF/6	487+	FCOMIP	ST, ST(i)
+DF/7	87+	FISTP	Md
+DFFC	emc87	FRINEAR
+
+#### 8-bit instructions (8080/8085/Z80)
+00	i80+	NOP
+01	i80+	LD	BC, Iw	intel:	LXI	B, Iw
+02	i80+	LD	(BC), A	intel:	STAX	B
+03	i80+	INC	BC	intel:	INX	B
+04	i80+	INC	B	intel:	INR	B
+05	i80+	DEC	B	intel:	DCR	B
+06	i80+	LD	B, Ib	intel:	MVI	B, Ib
+07	i80+	RLCA	-	intel:	RLC
+
+08	i80	NOP
+08	z80	EX	AF, AF'
+08	i85	DSUB
+09	i80+	ADD	HL, BC	intel:	DAD	B
+0A	i80+	LD	A, (BC)	intel:	LDAX	B
+0B	i80+	DEC	BC	intel:	DCX	B
+0C	i80+	INC	C	intel:	INR	C
+0D	i80+	DEC	C	intel:	DCR	C
+0E	i80+	LD	C, Ib	intel:	MVI	C, Ib
+0F	i80+	RRCA	-	intel:	RRC
+
+10	i80	NOP
+10	z80	DJNZ	Jb
+10	i85	ARHL
+11	i80+	LD	DE, Iw	intel:	LXI	D, Iw
+12	i80+	LD	(DE), A	intel:	STAX	D
+13	i80+	INC	DE	intel:	INX	D
+14	i80+	INC	D	intel:	INR	D
+15	i80+	DEC	D	intel:	DCR	D
+16	i80+	LD	D, Ib	intel:	MVI	D, Ib
+17	i80+	RLA	-	intel:	RAL
+
+18	i80	NOP
+18	z80	JR	Jb
+18	i85	RDEL
+19	i80+	ADD	HL, DE	intel:	DAD	D
+1A	i80+	LD	A, (DE)	intel:	LDAX	D
+1B	i80+	DEC	DE	intel:	DCX	D
+1C	i80+	INC	E	intel:	INR	E
+1D	i80+	DEC	E	intel:	DCR	E
+1E	i80+	LD	E, Ib	intel:	MVI	E, Ib
+1F	i80+	RRA	-	intel:	RAR
+
+20	i80	NOP
+20	z80	JR	NZ, Jb
+20	i85	RIM
+21	i80+	LD	HL, Iw	intel:	LXI	H, Iw
+22	i80+	LD	(Iw), HL	intel:	SHLD	Iw
+23	i80+	INC	HL	intel:	INX	H
+24	i80+	INC	H	intel:	INR	H
+25	i80+	DEC	H	intel:	DCR	H
+26	i80+	LD	H, Ib	intel:	MVI	H, Ib
+27	i80+	DAA
+
+28	i80	NOP
+28	z80	JR	Z, Jb
+28	i85	LDHI	Ib
+29	i80+	ADD	HL, HL	intel:	DAD	H
+2A	i80+	LD	HL, (Iw)	intel:	LHLD	Iw
+2B	i80+	DEC	HL	intel:	DCX	H
+2C	i80+	INC	L	intel:	INR	L
+2D	i80+	DEC	L	intel:	DCR	L
+2E	i80+	LD	L, Ib	intel:	MVI	L, Ib
+2F	i80+	CPL	-	intel:	CMA
+
+30	i80	NOP
+30	z80	JR	NC, Jb
+30	i85	SIM
+31	i80+	LD	SP, Iw	intel:	LXI	SP, Iw
+32	i80+	LD	(Iw), A	intel:	STA	Iw
+33	i80+	INC	SP	intel:	INX	SP
+34	i80+	INC	(HL)	intel:	INR	M
+35	i80+	DEC	(HL)	intel:	DCR	M
+36	i80+	LD	(HL), Ib	intel:	MVI	M, Ib
+37	i80+	SCF	-	intel:	STC
+
+38	i80	NOP
+38	z80	JR	C, Jb
+38	i85	LDSI	Ib
+39	i80+	ADD	HL, SP	intel:	DAD	SP
+3A	i80+	LD	A, (Iw)	intel:	LDA	Iw
+3B	i80+	DEC	SP	intel:	DCX	SP
+3C	i80+	INC	A	intel:	INR	A
+3D	i80+	DEC	A	intel:	DCR	A
+3E	i80+	LD	A, Ib	intel:	MVI	A, Ib
+3F	i80+	CCF	-	intel:	CMC
+
+40	i80+	LD	B, B	intel:	MOV	B, B
+41	i80+	LD	B, C	intel:	MOV	B, C
+42	i80+	LD	B, D	intel:	MOV	B, D
+43	i80+	LD	B, E	intel:	MOV	B, E
+44	i80+	LD	B, H	intel:	MOV	B, H
+45	i80+	LD	B, L	intel:	MOV	B, L
+46	i80+	LD	B, (HL)	intel:	MOV	B, M
+47	i80+	LD	B, A	intel:	MOV	B, A
+
+48	i80+	LD	C, B	intel:	MOV	C, B
+49	i80+	LD	C, C	intel:	MOV	C, C
+4A	i80+	LD	C, D	intel:	MOV	C, D
+4B	i80+	LD	C, E	intel:	MOV	C, E
+4C	i80+	LD	C, H	intel:	MOV	C, H
+4D	i80+	LD	C, L	intel:	MOV	C, L
+4E	i80+	LD	C, (HL)	intel:	MOV	C, M
+4F	i80+	LD	C, A	intel:	MOV	C, A
+
+50	i80+	LD	D, B	intel:	MOV	D, B
+51	i80+	LD	D, C	intel:	MOV	D, C
+52	i80+	LD	D, D	intel:	MOV	D, D
+53	i80+	LD	D, E	intel:	MOV	D, E
+54	i80+	LD	D, H	intel:	MOV	D, H
+55	i80+	LD	D, L	intel:	MOV	D, L
+56	i80+	LD	D, (HL)	intel:	MOV	D, M
+57	i80+	LD	D, A	intel:	MOV	D, A
+
+58	i80+	LD	E, B	intel:	MOV	E, B
+59	i80+	LD	E, C	intel:	MOV	E, C
+5A	i80+	LD	E, D	intel:	MOV	E, D
+5B	i80+	LD	E, E	intel:	MOV	E, E
+5C	i80+	LD	E, H	intel:	MOV	E, H
+5D	i80+	LD	E, L	intel:	MOV	E, L
+5E	i80+	LD	E, (HL)	intel:	MOV	E, M
+5F	i80+	LD	E, A	intel:	MOV	E, A
+
+60	i80+	LD	H, B	intel:	MOV	H, B
+61	i80+	LD	H, C	intel:	MOV	H, C
+62	i80+	LD	H, D	intel:	MOV	H, D
+63	i80+	LD	H, E	intel:	MOV	H, E
+64	i80+	LD	H, H	intel:	MOV	H, H
+65	i80+	LD	H, L	intel:	MOV	H, L
+66	i80+	LD	H, (HL)	intel:	MOV	H, M
+67	i80+	LD	H, A	intel:	MOV	H, A
+
+68	i80+	LD	L, B	intel:	MOV	L, B
+69	i80+	LD	L, C	intel:	MOV	L, C
+6A	i80+	LD	L, D	intel:	MOV	L, D
+6B	i80+	LD	L, E	intel:	MOV	L, E
+6C	i80+	LD	L, H	intel:	MOV	L, H
+6D	i80+	LD	L, L	intel:	MOV	L, L
+6E	i80+	LD	L, (HL)	intel:	MOV	L, M
+6F	i80+	LD	L, A	intel:	MOV	L, A
+
+70	i80+	LD	(HL), B	intel:	MOV	M, B
+71	i80+	LD	(HL), C	intel:	MOV	M, C
+72	i80+	LD	(HL), D	intel:	MOV	M, D
+73	i80+	LD	(HL), E	intel:	MOV	M, E
+74	i80+	LD	(HL), H	intel:	MOV	M, H
+75	i80+	LD	(HL), L	intel:	MOV	M, L
+76	i80+	HALT	-	intel:	HALT
+77	i80+	LD	(HL), A	intel:	MOV	M, A
+
+78	i80+	LD	A, B	intel:	MOV	A, B
+79	i80+	LD	A, C	intel:	MOV	A, C
+7A	i80+	LD	A, D	intel:	MOV	A, D
+7B	i80+	LD	A, E	intel:	MOV	A, E
+7C	i80+	LD	A, H	intel:	MOV	A, H
+7D	i80+	LD	A, L	intel:	MOV	A, L
+7E	i80+	LD	A, (HL)	intel:	MOV	A, M
+7F	i80+	LD	A, A	intel:	MOV	A, A
+
+80	i80+	ADD	A, B	intel:	ADD	B
+81	i80+	ADD	A, C	intel:	ADD	C
+82	i80+	ADD	A, D	intel:	ADD	D
+83	i80+	ADD	A, E	intel:	ADD	E
+84	i80+	ADD	A, H	intel:	ADD	H
+85	i80+	ADD	A, L	intel:	ADD	L
+86	i80+	ADD	A, (HL)	intel:	ADD	M
+87	i80+	ADD	A, A	intel:	ADD	A
+
+88	i80+	ADC	A, B	intel:	ADC	B
+89	i80+	ADC	A, C	intel:	ADC	C
+8A	i80+	ADC	A, D	intel:	ADC	D
+8B	i80+	ADC	A, E	intel:	ADC	E
+8C	i80+	ADC	A, H	intel:	ADC	H
+8D	i80+	ADC	A, L	intel:	ADC	L
+8E	i80+	ADC	A, (HL)	intel:	ADC	M
+8F	i80+	ADC	A, A	intel:	ADC	A
+
+90	i80+	SUB	B	intel:	SUB	B
+91	i80+	SUB	C	intel:	SUB	C
+92	i80+	SUB	D	intel:	SUB	D
+93	i80+	SUB	E	intel:	SUB	E
+94	i80+	SUB	H	intel:	SUB	H
+95	i80+	SUB	L	intel:	SUB	L
+96	i80+	SUB	(HL)	intel:	SUB	M
+97	i80+	SUB	A	intel:	SUB	A
+
+98	i80+	SBC	A, B	intel:	SBB	B
+99	i80+	SBC	A, C	intel:	SBB	C
+9A	i80+	SBC	A, D	intel:	SBB	D
+9B	i80+	SBC	A, E	intel:	SBB	E
+9C	i80+	SBC	A, H	intel:	SBB	H
+9D	i80+	SBC	A, L	intel:	SBB	L
+9E	i80+	SBC	A, (HL)	intel:	SBB	M
+9F	i80+	SBC	A, A	intel:	SBB	A
+
+A0	i80+	AND	B	intel:	ANA	B
+A1	i80+	AND	C	intel:	ANA	C
+A2	i80+	AND	D	intel:	ANA	D
+A3	i80+	AND	E	intel:	ANA	E
+A4	i80+	AND	H	intel:	ANA	H
+A5	i80+	AND	L	intel:	ANA	L
+A6	i80+	AND	(HL)	intel:	ANA	M
+A7	i80+	AND	A	intel:	ANA	A
+
+A8	i80+	XOR	B	intel:	XRA	B
+A9	i80+	XOR	C	intel:	XRA	C
+AA	i80+	XOR	D	intel:	XRA	D
+AB	i80+	XOR	E	intel:	XRA	E
+AC	i80+	XOR	H	intel:	XRA	H
+AD	i80+	XOR	L	intel:	XRA	L
+AE	i80+	XOR	(HL)	intel:	XRA	M
+AF	i80+	XOR	A	intel:	XRA	A
+
+B0	i80+	OR	B	intel:	ORA	B
+B1	i80+	OR	C	intel:	ORA	C
+B2	i80+	OR	D	intel:	ORA	D
+B3	i80+	OR	E	intel:	ORA	E
+B4	i80+	OR	H	intel:	ORA	H
+B5	i80+	OR	L	intel:	ORA	L
+B6	i80+	OR	(HL)	intel:	ORA	M
+B7	i80+	OR	A	intel:	ORA	A
+
+B8	i80+	CP	B	intel:	CMP	B
+B9	i80+	CP	C	intel:	CMP	C
+BA	i80+	CP	D	intel:	CMP	D
+BB	i80+	CP	E	intel:	CMP	E
+BC	i80+	CP	H	intel:	CMP	H
+BD	i80+	CP	L	intel:	CMP	L
+BE	i80+	CP	(HL)	intel:	CMP	M
+BF	i80+	CP	A	intel:	CMP	A
+
+C0	i80+	RET	NZ	intel:	RNZ
+C1	i80+	POP	BC	intel:	POP	B
+C2	i80+	JP	NZ, Iw	intel:	JNZ	Iw
+C3	i80+	JP	Iw	intel:	JMP	Iw
+C4	i80+	CALL	NZ, Iw	intel:	CNZ	Iw
+C5	i80+	PUSH	BC	intel:	PUSH	B
+C6	i80+	ADD	A, Ib	intel:	ADI	Ib
+C7	i80+	RST	00h	intel:	RST	0
+
+C8	i80+	RET	Z	intel:	RZ
+C9	i80+	RET
+CA	i80+	JP	Z, Iw	intel:	JZ	Iw
+CB	i80	JP	Iw	intel:	JMP	Iw
+CB	z80	bits
+CB	i85	RSTV
+CC	i80+	CALL	Z, Iw	intel:	CZ	Iw
+CD	i80+	CALL	Iw
+CE	i80+	ADC	A, Ib	intel:	ACI	Ib
+CF	i80+	RST	08h	intel:	RST	1
+
+D0	i80+	RET	NC	intel:	RNC
+D1	i80+	POP	DE	intel:	POP	D
+D2	i80+	JP	NC, Iw	intel:	JNC	Iw
+D3	i80+	OUT	(Ib), A	intel:	OUT	Ib
+D4	i80+	CALL	NC, Iw	intel:	CNC	Iw
+D5	i80+	PUSH	DE	intel:	PUSH	D
+D6	i80+	SUB	Ib	intel:	SUI	Ib
+D7	i80+	RST	10h	intel:	RST	2
+
+D8	i80+	RET	C	intel:	RC
+D9	i80	RET
+D9	z80	EXX
+D9	i85	SHLX
+DA	i80+	JP	C, Iw	intel:	JC	Iw
+DB	i80+	IN	A, (Ib)	intel:	IN	Ib
+DC	i80+	CALL	C, Iw	intel:	CC	Iw
+DD	i80	CALL	Iw	intel:	CALL	Iw
+#DD	z80	IX:
+DD	i85	JNK	Iw
+DE	i80+	SBC	A, Ib	intel:	SBI	Ib
+DF	i80+	RST	18h	intel:	RST	3
+
+E0	i80+	RET	PO	intel:	RPO
+E1	i80+	POP	HL	intel:	POP	H
+E2	i80+	JP	PO, Iw	intel:	JPO	Iw
+E3	i80+	EX	(SP), HL	intel:	XTHL
+E4	i80+	CALL	PO, Iw	intel:	CPO	Iw
+E5	i80+	PUSH	HL	intel:	PUSH	H
+E6	i80+	AND	Ib	intel:	ANI	Ib
+E7	i80+	RST	20h	intel:	RST	4
+
+E8	i80+	RET	PE	intel:	RPE
+E9	i80+	JP	(HL)	intel:	PCHL
+EA	i80+	JP	PE, Iw	intel:	JPE	Iw
+EB	i80+	EX	DE, HL	intel:	XCHG
+EC	i80+	CALL	PE, Iw	intel:	CPE	Iw
+#ED	i80	CALL	Iw	feature:	!EMULATED
+ED	i85	LHLX	-	# TODO: clashes with ED prefix
+EE	i80+	XOR	Ib	intel:	XRI	Ib
+EF	i80+	RST	28h	intel:	RST	5
+
+F0	i80+	RET	P	intel:	RP
+F1	i80+	POP	AF	intel:	POP	PSW
+F2	i80+	JP	P, Iw	intel:	JP	Iw
+F3	i80+	DI
+F4	i80+	CALL	P, Iw	intel:	CP	Iw
+F5	i80+	PUSH	AF	intel:	PUSH	PSw
+F6	i80+	OR	Ib	intel:	ORI	Ib
+F7	i80+	RST	30h	intel:	RST	6
+
+F8	i80+	RET	M	intel:	RM
+F9	i80+	LD	SP, HL	intel:	SPHL
+FA	i80+	JP	M, Iw	intel:	JM	Iw
+FB	i80+	EI
+FC	i80+	CALL	M, Iw	intel:	CM	Iw
+FD	i80	CALL	Iw	intel:	CALL	Iw
+FD	i85	JK	Iw
+#FD	z80	IY:
+FE	i80+	CP	Ib	intel:	CPI	Iw
+FF	i80+	RST	38h	intel:	RST	7
+
+ED40	z80	IN	B, (C)
+ED41	z80	OUT	(C), B
+ED42	z80	SBC	HL, BC
+ED43	z80	LD	(Iw), BC
+ED44	z80	NEG
+ED45	z80	RETN
+ED46	z80	IM	0
+ED47	z80	LD	I, A
+
+ED48	z80	IN	C, (C)
+ED49	z80	OUT	(C), C
+ED4A	z80	ADC	HL, BC
+ED4B	z80	LD	BC, (Iw)
+ED4C	z80	NEG
+ED4D	z80	RETI
+ED4E	z80	IM	0
+ED4F	z80	LD	R, A
+
+ED50	z80	IN	D, (C)
+ED51	z80	OUT	(C), D
+ED52	z80	SBC	HL, DE
+ED53	z80	LD	(Iw), DE
+ED54	z80	NEG
+ED55	z80	RETN
+ED56	z80	IM	1
+ED57	z80	LD	A, I
+
+ED58	z80	IN	E, (C)
+ED59	z80	OUT	(C), E
+ED5A	z80	ADC	HL, DE
+ED5B	z80	LD	DE, (Iw)
+ED5C	z80	NEG
+ED5D	z80	RETN
+ED5E	z80	IM	2
+ED5F	z80	LD	A, R
+
+ED60	z80	IN	H, (C)
+ED61	z80	OUT	(C), H
+ED62	z80	SBC	HL, HL
+ED63	z80	LD	(Iw), HL
+ED64	z80	NEG
+ED65	z80	RETN
+ED66	z80	IM	0
+ED67	z80	RRD
+
+ED68	z80	IN	L, (C)
+ED69	z80	OUT	(C), L
+ED6A	z80	ADC	HL, HL
+ED6B	z80	LD	HL, (Iw)
+ED6C	z80	NEG
+ED6D	z80	RETN
+ED6E	z80	IM	0
+ED6F	z80	RLD
+
+ED70	z80	IN	(C)
+ED71	z80	OUT	(C), 0
+ED72	z80	SBC	HL, SP
+ED73	z80	LD	(Iw), SP
+ED74	z80	NEG
+ED75	z80	RETN
+ED76	z80	IM	1
+
+ED78	z80	IN	A, (C)
+ED79	z80	OUT	(C), A
+ED7A	z80	ADC	HL, SP
+ED7B	z80	LD	SP, (Iw)
+ED7C	z80	NEG
+ED7D	z80	RETN
+ED7E	z80	IM	2
+
+EDA0	z80	LDI
+EDA1	z80	CPI
+EDA2	z80	INI
+EDA3	z80	OUTI
+
+EDA8	z80	LDD
+EDA9	z80	CPD
+EDAA	z80	IND
+EDAB	z80	OUTD
+
+EDB0	z80	LDIR
+EDB1	z80	CPIR
+EDB2	z80	INIR
+EDB3	z80	OTIR
+
+EDB8	z80	LDDR
+EDB9	z80	CPDR
+EDBA	z80	INDR
+EDBB	z80	OTDR
+
+EDED	i80,z80	CALLN	Ib	feature:	EMULATED
+EDFD	i80,z80	RETEM	-	feature:	EMULATED
+
+@instruction AAA
+if(($al & 0xF) > 9 || $af)
+{
+	$ax = ($ax + 0x0106) & 0xFF0F;
+	$af = X86_FL_AF;
+	$cf = X86_FL_CF;
+}
+else
+{
+	$ax = $ax & 0xFF0F;
+	$af = $cf = 0;
+}
+
+@instruction AAD
+if(x86_is_nec(emu))
+	$0 = 10; // set the immediate to 10
+_uint8 al = $al + $0 * $ah;
+$ax = al;
+$zf = _zero8(al);
+$sf = _sign8(al);
+$pf = _parity(al);
+
+@instruction AAM
+if(x86_is_nec(emu))
+	$0 = 10; // set the immediate to 10
+_uint8 al = $al;
+$ah = al / $0;
+al %= $0;
+$al = al;
+$zf = _zero8(al);
+$sf = _sign8(al);
+$pf = _parity(al);
+
+@instruction AAS
+if(($al & 0xF) > 9 || $af)
+{
+	$ax = ($ax - 0x0106) & 0xFF0F;
+	$af = X86_FL_AF;
+	$cf = X86_FL_CF;
+}
+else
+{
+	$ax = $ax & 0xFF0F;
+	$af = $cf = 0;
+}
+
+@instruction ADC
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x + y + $cf;
+$0.$O = z;
+$cf = _add_carry$O(x, y, z);
+$of = _add_overflow$O(x, y, z);
+$af = _add_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction ADD
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x + y;
+$0.$O = z;
+$cf = _add_carry$O(x, y, z);
+$of = _add_overflow$O(x, y, z);
+$af = _add_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction ADD4S
+@comment NEC specific
+$cf = 0;
+for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
+{
+	_uint8 x = _read8(_dst_seg, ($di + i) & 0xFFFF);
+	_uint8 y = _read8(_src_seg, ($si + i) & 0xFFFF);
+	_uint8 z = x + y + $cf;
+	$cf = _add_carry8(x, y, z);
+	$of = _add_overflow8(x, y, z);
+	$af = _add_auxiliary(x, y, z);
+	$zf = _zero8(z);
+	$sf = _sign8(z);
+	$pf = _parity(z);
+	if(z > 0x99 || $cf)
+	{
+		z -= 0x60;
+		$cf = X86_FL_CF;
+	}
+	if((z & 0x0F) > 0x09 || $af)
+	{
+		if((z & 0x0F) > 0x09)
+			$cf = X86_FL_CF;
+		$af = X86_FL_AF;
+	}
+	_write8(_src_seg, ($si + i) & 0xFFFF, z); /* TODO: double check */
+}
+
+@instruction AND
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x & y;
+$0.$O = z;
+$cf = 0;
+//$af = ?;
+$of = 0;
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction ARPL
+_uint16 dst = $0.w;
+_uint16 rpl = $1.w & 7;
+if((dst & 7) < rpl)
+{
+	$zf = X86_FL_ZF;
+	$0.w = (dst & ~7) | rpl;
+}
+else
+{
+	$zf = 0;
+}
+
+@instruction BB0_RESET
+@comment Cyrix specific
+/* TODO: BB0_RESET */
+
+@instruction BB1_RESET
+@comment Cyrix specific
+/* TODO: BB1_RESET */
+
+@instruction BOUND
+_int$O src = $0.$O;
+if(src < (_int$O)$1.$O || src > (_int$O)$1@$O.$O)
+{
+	x86_trigger_interrupt(emu, X86_EXC_BR | X86_EXC_FAULT, 0);
+}
+
+@instruction BRKCS
+@comment NEC specific
+_uint16 flags = $flags;
+x86_set_register_bank_number(emu, $0);
+$bank.w[X86_BANK_PSW_SAVE] = htole16(flags);
+$bank.w[X86_BANK_PC_SAVE] = htole16($ip);
+$if = 0;
+$tf = 0;
+$ip = le16toh($bank.w[X86_BANK_VECTOR_PC]);
+
+@instruction BRKEM
+@comment NEC specific
+_push16($flags);
+_push16($cs);
+_push16($ip);
+/* TODO: extensions */
+_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+emu->md_enabled = true;
+emu->md = 0;
+x86_load_x80_registers(emu);
+
+@instruction BRKEM2
+@comment NEC specific, also mentioned as BRKFEM
+_push16($flags);
+_push16($cs);
+_push16($ip);
+/* TODO: extensions */
+_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+emu->md_enabled = true;
+emu->md = 0;
+x86_load_x80_registers(emu);
+emu->full_z80_emulation = true;
+
+@instruction BRKN
+@comment NEC specific
+/* TODO: BRKN */
+
+@instruction BRKS
+@comment NEC specific
+/* TODO: BRKS */
+
+@instruction BRKXA
+@comment NEC specific
+uint16_t pc = x86_memory_read16(emu, $0 * 4);
+uint16_t ps = x86_memory_read16(emu, $0 * 4 + 4);
+emu->v33_xam |= X86_XAM_XA;
+$ip = pc;
+$cs = ps;
+
+@instruction BSCH
+@comment NEC specific
+_uint$O x = $0.$O;
+if(x == 0)
+{
+	$cl = $O - 1;
+	$zf = X86_FL_ZF;
+}
+else
+{
+	int i;
+	for(i = 0; i < $O && (x & 1); i++, x >>= 1)
+		;
+	$cl = i;
+	$zf = 0;
+}
+
+@instruction BSF
+_uint$O x = $1.$O;
+$zf = _zero$O(x);
+if(x != 0)
+{
+	for(unsigned n = 0; ; x >>= 1, n++)
+	{
+		if((x & 1))
+		{
+			$0.$O = n;
+		}
+	}
+}
+/* otherwise, result undefined */
+
+@instruction BSR
+_uint$O x = $1.$O;
+$zf = _zero$O(x);
+if(x != 0)
+{
+	for(unsigned n = $O - 1; ; n--)
+	{
+		if(((x >> n) & 1))
+		{
+			$0.$O = n;
+		}
+	}
+}
+/* otherwise, result undefined */
+
+@instruction BSWAP|op=w
+if(emu->cpu_type == X86_CPU_486)
+{
+	$0.$O = $0.l >> 16;
+}
+else
+{
+	$0.$O = 0;
+}
+
+@instruction BSWAP|op=q|op=l
+$0.$O = x86_bswap$O($0.$O);
+
+@instruction BT|mod=r
+/* TODO: what if value exceeds maximum? do immediate bits get removed? */
+$cf = ($0.$O >> $1.$O) & 1;
+
+@instruction BT|mod=m
+_uint$O offset = $1.$O;
+$0.off += (offset >> 3);
+$cf = ($0.$O >> (offset & 7)) & 1;
+
+@instruction BTC|mod=r
+/* TODO: what if value exceeds maximum? do immediate bits get removed? */
+_uint$O offset = $1.$O;
+_uint$O regval = $0.$O;
+$cf = (regval >> offset) & 1;
+$0.$O = regval ^ (1 << offset);
+
+@instruction BTC|mod=m
+_uint$O offset = $1.$O;
+$0.off += (offset >> 3);
+offset &= 7;
+_uint8 memval = $0.b;
+$cf = (memval >> offset) & 1;
+$0.b = memval ^ (1 << offset);
+
+@instruction BTR|mod=r
+/* TODO: what if value exceeds maximum? do immediate bits get removed? */
+_uint$O offset = $1.$O;
+_uint$O regval = $0.$O;
+$cf = (regval >> offset) & 1;
+$0.$O = regval & ~(1 << offset);
+
+@instruction BTR|mod=m
+_uint$O offset = $1.$O;
+$0.off += (offset >> 3);
+offset &= 7;
+_uint8 memval = $0.b;
+$cf = (memval >> offset) & 1;
+$0.b = memval & ~(1 << offset);
+
+@instruction BTS|mod=r
+/* TODO: what if value exceeds maximum? do immediate bits get removed? */
+_uint$O offset = $1.$O;
+_uint$O regval = $0.$O;
+$cf = (regval >> offset) & 1;
+$0.$O = regval | (1 << offset);
+
+@instruction BTS|mod=m
+_uint$O offset = $1.$O;
+$0.off += (offset >> 3);
+offset &= 7;
+_uint8 memval = $0.b;
+$cf = (memval >> offset) & 1;
+$0.b = memval | (1 << offset);
+
+@instruction BTCLR
+@comment NEC specific
+if(x86_sfr_get(emu, $0 + 0x100) & (1 << ($1 & 7)))
+{
+	$rip = (_uint$O)$2.$O;
+}
+
+@instruction BTCLRL
+@comment NEC specific
+if(x86_sfr_get(emu, $0) & (1 << ($1 & 7)))
+{
+	$rip = (_uint$O)$2.$O;
+}
+
+@instruction CALL
+_push$O($rip);
+$rip = (_uint$O)$0.$O;
+
+@instruction CALLF|op=w|op=l
+_callf$O($0@$O.w, (_uint$O)$0.$O);
+
+@instruction CALLF|op=q
+if(x86_is_intel64(emu))
+{
+	_callf$O($0@q.w, (_uint64)$0.q);
+}
+else
+{
+	_callf$O($0@l.w, (_uint32)$0.l);
+}
+
+@instruction CBW/CWDE/CDQE
+$ax.$O = (_int$Ohalf)$ax.$Ohalf;
+
+@instruction CWD/CDQ/CQO
+$dx.$O = (_int$O)$ax.$O < 0 ? -1 : 1;
+
+@instruction CLAC
+$ac = 0;
+
+@instruction CLC
+$cf = 0;
+
+@instruction CLD
+$df = 0;
+
+@instruction CLI
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+if((emu->cr[0] & X86_CR0_PE) == 0 || emu->iopl >= $cpl)
+{
+	$if = 0;
+}
+else if(emu->vm ? (emu->cr[4] & X86_CR4_VME) != 0 : ((emu->cr[4] & X86_CR4_PVI) != 0 && $cpl == 3))
+{
+	emu->vif = 0;
+}
+else
+{
+	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+}
+
+@instruction CLR1
+@comment NEC specific
+$0.$O = $0.$O & ~(1 << ($1.b & ($O - 1)));
+
+@instruction CLTS
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+emu->cr[0] &= ~X86_CR0_TS;
+
+@instruction CMC
+emu->cf ^= X86_FL_CF;
+
+@instruction CMOVcc
+if(X86_CHECK_$C(emu))
+	$0.$O = $1.$O;
+
+@instruction CMP
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x - y;
+$cf = _sub_carry$O(x, y, z);
+$of = _sub_overflow$O(x, y, z);
+$af = _sub_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction CMP4S
+@comment NEC specific
+$cf = 0;
+for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
+{
+	_uint8 x = _read8(_dst_seg, ($di + i) & 0xFFFF);
+	_uint8 y = _read8(_src_seg, ($si + i) & 0xFFFF);
+	_uint8 z = x - y - $cf;
+	$cf = _sub_carry8(x, y, z);
+	$of = _sub_overflow8(x, y, z);
+	$af = _sub_auxiliary(x, y, z);
+	$zf = _zero8(z);
+	$sf = _sign8(z);
+	$pf = _parity(z);
+	if(z > 0x99 || $cf)
+	{
+		z -= 0x60;
+		$cf = X86_FL_CF;
+	}
+	if((z & 0x0F) > 0x09 || $af)
+	{
+		if($al < 0x06)
+			$cf = X86_FL_CF;
+		$af = X86_FL_AF;
+	}
+	else
+	{
+		$af = 0;
+	}
+}
+
+@instruction CMPS
+_uint$O x = _read$O(_src_seg, $si.$A), y = _read$O(_dst_seg, $di.$A);
+_uint$O z = x - y;
+$cf = _sub_carry$O(x, y, z);
+$of = _sub_overflow$O(x, y, z);
+$af = _sub_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+if($df)
+{
+	$si.$A = $si.$A - ($O >> 3);
+	$di.$A = $di.$A - ($O >> 3);
+}
+else
+{
+	$si.$A = $si.$A + ($O >> 3);
+	$di.$A = $di.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0 && _rep())
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction CMPXCHG
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+_uint$O x = $ax.$O, y = $0.$O;
+_uint$O z = x - y;
+$cf = _sub_carry$O(x, y, z);
+$of = _sub_overflow$O(x, y, z);
+$af = _sub_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+if($zf)
+{
+	$0.$O = $1.$O;
+}
+else
+{
+	$ax.$O = $0.$O;
+}
+
+@instruction CMPXCHG8B/CMPXCHG16B
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+_uint$O l = $0.$O;
+_uint$O h = $0@$O.$O;
+if($ax.$O == l && $dx.$O == h)
+{
+	$zf = X86_FL_ZF;
+	$0.$O = $bx.$O;
+	$0@$O.$O = $cx.$O;
+}
+else
+{
+	$zf = 0;
+	$ax.$O = l;
+	$dx.$O = h;
+}
+
+@instruction CPU_READ
+@comment Cyrix specific
+/* TODO: CPU_READ */
+
+@instruction CPU_WRITE
+@comment Cyrix specific
+/* TODO: CPU_WRITE */
+
+@instruction CPUID
+x86_cpuid(emu);
+
+@instruction DAA
+if($al > 0x99 || $cf)
+{
+	$al += 0x60;
+	$cf = X86_FL_CF;
+}
+if(($al & 0x0F) > 0x09 || $af)
+{
+	$al += 0x06;
+	$af = X86_FL_AF;
+}
+
+@instruction DAS
+if($al > 0x99 || $cf)
+{
+	$al -= 0x60;
+	$cf = X86_FL_CF;
+}
+if(($al & 0x0F) > 0x09 || $af)
+{
+	if($al < 0x06)
+		$cf = X86_FL_CF;
+	$al -= 0x06;
+	$af = X86_FL_AF;
+}
+else
+{
+	$af = 0;
+}
+
+@instruction DEC
+_uint$O x = $0.$O;
+_uint$O z = x - 1;
+$0.$O = z;
+$of = _sub_overflow$O(x, 0, z);
+$af = _sub_auxiliary(x, 0, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction DIV|op=b
+_uint$O x = $0.$O;
+_uint$Odup ax = $ax;
+if(x == 0) /* TODO: or division overflows */
+{
+	// TODO: on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+$ah = ax / x;
+$al = ax % x;
+
+@instruction DIV|op=w|op=l
+_uint$O x = $0.$O;
+_uint$Odup dxax = $ax.$O | ((_uint$Odup)$dx.$O << $O);
+if(x == 0) /* TODO: or division overflows */
+{
+	// TODO: on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+$ax.$O = dxax / x;
+$dx.$O = dxax % x;
+
+@instruction DIV|op=q
+_uint$O x = $0.$O;
+_uint$Odup dxax = _cons$Odup($dx.$O, $ax.$O);
+if(x == 0) /* TODO: or division overflows */
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+_uint$O y, z;
+_div$Odup(y, z, dxax, x);
+$ax.$O = y;
+$dx.$O = z;
+
+@instruction DMINT
+@comment Cyrix specific
+if(!x86_dmm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+/* TODO: (Cyrix) DMINT */
+
+@instruction EMMS
+emu->x87.tw = 0xFFFF;
+
+@instruction ENTER
+$1 &= 0x1F;
+_push$O($bp.$O);
+_uint$O sp = $sp.$O;
+if($1 > 1)
+{
+	for(int i = 0; i < $1 - 1; i++)
+	{
+		$bp.$S = $bp.$S - ($O >> 3);
+		_push$O(_read$O(X86_R_SS, $bp.$S));
+	}
+}
+if($1 != 0)
+{
+	_push$O(sp);
+}
+$bp.$S = sp;
+$sp.$S = $sp.$S - $0;
+
+@instruction exit_v20_emulation
+@comment NEC specific
+emu->xip = emu->old_xip + 1;
+x86_v60_exception(emu, V60_EXC_RI);
+
+@instruction EXT
+@comment NEC specific
+_uint8 length = ($1.b & 0xF) + 1;
+_uint8 offset = $0.b & 0xF;
+_uint16 si = $si;
+$ax.$O = x86_bitfield_extract16(emu, _src_seg2, si, offset, length);
+$0.b = (offset + length) & 0xF;
+if((offset + length) >= 16)
+	$si = si + 2;
+
+@instruction FINT
+@comment NEC specific
+switch(emu->cpu_type)
+{
+case X86_CPU_V25:
+	x86_sfr_set(emu, X86_V25_SFR_ISPR, x86_sfr_get(emu, X86_V25_SFR_ISPR) & ~1);
+	break;
+case X86_CPU_V55:
+	x86_sfr_set(emu, X86_V55_SFR_ISPR, x86_sfr_get(emu, X86_V55_SFR_ISPR) & ~1);
+	break;
+default:
+	assert(false);
+}
+
+@instruction HLT
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+$rip = $old_rip; // TODO: should the xIP not point to the next instruction? hard to return from interrupts
+emu->halted = true;
+emu->emulation_result = X86_RESULT(X86_RESULT_HALT, 0);
+
+@instruction IBTS
+@comment Obsolete Intel instruction
+x86_bitfield_insert$O(emu, _seg, _off, $ax.$O, $cl, $0.$O);
+
+@instruction IDIV|op=b
+_int$O x = $0.$O;
+_int$Odup ax = $ax;
+if(x == 0) /* TODO: or division overflows */
+{
+	// TODO: on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+$ah = ax / x;
+$al = ax % x;
+
+@instruction IDIV|op=w|op=l
+_int$O x = $0.$O;
+_int$Odup dxax = $ax.$O | ((_int$Odup)$dx.$O << $O);
+if(x == 0) /* TODO: or division overflows */
+{
+	// TODO: on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+$ax.$O = dxax / x;
+$dx.$O = dxax % x;
+
+@instruction IDIV|op=q
+_int$O x = $0.$O;
+_int$Odup dxax = _icons$Odup($dx.$O, $ax.$O);
+if(x == 0) /* TODO: or division overflows */
+{
+	// TODO: on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+_uint$O y, z;
+_idiv$Odup(y, z, dxax, x);
+$ax.$O = y;
+$dx.$O = z;
+
+@instruction IMUL|cnt=1 op=b
+_int$O x = $al, y = $0.$O;
+_int$Odup result = (_int$Odup)x * (_int$Odup)y;
+$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$ax = result;
+
+@instruction IMUL|cnt=1 op=w|cnt=1 op=l
+_int$O x = $ax.$O, y = $0.$O;
+_int$Odup result = (_int$Odup)x * (_int$Odup)y;
+$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$ax.$O = result;
+$dx.$O = result >> $O;
+
+@instruction IMUL|cnt=1 op=q
+_int$O x = $ax.$O, y = $0.$O;
+_int$Odup result;
+_imul$Odup(result, x, y);
+$cf = $of = _ioverflow$Odup(result);
+$ax.$O = _low$Odup(result);
+$dx.$O = _high$Odup(result);
+
+@instruction IMUL|cnt=2 op=w|cnt=2 op=l
+_int$O x = $0.$O, y = $1.$O;
+_int$Odup result = (_int$Odup)x * (_int$Odup)y;
+$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$0.$O = result;
+
+@instruction IMUL|cnt=2 op=q
+_int$O x = $0.$O, y = $1.$O;
+_int$Odup result;
+_imul$Odup(result, x, y);
+$cf = $of = _ioverflow$Odup(result);
+$0.$O = _low$Odup(result);
+
+@instruction IMUL|cnt=3 op=w|cnt=3 op=l
+_int$O x = $1.$O, y = $2;
+_int$Odup result = (_int$Odup)x * (_int$Odup)y;
+$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$0.$O = result;
+
+@instruction IMUL|cnt=3 op=q
+_int$O x = $1.$O, y = $2;
+_int$Odup result;
+_imul$Odup(result, x, y);
+$cf = $of = _ioverflow$Odup(result);
+$0.$O = _low$Odup(result);
+
+@instruction IN|op1=ub
+if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+IO_PRIVILEGED();
+emu->io_type = X86_IN_IMM;
+$0.$O = _input$O($1.w);
+
+@instruction IN|op1=dx
+if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+IO_PRIVILEGED();
+emu->io_type = X86_IN_DX;
+$0.$O = _input$O($1.w);
+
+@instruction INC
+_uint$O x = $0.$O;
+_uint$O z = x + 1;
+$0.$O = z;
+$of = _add_overflow$O(x, 0, z);
+$af = _add_auxiliary(x, 0, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction INS|cnt=2
+_uint8 length = ($1.b & 0xF) + 1;
+_uint8 offset = $0.b & 0xF;
+_uint16 di = $di;
+x86_bitfield_insert16(emu, X86_R_ES, di, offset, length, $ax.$O);
+$0.b = (offset + length) & 0xF;
+if((offset + length) >= 16)
+	$di = di + 2;
+
+@instruction INS|cnt=0
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+IO_PRIVILEGED();
+emu->io_type = emu->parser->rep_prefix == X86_PREF_NOREP ? X86_INS : X86_REP_INS;
+emu->io_restart_xdi = $di.$A;
+emu->io_restart_xcx = $cx.$A;
+_write$O(_dst_seg, $di.$A, _input$O($dx));
+if($df)
+{
+	$di.$A = $di.$A - ($O >> 3);
+}
+else
+{
+	$di.$A = $di.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0)
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction INT
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+
+@instruction INT1
+_int(X86_EXC_DB | X86_EXC_INT1, 0);
+
+@instruction INT3
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+_int(X86_EXC_BP | X86_EXC_INT_SW, 0); /* note: fixed */
+
+@instruction INTO
+if($of)
+{
+	_int(X86_EXC_OF | X86_EXC_INT_SW, 0);
+}
+
+@instruction INVD
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+/* TODO: INVD */
+
+@instruction INVLPG
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+/* TODO: INVLPG */
+
+@instruction WBINVD
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+/* TODO: WBINVD */
+
+@instruction IRET
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+_iret$O();
+
+@instruction JMP
+$rip = (_uint$O)$0.$O;
+
+@instruction JMPAI
+@comment VIA specific
+/* TODO: (VIA) JMPAI */
+
+@instruction JMPE
+@comment Intel Itanium specific
+if(!x86_is_ia64(emu))
+	UNDEFINED();
+/* TODO: (ia64) JMPE */
+
+@instruction JMPF|op=w|op=l
+_jmpf($0@$O.w, (_uint$O)$0.$O);
+
+@instruction JMPF|op=q
+if(x86_is_intel64(emu))
+{
+	_jmpf($0@q.w, (_uint64)$0.q);
+}
+else
+{
+	_jmpf($0@l.w, (_uint32)$0.l);
+}
+
+@instruction JrCXZ
+if($cx.$A == 0)
+{
+	$rip = (_uint$O)$0;
+}
+
+@instruction Jcc
+if(X86_CHECK_$C(emu))
+{
+	$rip = (_uint$O)$0;
+}
+
+@instruction LAHF
+$al = $flagsl;
+
+@instruction LAR
+if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+_uint16 selector = $1.w;
+if((selector & ~3) == 0 || selector > emu->sr[selector & 4 ? X86_R_LDTR : X86_R_GDTR].limit)
+{
+	$zf = 0;
+}
+else
+{
+	_uint8 access_rights[4];
+	x86_descriptor_read_selector(emu, selector, 4, access_rights, emu->cpu_type == X86_CPU_286 ? 2 : 4, X86_EXC_GP);
+	_uint8 * descriptor = access_rights - 4;
+	if(x86_descriptor_is_system_segment(descriptor))
+	{
+		switch(x86_descriptor_get_type(descriptor))
+		{
+		case X86_DESC_TYPE_LDT:
+			$zf = X86_FL_ZF;
+			break;
+
+		case X86_DESC_TYPE_TSS32_A:
+		case X86_DESC_TYPE_TSS32_B:
+		case X86_DESC_TYPE_CALLGATE32:
+			// these only exist since the 386
+			$zf = emu->cpu_type != X86_CPU_286;
+			break;
+
+		case X86_DESC_TYPE_TSS16_A:
+		case X86_DESC_TYPE_TSS16_B:
+		case X86_DESC_TYPE_CALLGATE16:
+		case X86_DESC_TYPE_TASKGATE:
+			// these are only supported outside long mode
+			$zf = !x86_is_long_mode(emu);
+			break;
+
+		default:
+			$zf = 0;
+			break;
+		}
+	}
+	else
+	{
+		unsigned dpl = x86_descriptor_get_dpl(descriptor);
+		$zf =
+			(x86_descriptor_is_executable(descriptor) && x86_descriptor_is_conforming(descriptor))
+			|| ((x86_get_cpl(emu) < dpl) && ((selector & 3) < dpl));
+	}
+	if($zf)
+		$0.$O = x86_load_access_rights$O(descriptor);
+}
+
+@instruction MOV|cnt=3 op=w|cnt=3 op=l
+@comment Syntax matches that of NEC CPUs
+@comment LDS, LES, LFS, LGS, LSS fall under here
+_uint$O offset = $2.$O;
+$0 = $2@$O.w;
+$1.$O = offset;
+
+@instruction MOV|cnt=3 op=q
+@comment Syntax matches that of NEC CPUs
+@comment LDS, LES, LFS, LGS, LSS fall under here
+_uint$O offset;
+if(x86_is_intel64(emu))
+{
+	offset = $2.$O;
+	$0 = $2@$O.w;
+}
+else
+{
+	offset = $2.l;
+	$0 = $2@l.w;
+}
+$1.$O = offset;
+
+@instruction LEA
+$0.$O = $1.off;
+
+@instruction LEAVE
+$sp.$S = $bp.$S;
+$bp.$O = _pop$O();
+
+@instruction LGDT|op=w
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+emu->sr[X86_R_GDTR].limit = $0.w;
+emu->sr[X86_R_GDTR].base = $0@w.l & 0x00FFFFFF;
+
+@instruction LGDT|op=l|op=q
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+_uint$O base = $0@w.$O;
+x86_check_canonical_address(emu, NONE, base, 0);
+emu->sr[X86_R_GDTR].limit = $0.w;
+emu->sr[X86_R_GDTR].base = base;
+
+@instruction LIDT|op=w
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+emu->sr[X86_R_IDTR].limit = $0.w;
+emu->sr[X86_R_IDTR].base = $0@w.l & 0x00FFFFFF;
+
+@instruction LIDT|op=l|op=q
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+_uint$O base = $0@w.$O;
+x86_check_canonical_address(emu, NONE, base, 0);
+emu->sr[X86_R_IDTR].limit = $0.w;
+emu->sr[X86_R_IDTR].base = base;
+
+@instruction LLDT
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+x86_ldtr_load(emu, $0.w);
+
+@instruction LMSW
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+if(x86_stay_in_protected_mode(emu))
+	emu->cr[0] = (emu->cr[0] & ~0xE) | ($0.w & 0xF); /* preserve PE */
+else
+	emu->cr[0] = (emu->cr[0] & ~0xF) | ($0.w & 0xF);
+
+@instruction LTR
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+x86_tr_load(emu, $0.w);
+
+@instruction LOADALL286
+PRIVILEGED();
+x86_ice_loadall_286(emu);
+
+@instruction LOADALL386
+if(emu->cpu_type == X86_CPU_486 && emu->cpu_traits.cpu_subtype != X86_CPU_486_486A && emu->cpu_level != X86_LEVEL_ICE)
+{
+	UNDEFINED();
+}
+PRIVILEGED();
+x86_ice_loadall_386(emu, ((_uint32)emu->sr[X86_R_ES].selector << 4) + $edi);
+
+@instruction LODS
+$ax.$O = _read$O(_src_seg, $si.$A);
+if($df)
+{
+	$si.$A = $si.$A - ($O >> 3);
+}
+else
+{
+	$si.$A = $si.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0)
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction LOOP
+$cx.$A = $cx.$A - 1;
+if($cx.$A != 0)
+{
+	$rip = (_uint$O)$0;
+}
+
+@instruction LOOPcc
+$cx.$A = $cx.$A - 1;
+if($cx.$A != 0 && X86_CHECK_$C(emu))
+{
+	$rip = (_uint$O)$0;
+}
+
+@instruction LSL
+if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+_uint16 selector = $1.w;
+if((selector & ~3) == 0 || selector > emu->sr[selector & 4 ? X86_R_LDTR : X86_R_GDTR].limit)
+{
+	$zf = 0;
+}
+else
+{
+	_uint8 descriptor[8];
+	x86_descriptor_read_selector(emu, selector, 0, descriptor, emu->cpu_type == X86_CPU_286 ? 6 : 8, X86_EXC_GP);
+	if(x86_descriptor_is_system_segment(descriptor))
+	{
+		switch(x86_descriptor_get_type(descriptor))
+		{
+		case X86_DESC_TYPE_LDT:
+			$zf = X86_FL_ZF;
+			break;
+
+		case X86_DESC_TYPE_TSS32_A:
+		case X86_DESC_TYPE_TSS32_B:
+		case X86_DESC_TYPE_CALLGATE32:
+			// these only exist since the 386
+			$zf = emu->cpu_type != X86_CPU_286;
+			break;
+
+		case X86_DESC_TYPE_TSS16_A:
+		case X86_DESC_TYPE_TSS16_B:
+		case X86_DESC_TYPE_CALLGATE16:
+		case X86_DESC_TYPE_TASKGATE:
+			// these are only supported outside long mode
+			$zf = !x86_is_long_mode(emu);
+			break;
+
+		default:
+			$zf = 0;
+			break;
+		}
+	}
+	else
+	{
+		unsigned dpl = x86_descriptor_get_dpl(descriptor);
+		$zf =
+			(x86_descriptor_is_executable(descriptor) && x86_descriptor_is_conforming(descriptor))
+			|| ((x86_get_cpl(emu) < dpl) && ((selector & 3) < dpl));
+	}
+	if($zf)
+		$0.$O = x86_descriptor_get_limit(emu, descriptor);
+}
+
+@instruction LZCNT
+_uint$O x = $1.$O;
+int i;
+$zf = 0;
+$cf = X86_FL_CF;
+for(i = 0; i < $O; i++)
+{
+	if((x & (1 << ($O - 1 - i))))
+	{
+		$zf = i == 0;
+		$cf = 0;
+		break;
+	}
+}
+$0.$O = i;
+
+@instruction MOV|op0=sw
+$0.$O = $1.$O;
+if(x86_segment_get_number(emu, _reg) == X86_R_SS)
+	emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
+
+@instruction MOV
+$0.$O = $1.$O;
+
+@instruction MOVBE
+$0.$O = x86_bswap$O($1.$O);
+
+@instruction MOVSPA
+@comment NEC specific
+x86_store_register_bank(emu); /* make sure registers are not cached */
+unsigned old_bank = x86_retrieve_register_bank_number(emu, le16toh($bank.w[X86_BANK_PSW_SAVE]));
+$sp = le16toh(emu->bank[old_bank].w[X86_BANK_SP]);
+$ss = le16toh(emu->bank[old_bank].w[X86_BANK_SS]);
+
+@instruction MOVSPB
+@comment NEC specific
+x86_store_register_bank(emu); /* make sure registers are not cached */
+unsigned new_bank = x86_register_bank_number(emu, $0);
+emu->bank[new_bank].w[X86_BANK_SP] = htole16($sp);
+emu->bank[new_bank].w[X86_BANK_SS] = htole16($ss);
+x86_load_register_bank(emu); /* make sure registers are not cached */
+
+@instruction MOVS
+_write$O(_dst_seg, $di.$A, _read$O(_src_seg, $si.$A));
+if($df)
+{
+	$si.$A = $si.$A - ($O >> 3);
+	$di.$A = $di.$A - ($O >> 3);
+}
+else
+{
+	$si.$A = $si.$A + ($O >> 3);
+	$di.$A = $di.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0)
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction MOVSX
+$0.$O = (_int$1.size)$1;
+
+@instruction MOVSXD
+$0.$O = (_int$1.size)$1;
+
+@instruction MOVZX
+$0.$O = (_uint$1.size)$1;
+
+@instruction MUL|op=b
+_uint$O x = $al, y = $0.$O;
+_uint$Odup result = (_uint$Odup)x * (_uint$Odup)y;
+$cf = $of = result == (_uint$Odup)(_uint$O)result;
+$ax = result;
+
+@instruction MUL|op=w|op=l
+_uint$O x = $ax.$O, y = $0.$O;
+_uint$Odup result = (_uint$Odup)x * (_uint$Odup)y;
+$cf = $of = result == (_uint$Odup)(_uint$O)result;
+$ax.$O = result;
+$dx.$O = result >> $O;
+
+@instruction MUL|op=q
+_uint$O x = $ax.$O, y = $0.$O;
+_uint$Odup result;
+_mul$Odup(result, x, y);
+$cf = $of = _overflow$Odup(result);
+$ax.$O = _low$Odup(result);
+$dx.$O = _high$Odup(result);
+
+@instruction NEG
+_uint$O x = $0.$O;
+_uint$O z = -x;
+$0.$O = z;
+$cf = _sub_carry$O(x, 0, z);
+$of = _sub_overflow$O(x, 0, z);
+$af = _sub_auxiliary(x, 0, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction NOP
+
+@instruction NOT
+$0.$O = ~$0.$O;
+
+@instruction NOT1
+@comment NEC specific
+$0.$O = $0.$O ^ (1 << ($1.b & ($O - 1)));
+
+@instruction OR
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x | y;
+$0.$O = z;
+$cf = 0;
+//$af = ?;
+$of = 0;
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction OUT|op0=ub
+if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+IO_PRIVILEGED();
+emu->io_type = X86_OUT_IMM;
+_output$O($0.w, $1.$O);
+
+@instruction OUT|op0=dx
+if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+IO_PRIVILEGED();
+emu->io_type = X86_OUT_DX;
+_output$O($0.w, $1.$O);
+
+@instruction OUTS
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+IO_PRIVILEGED();
+emu->io_type = emu->parser->rep_prefix == X86_PREF_NOREP ? X86_OUTS : X86_REP_OUTS;
+emu->io_restart_xsi = $si.$A;
+emu->io_restart_xcx = $cx.$A;
+_output$O($dx, _read$O(_src_seg3, $si.$A));
+if($df)
+{
+	$si.$A = $si.$A - ($O >> 3);
+}
+else
+{
+	$si.$A = $si.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0)
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction POP|op0=ss
+$0.$O = _pop$O();
+emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
+
+@instruction POP
+$0.$O = _pop$O();
+
+@instruction POPAd
+$di.$O = _pop$O();
+$si.$O = _pop$O();
+$bp.$O = _pop$O();
+x86_stack_adjust(emu, ($O >> 3));
+$bx.$O = _pop$O();
+$dx.$O = _pop$O();
+$cx.$O = _pop$O();
+$ax.$O = _pop$O();
+
+@instruction POPCNT
+_uint$O x = $1.$O;
+int count = 0;
+for(int i = 0; i < 16; i++)
+{
+	if((x & 1))
+		count ++;
+	x <<= 1;
+}
+$0.$O = count;
+$of = $sf = $af = $cf = $pf = 0;
+$zf = count == 0;
+
+@instruction POPF
+$flags.$O = _pop$O();
+
+@instruction PUSH|op=w op0=r4
+if(emu->cpu_type <= X86_CPU_186 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_V25 || emu->cpu_type == X86_CPU_V55)
+	_push$O($sp - 2);
+else
+	_push$O($0.$O);
+
+@instruction PUSH|op=w op0=rv
+if((emu->cpu_type <= X86_CPU_186 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_V25 || emu->cpu_type == X86_CPU_V55)
+	&& _mem == X86_R_SP)
+	_push$O($sp - 2);
+else
+	_push$O($0.$O);
+
+@instruction PUSH
+_push$O($0.$O);
+
+@instruction PUSHAd
+_uint$O sp = $sp.$O;
+_push$O($ax.$O);
+_push$O($cx.$O);
+_push$O($dx.$O);
+_push$O($bx.$O);
+_push$O(sp);
+_push$O($bp.$O);
+_push$O($si.$O);
+_push$O($di.$O);
+
+@instruction PUSHF
+_push$O($flags.$O);
+
+@instruction QHOUT
+@comment NEC specific
+_uint16 parameter_table[4];
+parameter_table[0] = _read16(_seg, $0);
+parameter_table[1] = _read16(_seg, ($0 + 2) & 0xFFFF);
+parameter_table[3] = _read16(_seg, ($0 + 6) & 0xFFFF);
+x86_queue_head_out(emu, parameter_table);
+_write16(_seg, ($0 + 4) & 0xFFFF, parameter_table[2]);
+
+@instruction QOUT
+@comment NEC specific
+_uint16 parameter_table[4];
+parameter_table[0] = _read16(_seg, $0);
+parameter_table[1] = _read16(_seg, ($0 + 2) & 0xFFFF);
+parameter_table[2] = _read16(_seg, ($0 + 4) & 0xFFFF);
+parameter_table[3] = _read16(_seg, ($0 + 6) & 0xFFFF);
+x86_queue_out(emu, parameter_table);
+
+@instruction QTIN
+@comment NEC specific
+_uint16 parameter_table[4];
+parameter_table[0] = _read16(_seg, $0);
+parameter_table[1] = _read16(_seg, ($0 + 2) & 0xFFFF);
+parameter_table[2] = _read16(_seg, ($0 + 4) & 0xFFFF);
+parameter_table[3] = _read16(_seg, ($0 + 6) & 0xFFFF);
+x86_queue_tail_in(emu, parameter_table);
+
+@instruction RCL|op=b|op=w
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+if(emu->cpu_type >= X86_CPU_286)
+{
+	y &= 0x1F;
+}
+y %= $O + 1;
+if(y != 0)
+{
+	_uint$O z = (x << y) | ($cf << (y - 1)) | (x >> ($O + 1 - y));
+	$cf = x >> ($O - y);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction RCL|op=l|op=q
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_uint$O z = (x << y) | ($cf << (y - 1)) | (x >> ($O + 1 - y));
+	$cf = x >> ($O - y);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction RCR|op=b|op=w
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+if(emu->cpu_type >= X86_CPU_286)
+{
+	y &= 0x1F;
+}
+y %= $O + 1;
+if(y != 0)
+{
+	_uint$O z = (x >> y) | (emu->cf << ($O - y)) | (x << ($O + 1 - y));
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction RCR|op=l|op=q
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_uint$O z = (x >> y) | (emu->cf << ($O - y)) | (x << ($O + 1 - y));
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction RDFSBASE
+$0.$O = emu->sr[X86_R_FS].base;
+
+@instruction RDGSBASE
+$0.$O = emu->sr[X86_R_GS].base;
+
+@instruction RDM
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+/* TODO: RDM */
+
+@instruction RDMSR
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+_uint32 index = $ecx;
+_uint64 msr;
+msr = x86_msr_get(emu, index);
+$eax = msr;
+$edx = msr >> 32;
+
+@instruction RDPMC
+/* TODO: RDPMC */
+
+@instruction RDRAND
+/* TODO: RDRAND */
+
+@instruction RDSEED
+/* TODO: RDSEED */
+
+@instruction RDSHR
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+$0 = emu->smm_hdr;
+
+@instruction RDTSC
+if(!x86_is_real_mode(emu) && (emu->cr[4] & X86_CR4_TSD) != 0 && emu->cpl > 0)
+	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+$eax = emu->tsc;
+$edx = emu->tsc >> 32;
+
+@instruction RDTSCP
+PRIVILEGED();
+/* TODO: RDTSCP */
+
+@instruction RET
+$rip = _pop$O();
+
+@instruction RET|i
+$rip = _pop$O();
+x86_stack_adjust(emu, $0);
+
+@instruction RETF
+_retf$O(0);
+
+@instruction RETF|i
+_retf$O($0);
+x86_stack_adjust(emu, $0);
+
+@instruction RETRBI
+@comment NEC specific
+x86_store_register_bank(emu); /* make sure registers are not cached */
+$rip = le16toh($bank.w[X86_BANK_PC_SAVE]);
+$flags = le16toh($bank.w[X86_BANK_PSW_SAVE]);
+
+@instruction RETXA
+@comment NEC specific
+uint16_t pc = x86_memory_read16(emu, $0 * 4);
+uint16_t ps = x86_memory_read16(emu, $0 * 4 + 4);
+emu->v33_xam &= ~X86_XAM_XA;
+$ip = pc;
+$cs = ps;
+
+@instruction ROL
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_uint$O z = (x << y) | (x >> ($O - y));
+	$cf = x >> ($O - y);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction ROR
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_uint$O z = (x >> y) | (x << ($O - y));
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction ROL4
+@comment NEC specific
+_uint8 b = $0.b;
+$0.b = (b << 4) | ($al & 0xF);
+$al = ($al & 0xF0) | (b >> 4);
+
+@instruction ROR4
+@comment NEC specific
+_uint8 b = $0.b;
+$0.b = (b >> 4) | ($al & 0xF) << 4;
+$al = ($al & 0xF0) | (b & 0x0F);
+
+@instruction RSDC
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+int cpl = x86_restore_descriptor(emu, _seg, _off, _reg);
+if(_reg == X86_R_CS)
+	$cpl = cpl;
+
+@instruction RSLDT
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+x86_restore_descriptor(emu, _seg, _off, X86_R_LDTR);
+
+@instruction RSM
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+/* TODO: RSM */
+
+@instruction RSTS
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+x86_restore_descriptor(emu, _seg, _off, X86_R_TR);
+
+@instruction RSTWDT
+@comment NEC specific
+if((($0 ^ $1) & 0xFF) == 0)
+{
+	/* TODO: clear the watchdog timer */
+}
+else
+{
+	_push16($flags);
+	_push16($cs);
+	_push16($ip);
+	_int(0x08 | X86_EXC_INT_N, 0);
+}
+
+@instruction SAHF
+$flagsl = $ah;
+
+@instruction SALC
+$al = $cf ? 0xFF : 0x00;
+
+@instruction SAR|op=b|op=w
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+if(emu->cpu_type >= X86_CPU_286)
+{
+	y &= 0x1F;
+}
+if(y >= $O)
+{
+	$cf = (_int$O)x < 0 ? 1 : 0;
+	$0.$O = (_int$O)x < 0 ? -1 : 0;
+}
+else if(y != 0)
+{
+	_int$O z = x >> y;
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = 0;
+	}
+	$0.$O = z;
+}
+
+@instruction SAR|op=l|op=q
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_int$O z = x >> y;
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = 0;
+	}
+	$0.$O = z;
+}
+
+@instruction SBB
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x - y - $cf;
+$0.$O = z;
+$cf = _sub_carry$O(x, y, z);
+$of = _sub_overflow$O(x, y, z);
+$af = _sub_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction SCAS
+_uint$O x = $ax.$O, y = _read$O(_dst_seg, $di.$A);
+_uint$O z = x - y;
+$cf = _sub_carry$O(x, y, z);
+$of = _sub_overflow$O(x, y, z);
+$af = _sub_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+if($df)
+{
+	$di.$A = $di.$A - ($O >> 3);
+}
+else
+{
+	$di.$A = $di.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0 && _rep())
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction SET1
+@comment NEC specific
+$0.$O = $0.$O | (1 << ($1.b & ($O - 1)));
+
+@instruction SETcc
+$0.b = X86_CHECK_$C(emu) ? 1 : 0;
+
+@instruction SGDT
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+$0.w = emu->sr[X86_R_GDTR].limit;
+$0@w.$O = emu->sr[X86_R_GDTR].base;
+
+@instruction SIDT
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+$0.w = emu->sr[X86_R_IDTR].limit;
+$0@w.$O = emu->sr[X86_R_IDTR].base;
+
+@instruction SHL|op=b|op=w
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+if(emu->cpu_type >= X86_CPU_286)
+{
+	y &= 0x1F;
+}
+if(y >= $O)
+{
+	$cf = y == $O ? x & 1 : 0;
+	$0.$O = 0;
+}
+else if(y != 0)
+{
+	_int$O z = x << y;
+	$cf = x >> ($O - y);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction SHL|op=l|op=q
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_int$O z = x << y;
+	$cf = x >> ($O - y);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction SHR|op=b|op=w
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+if(emu->cpu_type >= X86_CPU_286)
+{
+	y &= 0x1F;
+}
+if(y >= $O)
+{
+	$cf = y == $O ? x >> ($O - 1) : 0;
+	$0.$O = 0;
+}
+else if(y != 0)
+{
+	_int$O z = x >> y;
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction SHR|op=l|op=q
+_uint$O x = $0.$O;
+_uint8 y = $1.b;
+y &= $O - 1;
+if(y != 0)
+{
+	_int$O z = x >> y;
+	$cf = x >> (y - 1);
+	if(y == 1)
+	{
+		$of = (x ^ z) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction SHLD
+_uint$O x = $0.$O;
+_uint$O y = $1.$O;
+_uint8 z = $2.b;
+y &= ($O == 64 ? 0x3F : 0x1F);
+if(y == 0)
+{
+	$0.$O = x;
+}
+else if(y <= $O)
+{
+	_uint$O w = (x << z) | (y >> ($O - z));
+	$zf = _zero$O(w);
+	$sf = _sign$O(w);
+	$pf = _parity(w);
+	$cf = x >> z;
+	if(y == 1)
+	{
+		$of = (x ^ w) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction SHRD
+_uint$O x = $0.$O;
+_uint$O y = $1.$O;
+_uint8 z = $2.b;
+y &= ($O == 64 ? 0x3F : 0x1F);
+if(y == 0)
+{
+	$0.$O = x;
+}
+else if(y <= $O)
+{
+	_uint$O w = (x >> z) | (y << ($O - z));
+	$zf = _zero$O(w);
+	$sf = _sign$O(w);
+	$pf = _parity(w);
+	$cf = x >> z;
+	if(y == 1)
+	{
+		$of = (x ^ w) >> ($O - 1);
+	}
+	$0.$O = z;
+}
+
+@instruction SLDT
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+$0.w = emu->sr[X86_R_LDTR].selector;
+
+@instruction SMI
+if((emu->dr[7] & X86_DR7_ICE) != 0)
+{
+	x86_ice_storeall_386(emu, ((_uint32)emu->sr[X86_R_ES].selector << 4) + $edi);
+	emu->dr[6] |= 0x1000;
+}
+else
+{
+	_int(X86_EXC_DB | X86_EXC_INT1, 0);
+}
+
+@instruction SMINT
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+/* TODO: (Cyrix) SMINT */
+
+@instruction SMSW
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+$0.w = emu->cr[0];
+
+@instruction STAC
+$af = X86_FL_AC;
+
+@instruction STC
+$cf = X86_FL_CF;
+
+@instruction STD
+$df = X86_FL_DF;
+
+@instruction STI
+if(emu->cpu_type == X86_CPU_V60)
+{
+	emu->xip = emu->old_xip + 1;
+	x86_v60_exception(emu, V60_EXC_PI);
+}
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+
+bool had_if = $if;
+
+if((emu->cr[0] & X86_CR0_PE) == 0 || emu->iopl >= $cpl)
+	$if = X86_FL_IF;
+else if((emu->vm ? (emu->cr[4] & X86_CR4_VME) != 0 : ((emu->cr[4] & X86_CR4_PVI) != 0 && $cpl == 3)) && emu->vip == 0)
+	emu->vif = X86_FL_VIF;
+else
+	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+
+if(!had_if)
+	emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
+
+@instruction STOP
+@comment NEC specific
+PRIVILEGED();
+/* TODO: (v25) STOP */
+
+@instruction STOREALL286
+PRIVILEGED();
+x86_ice_storeall_286(emu);
+/* TODO: STOREALL286 */
+
+@instruction STOS
+_write$O(_dst_seg, $di.$A, $ax.$O);
+if($df)
+{
+	$di.$A = $di.$A - ($O >> 3);
+}
+else
+{
+	$di.$A = $di.$A + ($O >> 3);
+}
+
+if(emu->parser->rep_prefix != X86_PREF_NOREP)
+{
+	_uint$A cx = $cx.$A - 1;
+	$cx.$A = cx;
+	if(cx != 0)
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction STR
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+$0.w = emu->sr[X86_R_TR].selector;
+
+@instruction SUB
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x - y;
+$0.$O = z;
+$cf = _sub_carry$O(x, y, z);
+$of = _sub_overflow$O(x, y, z);
+$af = _sub_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction SUB4S
+@comment NEC specific
+$cf = 0;
+for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
+{
+	_uint8 x = _read8(_dst_seg, ($di + i) & 0xFFFF);
+	_uint8 y = _read8(_src_seg, ($si + i) & 0xFFFF);
+	_uint8 z = x - y - $cf;
+	$cf = _sub_carry8(x, y, z);
+	$of = _sub_overflow8(x, y, z);
+	$af = _sub_auxiliary(x, y, z);
+	$zf = _zero8(z);
+	$sf = _sign8(z);
+	$pf = _parity(z);
+	if(z > 0x99 || $cf)
+	{
+		z -= 0x60;
+		$cf = X86_FL_CF;
+	}
+	if((z & 0x0F) > 0x09 || $af)
+	{
+		if(z < 0x06)
+			$cf = X86_FL_CF;
+		z -= 0x06;
+		$af = X86_FL_AF;
+	}
+	else
+	{
+		$af = 0;
+	}
+	_write8(_src_seg, ($si + i) & 0xFFFF, z);
+}
+
+@instruction SVDC
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+x86_save_descriptor(emu, _seg, _off, _reg);
+
+@instruction SVLDT
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+x86_save_descriptor(emu, _seg, _off, X86_R_LDTR);
+
+@instruction SVTS
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+x86_save_descriptor(emu, _seg, _off, X86_R_TR);
+
+@instruction SWAPGS
+PRIVILEGED();
+_uint64 gs = emu->sr[X86_R_GS].base;
+emu->sr[X86_R_GS].base = emu->kernel_gs_bas;
+emu->kernel_gs_bas = gs;
+
+@instruction SYSCALL
+if(x86_is_long_mode(emu))
+{
+	$rcx = $rip;
+	emu->rf = /*emu->via_ace =*/ 0;
+	emu->gpr[11] = x86_flags_get64(emu);
+	x86_flags_set32(emu, x86_flags_get32(emu) & ~emu->fmask);
+	$rip = (emu->sr[X86_R_CS].access & X86_DESC_L) != 0 ? emu->lstar : emu->cstar;
+	emu->sr[X86_R_CS].selector = (emu->star >> 32) & 0xFFFC;
+	emu->sr[X86_R_CS].access   = 0x00E09B00; /* 64-bit code */
+	emu->sr[X86_R_CS].base     = 0;
+	emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+	emu->sr[X86_R_SS].selector = ((emu->star >> 32) & 0xFFFC) + 8;
+	emu->sr[X86_R_SS].access   = 0x00C09300; /* 32-bit data, cpl=0 */
+	emu->sr[X86_R_SS].base     = 0;
+	emu->sr[X86_R_SS].limit    = 0xFFFFFFFF;
+	x86_set_cpl(emu, 0);
+}
+else
+{
+	/* not supported on Intel CPUs */
+	if(emu->cpu_type == X86_CPU_INTEL)
+		UNDEFINED();
+
+	$rcx = $eip;
+	emu->vm = emu->_if = emu->rf = 0;
+	$rip = emu->star & 0xFFFFFFFF;
+	emu->sr[X86_R_CS].selector = (emu->star >> 32) & 0xFFFC;
+	emu->sr[X86_R_CS].access   = 0x00C09B00; /* 32-bit code */
+	emu->sr[X86_R_CS].base     = 0;
+	emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+	emu->sr[X86_R_SS].selector = ((emu->star >> 32) & 0xFFFC) + 8;
+	emu->sr[X86_R_SS].access   = 0x00C09300; /* 32-bit data, cpl=0 */
+	emu->sr[X86_R_SS].base     = 0;
+	emu->sr[X86_R_SS].limit    = 0xFFFFFFFF;
+	x86_set_cpl(emu, 0);
+}
+
+@instruction SYSENTER
+if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sep_sel & ~7) == 0)
+{
+	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+}
+if(x86_is_long_mode(emu))
+{
+	if(emu->cpu_type == X86_CPU_AMD)
+		UNDEFINED();
+
+	$rsp = emu->sep_rsp;
+	$rip = emu->sep_rip;
+}
+else
+{
+	$esp = emu->sep_rsp;
+	$eip = emu->sep_rip;
+}
+emu->_if = emu->vm = 0;
+emu->sr[X86_R_CS].selector = emu->sep_sel & 0xFFFC;
+emu->sr[X86_R_CS].access   = x86_is_long_mode(emu) ? 0x00E09B00 : 0x00C09B00; /* 64/32-bit code */
+emu->sr[X86_R_CS].base     = 0;
+emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+emu->sr[X86_R_SS].selector = emu->sr[X86_R_CS].selector + 8;
+emu->sr[X86_R_SS].access   = 0x00C09300; /* 32-bit data, cpl=0 */
+emu->sr[X86_R_SS].base     = 0;
+emu->sr[X86_R_SS].limit    = 0xFFFFFFFF;
+x86_set_cpl(emu, 0);
+//emu->via_ace = 0;
+
+@instruction SYSEXIT
+PRIVILEGED();
+if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sep_sel & ~7) == 0)
+	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+if(x86_is_long_mode(emu) && emu->cpu_type == X86_CPU_AMD)
+	UNDEFINED();
+if(emu->parser->operation_size == SIZE_64BIT)
+{
+	$rsp = $rcx;
+	$rip = $rdx;
+	emu->sr[X86_R_CS].selector = (emu->sep_sel + 32) | 3;
+	emu->sr[X86_R_CS].access   = 0x00E0FB00; /* 64-bit code */
+}
+else
+{
+	$esp = $ecx;
+	$eip = $edx;
+	emu->sr[X86_R_CS].selector = (emu->sep_sel + 16) | 3;
+	emu->sr[X86_R_CS].access   = 0x00C0FB00; /* 32-bit code */
+}
+//emu->_if = emu->vm = 0;
+emu->sr[X86_R_CS].base     = 0;
+emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+emu->sr[X86_R_SS].selector = emu->sr[X86_R_CS].selector + 8;
+emu->sr[X86_R_SS].access   = 0x00C0F300; /* 32-bit data */
+emu->sr[X86_R_SS].base     = 0;
+emu->sr[X86_R_SS].limit    = 0xFFFFFFFF;
+x86_set_cpl(emu, 0);
+
+@instruction SYSRET
+PRIVILEGED();
+if(x86_is_long_mode(emu))
+{
+	$rip = $rcx;
+	if(emu->parser->operation_size == SIZE_64BIT)
+	{
+		emu->sr[X86_R_CS].selector = (((emu->star >> 48) & 0xFFFF) + 16) | 0x0003;
+		emu->sr[X86_R_CS].access   = 0x00E0FB00; /* 64-bit code */
+		emu->sr[X86_R_CS].base     = 0;
+		emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+	}
+	else
+	{
+		emu->sr[X86_R_CS].selector = ((emu->star >> 48) & 0xFFFF) | 0x0003;
+		emu->sr[X86_R_CS].access   = 0x00C0FB00; /* 32-bit code */
+		emu->sr[X86_R_CS].base     = 0;
+		emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+	}
+	emu->sr[X86_R_SS].selector   = (((emu->star >> 48) & 0xFFFF) + 8) | 0x0003;
+	x86_set_cpl(emu, 3);
+	x86_flags_set64(emu, emu->gpr[11]);
+	emu->rf = emu->vm = /*emu->via_ace =*/ 0;
+}
+else
+{
+	if(emu->cpu_type == X86_CPU_INTEL)
+		UNDEFINED();
+
+	$rip = $rcx;
+	emu->_if = X86_FL_IF;
+	emu->sr[X86_R_CS].selector = ((emu->star >> 48) & 0xFFFF) | 0x0003;
+	emu->sr[X86_R_CS].access   = 0x00C09B00; /* 32-bit code */
+	emu->sr[X86_R_CS].base     = 0;
+	emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
+	emu->sr[X86_R_SS].selector = (((emu->star >> 48) & 0xFFFF) + 8) | 0x0003;
+	x86_set_cpl(emu, 3);
+}
+
+@instruction TEST
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x & y;
+$cf = 0;
+//$af = ?;
+$of = 0;
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction TEST1
+@comment NEC specific
+$zf = ($0.$O & (1 << ($1.b & ($O - 1)))) == 0;
+
+@instruction TSKSW
+@comment NEC specific
+x86_store_register_bank(emu); /* make sure registers are not cached */
+$bank.w[X86_BANK_PSW_SAVE] = htole16($flags);
+$bank.w[X86_BANK_PC_SAVE] = htole16($ip);
+x86_set_register_bank_number(emu, $0.w);
+$flags = ($flags & 0xF000) | (le16toh($bank.w[X86_BANK_PSW_SAVE]));
+$ip = le16toh($bank.w[X86_BANK_PC_SAVE]);
+
+@instruction TZCNT
+_uint$O x = $1.$O;
+int i;
+$zf = 0;
+$cf = X86_FL_CF;
+for(i = 0; i < $O; i++)
+{
+	if((x & (1 << i)))
+	{
+		$zf = i == 0;
+		$cf = 0;
+		break;
+	}
+}
+$0.$O = i;
+
+@instruction UMOV
+PRIVILEGED();
+emu->parser->user_mode = true;
+$0.$O = $1.$O;
+
+@instruction VERR
+_uint16 selector = $0.w;
+if((selector & ~7) == 0)
+{
+	$zf = 0;
+}
+else
+{
+	_uint8 descriptor[8];
+	/* TODO: check bounds, check non-null */
+	x86_descriptor_load(emu, selector, descriptor, X86_EXC_GP);
+	_uint16 access = le16toh(*(_uint16 *)&descriptor[4]);
+	$zf = (access & X86_DESC_S) != 0
+		&& ((((access & X86_DESC_X) != 0 && access & X86_DESC_C) != 0)
+			|| min($cpl, selector & 7) > ((access >> X86_DESC_DPL_SHIFT) & 3)) && (access & X86_DESC_R) != 0;
+}
+
+@instruction VERW
+_uint16 selector = $0.w;
+if((selector & ~7) == 0)
+{
+	$zf = 0;
+}
+else
+{
+	_uint8 descriptor[8];
+	/* TODO: check bounds, check non-null */
+	x86_descriptor_load(emu, selector, descriptor, X86_EXC_GP);
+	_uint16 access = le16toh(*(_uint16 *)&descriptor[2]);
+	$zf = (access & X86_DESC_S) != 0
+		&& ((((access & X86_DESC_X) != 0 && access & X86_DESC_C) != 0)
+			|| min($cpl, selector & 7) > ((access >> X86_DESC_DPL_SHIFT) & 3)) && (access & X86_DESC_W) != 0;
+}
+
+@instruction WAIT
+if(emu->x87.fpu_type != X87_FPU_NONE)
+{
+	if(X86_CPU_286 <= emu->cpu_type && emu->cpu_type < X86_CPU_486)
+	{
+		if((emu->cr[0] & X86_CR0_MP) == X86_CR0_MP)
+		{
+			x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
+		}
+	}
+	if(X86_CPU_286 <= emu->cpu_type)
+	{
+		if((emu->cr[0] & X86_CR0_TS) != 0)
+		{
+			x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
+		}
+	}
+	_x87_int();
+	if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
+	{
+		$rip = $old_rip;
+	}
+}
+
+@instruction WRFSBASE
+_uint$O base = $0.$O;
+x86_check_canonical_address(emu, NONE, base, 0);
+emu->sr[X86_R_FS].base = base;
+
+@instruction WRGSBASE
+_uint$O base = $0.$O;
+x86_check_canonical_address(emu, NONE, base, 0);
+emu->sr[X86_R_GS].base = base;
+
+@instruction WRMSR
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+PRIVILEGED();
+_uint32 index = $ecx;
+_uint64 value = (_uint64)$eax | ((_uint64)$edx << 32);
+/* TODO: valid addresses */
+x86_msr_set(emu, index, value);
+
+@instruction WRSHR
+@comment Cyrix specific
+if(!x86_smm_instruction_valid(emu))
+{
+	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+}
+emu->smm_hdr = $0;
+
+@instruction XADD
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x + y;
+$0.$O = z;
+$cf = _add_carry$O(x, y, z);
+$of = _add_overflow$O(x, y, z);
+$af = _add_auxiliary(x, y, z);
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+$1.$O = x;
+
+@instruction XBTS
+@comment Obsolete Intel instruction
+$0.$O = x86_bitfield_extract$O(emu, _seg, _off, $ax.$O, $cl);
+
+@instruction XCHG|op0=r0
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+if(REGNUM(prs, 0) != 0)
+{
+	_uint$O tmp = $0.$O;
+	$0.$O = $1.$O;
+	$1.$O = tmp;
+}
+
+@instruction XCHG
+_uint$O tmp = $0.$O;
+$0.$O = $1.$O;
+$1.$O = tmp;
+
+@instruction XLAT
+if(_seg == NONE)
+{
+	_seg = X86_R_DS;
+}
+$al = _read8(_seg, $bx.$A + $al);
+
+@instruction XOR
+_uint$O x = $0.$O, y = $1.$O;
+_uint$O z = x ^ y;
+$0.$O = z;
+$cf = 0;
+//$af = ?;
+$of = 0;
+$zf = _zero$O(z);
+$sf = _sign$O(z);
+$pf = _parity(z);
+
+@instruction grp2_6|op1=cl
+if($cl != 0)
+{
+	$0.$O = -1;
+	$cf = 0;
+	//$af = ?;
+	$of = 0;
+	$zf = 0;
+	$sf = X86_FL_SF;
+	$pf = X86_FL_PF;
+}
+
+@instruction grp2_6|op1=1
+$0.$O = -1;
+$cf = 0;
+//$af = ?;
+$of = 0;
+$zf = 0;
+$sf = X86_FL_SF;
+$pf = X86_FL_PF;
+
+@instruction UD
+UNDEFINED();
+
+@instruction UD0
+UNDEFINED();
+
+@instruction UD1
+UNDEFINED();
+
+@instruction UD2
+if(x86_is_ia64(emu))
+	x86_ia64_intercept(emu, 0); // TODO
+UNDEFINED();
+
+@instruction ESC|mod=m
+/* escape instruction, no code */
+if(prs->fpu_type != X87_FPU_NONE)
+{
+	if(execute)
+	{
+		if(X86_CPU_286 <= emu->cpu_type)
+		{
+			if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)
+			{
+				x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
+			}
+		}
+
+		if(emu->x87.fpu_type == X87_FPU_8087) // TODO: what is the proper condition?
+			_x87_int();
+	}
+
+	uint16_t fop, fcs, fds;
+	uoff_t fip, fdp;
+
+	fop = (opcode << 8) | (prs->modrm_byte);
+	if(!execute)
+	{
+		// TODO
+	}
+	else if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
+	{
+		fcs = 0;
+		if(emu->x87.fpu_type == X87_FPU_8087)
+			fip = emu->sr[X86_R_CS].base + opcode_offset; // without any prefixes
+		else
+			fip = emu->sr[X86_R_CS].base + $old_rip;
+		fds = 0;
+		fdp = emu->sr[_seg].base + _off;
+	}
+	else
+	{
+		fcs = $cs;
+		fip = $old_rip;
+		fds = emu->sr[_seg].selector;
+		fdp = _off;
+	}
+
+	if(execute)
+		memcpy(emu->x87.address_text, prs->address_text, sizeof prs->address_text);
+
+	if(prs->fpu_type < X87_FPU_INTEGRATED)
+	{
+		if(execute)
+		{
+			// read the first 2 bytes from memory
+			x86_memory_segmented_read(emu, _seg, _off, 2, emu->x87.operand_data);
+			emu->sr[X86_R_FDS] = emu->sr[_seg];
+		}
+		x87_parse(prs, emu, true, fop, fcs, fip, fds, fdp, X86_R_FDS, _off, disassemble, execute);
+	}
+	else
+	{
+		x87_parse(prs, emu, true, fop, fcs, fip, fds, fdp, _seg, _off, disassemble, execute);
+	}
+}
+
+@instruction ESC|mod=r
+/* escape instruction, no code */
+if(prs->fpu_type != X87_FPU_NONE)
+{
+	if(execute)
+	{
+		if(X86_CPU_286 <= emu->cpu_type)
+		{
+			if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)
+			{
+				x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
+			}
+		}
+
+		if(emu->x87.fpu_type == X87_FPU_8087) // TODO: what is the proper condition?
+			_x87_int();
+	}
+
+	uint16_t fop, fcs;
+	uoff_t fip;
+
+	fop = (opcode << 8) | (prs->modrm_byte);
+	if(!execute)
+	{
+		// TODO
+	}
+	else if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
+	{
+		fcs = 0;
+		if(emu->x87.fpu_type == X87_FPU_8087)
+			fip = emu->sr[X86_R_CS].base + opcode_offset; // without any prefixes
+		else
+			fip = emu->sr[X86_R_CS].base + $old_rip;
+		//fds = 0;
+		//fdp = emu->sr[_seg].base + _off;
+	}
+	else
+	{
+		fcs = $cs;
+		fip = $old_rip;
+		//fds = emu->sr[_seg].selector;
+		//fdp = _off;
+	}
+
+//	if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
+//		memcpy(emu->x87.address_text, prs->address_text, sizeof prs->address_text);
+
+	x87_parse(prs, emu, true, fop, fcs, fip, 0, 0, NONE, 0, disassemble, execute);
+}
+
+@instruction F2XM1
+$st = x87_f2xm1(emu, $st);
+/* TODO */
+
+@instruction F4X4
+@comment IIT specific
+float80_t st[4];
+for(int j = 0; j < 4; j++)
+{
+	st[j] = 0.0;
+	for(int i = 0; i < 4; i++)
+	{
+		st[j] += x87_register_get80_bank(emu, i, 0)
+			* x87_register_get80_bank(emu, 4 - i + 4 * (1 - (j & 1)), 2 - (j / 2));
+	}
+}
+for(int j = 0; j < 4; j++)
+{
+	x87_register_set80_bank(emu, j, 0, st[j]);
+}
+
+@instruction FABS
+$st = x87_fabs(emu, $st);
+$c0 = 0;
+
+@instruction FADD|cnt=1
+$st = x87_fadd(emu, $st, $0);
+/* TODO */
+
+@instruction FADD|cnt=2
+$0 = x87_fadd(emu, $0, $1);
+/* TODO */
+
+@instruction FADDP
+$0 = x87_fadd(emu, $0, $1);
+x87_pop(emu);
+/* TODO */
+
+@instruction FIADD
+$st = x87_fadd(emu, $st, x87_int64_to_float80(emu, $0));
+/* TODO */
+
+@instruction FBLD
+uint8_t bytes[10];
+x87_memory_segmented_read(emu, _seg, _off, _off, sizeof bytes, bytes);
+$st = x87_packed80_to_float80($0);
+/* TODO */
+
+@instruction FBSTP
+uint8_t bytes[10];
+x87_float80_to_packed80(x87_pop(emu), bytes);
+x87_memory_segmented_write(emu, _seg, _off, _off, sizeof bytes, bytes);
+/* TODO */
+
+@instruction FCHS
+$st = x87_fchs(emu, $st);
+/* TODO */
+
+@instruction FCMOVcc
+/* TODO */
+
+@instruction FCOM
+x87_fcom(emu, $st, $0);
+/* TODO */
+
+@instruction FCOMI
+/* TODO */
+
+@instruction FCOMIP
+/* TODO */
+
+@instruction FCOMP
+x87_fcom(emu, $st, $0);
+x87_pop(emu);
+/* TODO */
+
+@instruction FCOMPP
+/* TODO */
+
+@instruction FICOM
+x87_fcom(emu, $st, x87_int64_to_float80(emu, $0));
+/* TODO */
+
+@instruction FICOMP
+x87_fcom(emu, $st, x87_int64_to_float80(emu, $0));
+x87_pop(emu);
+/* TODO */
+
+@instruction FCOS
+/* TODO */
+
+@instruction FDECSTP
+x87_set_sw_top(emu, x87_get_sw_top(emu) - 1);
+
+@instruction FDIV|cnt=1
+$st = x87_fdiv(emu, $st, $0);
+/* TODO */
+
+@instruction FDIV|cnt=2
+$0 = x87_fdiv(emu, $0, $1);
+/* TODO */
+
+@instruction FDIVP
+$0 = x87_fdiv(emu, $0, $1);
+x87_pop(emu);
+/* TODO */
+
+@instruction FDIVR|cnt=1
+$st = x87_fdiv(emu, $0, $st);
+/* TODO */
+
+@instruction FDIVR|cnt=2
+$0 = x87_fdiv(emu, $1, $0);
+/* TODO */
+
+@instruction FDIVRP
+$0 = x87_fdiv(emu, $1, $0);
+x87_pop(emu);
+/* TODO */
+
+@instruction FIDIV
+$st = x87_fdiv(emu, $st, x87_int64_to_float80(emu, $0));
+/* TODO */
+
+@instruction FIDIVR
+$st = x87_fdiv(emu, x87_int64_to_float80(emu, $0), $st);
+/* TODO */
+
+@instruction FFREE
+x87_register_free(emu, _reg);
+
+@instruction FFREEP
+/* TODO */
+
+@instruction FINCSTP
+x87_set_sw_top(emu, x87_get_sw_top(emu) + 1);
+
+@instruction FLD
+x87_push(emu, $0);
+/* TODO */
+
+@instruction FLD1
+x87_push(emu, 1.0);
+/* TODO */
+
+@instruction FILD
+x87_push(emu, x87_int64_to_float80(emu, $0));
+/* TODO */
+
+@instruction FLDCW
+emu->x87.cw = $0; // TODO: any checks?
+
+@instruction FLDENV
+if(emu->x87.fpu_type == X87_FPU_8087
+|| (emu->x87.fpu_type == X87_FPU_287 && !emu->x87.protected_mode)
+|| (emu->x87.fpu_type >= X87_FPU_387 && (x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))))
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_environment_restore_real_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_environment_restore_real_mode32(emu, _seg, _off);
+	}
+}
+else
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_environment_restore_protected_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_environment_restore_protected_mode32(emu, _seg, _off);
+	}
+}
+/* TODO */
+
+@instruction FLDL2E
+x87_push(emu, M_LOG2E);
+/* TODO */
+
+@instruction FLDL2T
+x87_push(emu, M_LOG2E * M_LN10);
+/* TODO */
+
+@instruction FLDLG2
+x87_push(emu, M_LOG10E * M_LN2);
+/* TODO */
+
+@instruction FLDLN2
+x87_push(emu, M_LN2);
+/* TODO */
+
+@instruction FLDPI
+x87_push(emu, M_PI);
+/* TODO */
+
+@instruction FLDZ
+x87_push(emu, 0.0);
+/* TODO */
+
+@instruction FMUL|cnt=1
+$st = x87_fmul(emu, $st, $0);
+/* TODO */
+
+@instruction FMUL|cnt=2
+$0 = x87_fmul(emu, $0, $1);
+/* TODO */
+
+@instruction FMULP
+$0 = x87_fmul(emu, $0, $1);
+x87_pop(emu);
+/* TODO */
+
+@instruction FIMUL
+$st = x87_fmul(emu, $st, x87_int64_to_float80(emu, $0));
+/* TODO */
+
+@instruction FNCLEX
+emu->x87.sw &= ~(X87_SW_B | X87_SW_ES | X87_SW_SF | X87_SW_PE | X87_SW_UE | X87_SW_OE | X87_SW_ZE | X87_SW_DE | X87_SW_IE);
+return;
+
+@instruction FNDISI
+if(emu->x87.fpu_type == X87_FPU_8087)
+{
+	emu->x87.cw |= X87_CW_IEM;
+	if(sync)
+		return;
+}
+else
+{
+	return;
+}
+
+@instruction FNENI
+if(emu->x87.fpu_type == X87_FPU_8087)
+{
+	emu->x87.cw &= ~X87_CW_IEM;
+	if(sync)
+		return;
+}
+else
+{
+	return;
+}
+
+@instruction FNINIT
+x87_reset(emu, false);
+return;
+
+@instruction FNOP
+
+@instruction FNSAVE
+if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
+{
+	emu->x87.queued_operation = X87_OP_FSAVE;
+	emu->x87.queued_segment = emu->sr[_seg];
+	emu->x87.queued_offset = _off;
+	return;
+}
+else
+{
+	_x87_busy();
+}
+
+if(emu->x87.fpu_type == X87_FPU_8087
+|| (emu->x87.fpu_type == X87_FPU_287 && !emu->x87.protected_mode)
+|| (emu->x87.fpu_type >= X87_FPU_387 && (x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))))
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_state_save_real_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_state_save_real_mode32(emu, _seg, _off);
+	}
+}
+else
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_state_save_protected_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_state_save_protected_mode32(emu, _seg, _off);
+	}
+}
+return;
+
+@instruction FNSTCW
+$0 = emu->x87.cw;
+/* TODO */
+return;
+
+@instruction FNSTENV
+if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
+{
+	emu->x87.queued_operation = X87_OP_FSTENV;
+	emu->x87.queued_segment = emu->sr[_seg];
+	emu->x87.queued_offset = _off;
+	return;
+}
+else
+{
+	_x87_busy();
+}
+
+if(emu->x87.fpu_type == X87_FPU_8087
+|| (emu->x87.fpu_type == X87_FPU_287 && !emu->x87.protected_mode)
+|| (emu->x87.fpu_type >= X87_FPU_387 && (x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))))
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_environment_save_real_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_environment_save_real_mode32(emu, _seg, _off);
+	}
+}
+else
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_environment_save_protected_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_environment_save_protected_mode32(emu, _seg, _off);
+	}
+}
+/* TODO */
+return;
+
+@instruction FNSTSW
+$0 = emu->x87.sw;
+/* TODO */
+return;
+
+@instruction FPATAN
+$st1 = x87_fpatan(emu, $st, $st1);
+x87_pop(emu);
+/* TODO */
+
+@instruction FPREM
+$st = x87_fprem(emu, $st, $st1);
+/* TODO */
+
+@instruction FPREM1
+/* TODO */
+
+@instruction FPTAN
+float80_t st, st1;
+x87_fptan(emu, $st, &st, &st1);
+$st = st1;
+x87_push(emu, st);
+/* TODO */
+
+@instruction FRICHOP
+@comment Cyrix specific
+/* TODO */
+
+@instruction FRINEAR
+@comment Cyrix specific
+/* TODO */
+
+@instruction FRINT2
+@comment Cyrix specific
+/* TODO */
+
+@instruction FRNDINT
+$st = x87_frndint(emu, $st);
+/* TODO */
+
+@instruction FRSTOR
+if(emu->x87.fpu_type == X87_FPU_8087
+|| (emu->x87.fpu_type == X87_FPU_287 && !emu->x87.protected_mode)
+|| (emu->x87.fpu_type >= X87_FPU_387 && (x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))))
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_state_restore_real_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_state_restore_real_mode32(emu, _seg, _off);
+	}
+}
+else
+{
+	if(emu->parser->operation_size == SIZE_16BIT)
+	{
+		x87_state_restore_protected_mode16(emu, _seg, _off);
+	}
+	else
+	{
+		x87_state_restore_protected_mode32(emu, _seg, _off);
+	}
+}
+/* TODO */
+
+@instruction FRSTPM
+/* TODO: guessing */
+if(emu->x87.fpu_type == X87_FPU_287)
+{
+	emu->x87.protected_mode = false;
+}
+return;
+
+@instruction FSCALE
+$st = x87_fscale(emu, $st, $st1);
+/* TODO */
+
+@instruction FSBP0
+@comment IIT specific
+emu->x87.current_bank = 0;
+
+@instruction FSBP1
+@comment IIT specific
+emu->x87.current_bank = 1;
+
+@instruction FSBP2
+@comment IIT specific
+emu->x87.current_bank = 2;
+
+@instruction FSBP3
+@comment IIT specific
+emu->x87.current_bank = 3;
+
+@instruction FSETPM
+if(emu->x87.fpu_type == X87_FPU_287)
+{
+	emu->x87.protected_mode = true;
+}
+
+@instruction FSIN
+/* TODO */
+
+@instruction FSINCOS
+/* TODO */
+
+@instruction FSQRT
+$st = x87_fsqrt(emu, $st);
+/* TODO */
+
+@instruction FST
+$0 = $st;
+/* TODO */
+
+@instruction FIST
+$0 = x87_float80_to_int64(emu, $st); // TODO: other integer types should be checked for rounding
+/* TODO */
+
+@instruction FISTP
+$0 = x87_float80_to_int64(emu, x87_pop(emu)); // TODO: other integer types should be checked for rounding
+/* TODO */
+
+@instruction FISTTP
+/* TODO */
+
+@instruction FSTDW
+if(emu->x87.fpu_type == X87_FPU_INTEGRATED)
+	_x87_int();
+$ax = emu->x87.dw; // device word register (bit 8: static bit)
+
+@instruction FSTP
+$0 = $st;
+x87_pop(emu);
+/* TODO */
+
+@instruction FSTSG
+if(emu->x87.fpu_type == X87_FPU_INTEGRATED)
+	_x87_int();
+$ax = emu->x87.sg; // signature word register (version, family, stepping, revision)
+
+@instruction FSUB|cnt=1
+$st = x87_fsub(emu, $st, $0);
+/* TODO */
+
+@instruction FSUB|cnt=2
+$0 = x87_fsub(emu, $0, $1);
+/* TODO */
+
+@instruction FSUBP
+$0 = x87_fsub(emu, $0, $1);
+x87_pop(emu);
+/* TODO */
+
+@instruction FSUBR|cnt=1
+$st = x87_fsub(emu, $0, $st);
+/* TODO */
+
+@instruction FSUBR|cnt=2
+$0 = x87_fsub(emu, $1, $0);
+/* TODO */
+
+@instruction FSUBRP
+$0 = x87_fsub(emu, $1, $0);
+x87_pop(emu);
+/* TODO */
+
+@instruction FISUB
+$st = x87_fsub(emu, $st, x87_int64_to_float80(emu, $0));
+/* TODO */
+
+@instruction FISUBR
+$st = x87_fsub(emu, x87_int64_to_float80(emu, $0), $st);
+/* TODO */
+
+@instruction FTST
+x87_fcom(emu, $st, 0.0);
+/* TODO */
+
+@instruction FTSTP
+@comment Cyrix specific
+x87_fcom(emu, $st, 0.0);
+x87_pop(emu);
+/* TODO */
+
+@instruction FUCOM
+/* TODO */
+
+@instruction FUCOMI
+/* TODO */
+
+@instruction FUCOMIP
+/* TODO */
+
+@instruction FUCOMP
+/* TODO */
+
+@instruction FUCOMPP
+/* TODO */
+
+@instruction FXAM
+x87_fxam(emu, $st, x87_tag_get(emu, x87_register_number(emu, 0)) == X87_TAG_EMPTY);
+/* TODO */
+
+@instruction FXCH
+float80_t tmp = $0;
+$0 = $st;
+$st = tmp;
+/* TODO */
+
+@instruction FXTRACT
+float80_t st, st1;
+x87_fxtract(emu, $st, &st, &st1);
+$st = st1;
+x87_push(emu, st);
+/* TODO */
+
+@instruction FYL2X
+$st1 = x87_fyl2x(emu, $st, $st1);
+x87_pop(emu);
+/* TODO */
+
+@instruction FYL2XP1
+$st1 = x87_fyl2xp1(emu, $st, $st1);
+x87_pop(emu);
+/* TODO */
+
+@instruction Z80.ADC|op=b
+_uint8 x = $0, y = $1;
+_uint8 z = x + y + $cf;
+$0 = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = z;
+	$nf = 0;
+	$pf = _add_overflow8(x, y, z);
+}
+else
+{
+	$sf = _sign8(z);
+	$pf = _parity(z);
+}
+$zf = _zero8(z);
+$cf = _add_carry8(x, y, z);
+$af = _add_auxiliary(x, y, z);
+
+@instruction Z80.ADC|op=w
+_uint16 x = $0, y = $1;
+_uint16 z = x + y + $cf;
+$0 = z;
+$f = z;
+$nf = 0;
+$pf = _add_overflow16(x, y, z);
+$zf = _zero16(z);
+$cf = _add_carry16(x, y, z);
+$af = _add_auxiliaryh(x, y, z);
+
+@instruction Z80.ADD|op=b
+_uint8 x = $0, y = $1;
+_uint8 z = x + y;
+$0 = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = z;
+	$nf = 0;
+	$pf = _add_overflow8(x, y, z);
+}
+else
+{
+	$sf = _sign8(z);
+	$pf = _parity(z);
+}
+$zf = _zero8(z);
+$cf = _add_carry8(x, y, z);
+$af = _add_auxiliary(x, y, z);
+
+@instruction Z80.ADD|op=w
+_uint16 x = $0, y = $1;
+_uint16 z = x + y + $cf;
+$0 = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & ~0x28) | (z & 0x28);
+	$nf = 0;
+	$af = _add_auxiliaryh(x, y, z);
+}
+$cf = _add_carry16(x, y, z);
+
+@instruction Z80.AND
+_uint8 x = $a, y = $0;
+_uint8 z = x & y;
+$a = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = (z & 0xA8);
+	$nf = 0;
+	$af = 1;
+}
+else
+{
+	$sf = _sign8(z);
+	$af = (x | y) >> 3;
+}
+$zf = _zero8(z);
+$cf = 0;
+$pf = _parity(z);
+
+@instruction Z80.bits
+// TODO: print instruction
+_uint8 op2 = x80_fetch8(prs, emu);
+_uint8 x = x80_register_get8(emu, prs->index_prefix, op2 & 7, $dsp);
+_uint8 z;
+switch((op2 >> 6))
+{
+case 0:
+	switch((op2 >> 3) & 7)
+	{
+	case 0:
+		z = (x << 1) | (x >> 7);
+		$f = z & 0xA8;
+		$cf = x >> 7;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 1:
+		z = (x >> 1) | (x << 7);
+		$f = z & 0xA8;
+		$cf = x & 1;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 2:
+		z = (x << 1) | $cf;
+		$f = z & 0xA8;
+		$cf = x >> 7;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 3:
+		z = (x >> 1) | ($cf << 7);
+		$f = z & 0xA8;
+		$cf = x & 1;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 4:
+		z = x << 1;
+		$f = z & 0xA8;
+		$cf = x >> 7;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 5:
+		z = (_int8)x >> 1;
+		$f = z & 0xA8;
+		$cf = x & 1;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 6:
+		z = (x << 1) | 1;
+		$f = z & 0xA8;
+		$cf = x >> 7;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	case 7:
+		z = (_uint8)x >> 1;
+		$f = z & 0xA8;
+		$cf = x & 1;
+		$pf = _parity(z);
+		$zf = _zero8(z);
+		break;
+	}
+	break;
+case 1:
+	z = x & (1 << ((op2 >> 3) & 7));
+	$f = ($f & 1) | (z & 0xA8);
+	$nf = 0;
+	$af = 1;
+	$pf = $zf = _zero8(z);
+	return X86_RESULT(X86_RESULT_SUCCESS, 0);
+case 2:
+	z = x & ~(1 << ((op2 >> 3) & 7));
+	break;
+case 3:
+	z = x | (1 << ((op2 >> 3) & 7));
+	break;
+}
+x80_register_set8(emu, prs->index_prefix, op2 & 7, $dsp, z);
+
+@instruction Z80.CALL|cnt=1
+_push80($pc);
+$pc = $0;
+
+@instruction Z80.CALL|cnt=2
+if(X80_CHECK_$0.cond(emu))
+{
+	_push80($pc);
+	$pc = $1;
+}
+
+@instruction Z80.RST
+_push80($pc);
+$pc = $0;
+
+@instruction Z80.CALLN
+x86_trigger_interrupt(emu86, ($0 & 0xFF) | X86_EXC_INT_N, 0);
+
+@instruction Z80.CCF
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & ~0x28) | ($a & 0x28);
+	$nf = 0;
+	$af = $cf;
+}
+$cf = $cf ^ 1;
+
+@instruction Z80.CP
+_uint8 x = $a, y = $0;
+_uint8 z = x - y;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = (x & 0x80) | (y & 0x28);
+	$nf = 1;
+	$pf = _sub_overflow8(x, y, z);
+	$af = _sub_auxiliary(x, y, z);
+}
+else
+{
+	$pf = _parity(z);
+	$af = _add_auxiliary(x, y, z);
+}
+$cf = _sub_carry8(x, y, z);
+$zf = _zero8(z);
+
+@instruction Z80.CPI
+_uint8 x = $a, y = _read80b($hl);
+_uint8 z = x - y;
+int af = _sub_auxiliary(x, y, z);
+$f = ($f & 1) | ((z - af) & 0x28);
+$nf = 1;
+$af = af;
+$zf = _zero8(z);
+$sf = _sign8(z);
+$hl ++;
+$bc --;
+$pf = $bc != 0;
+
+@instruction Z80.CPIR
+_uint8 x = $a, y = _read80b($hl);
+_uint8 z = x - y;
+int af = _sub_auxiliary(x, y, z);
+$f = ($f & 1) | ((z - af) & 0x28);
+$nf = 1;
+$af = af;
+$zf = _zero8(z);
+$sf = _sign8(z);
+$hl ++;
+$bc --;
+$pf = $bc != 0;
+if($bc != 0 && !$zf)
+	$pc = $old_pc;
+
+@instruction Z80.CPD
+_uint8 x = $a, y = _read80b($hl);
+_uint8 z = x - y;
+int af = _sub_auxiliary(x, y, z);
+$f = ($f & 1) | ((z - af) & 0x28);
+$nf = 1;
+$af = af;
+$zf = _zero8(z);
+$sf = _sign8(z);
+$hl --;
+$bc --;
+$pf = $bc != 0;
+
+@instruction Z80.CPDR
+_uint8 x = $a, y = _read80b($hl);
+_uint8 z = x - y;
+int af = _sub_auxiliary(x, y, z);
+$f = ($f & 1) | ((z - af) & 0x28);
+$nf = 1;
+$af = af;
+$zf = _zero8(z);
+$sf = _sign8(z);
+$hl --;
+$bc --;
+$pf = $bc != 0;
+if($bc != 0 && !$zf)
+	$pc = $old_pc;
+
+@instruction Z80.CPL
+$a = $a ^ 0xFF;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0xCA) | ($a & 0x28) | 0x12;
+}
+
+@instruction Z80.DAA
+if($a > 0x99 || $cf)
+{
+	$a = $a + (emu->cpu_type == X80_CPU_Z80 && $nf ? -0x60 : 0x60);
+	$cf = 1;
+}
+if(($a & 0x0F) > 0x09 || $af)
+{
+	if(emu->cpu_type == X80_CPU_Z80)
+	{
+		if($nf)
+		{
+			if($af && ($a & 0x0F) >= 0x06)
+				$af = 0;
+		}
+		else
+		{
+			$af = ($a & 0x0F) > 0x09 ? 1 : 0;
+		}
+		$a = $a + 0x06;
+	}
+	else
+	{
+		$af = 1;
+		$a = $a + (emu->cpu_type == X80_CPU_Z80 && $nf ? -0x06 : 0x06);
+	}
+}
+
+@instruction Z80.DEC|op=b
+_uint8 x = $0;
+_uint8 z = x - 1;
+$0 = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0x01) | (z & 0xA8);
+	$nf = 1;
+	$pf = _sub_overflow8(x, 0, z);
+	$af = _sub_auxiliary(x, 0, z);
+}
+else
+{
+	$pf = _parity(z);
+	$af = _add_auxiliary(x, 0, z);
+	$sf = _sign8(z);
+}
+$zf = _zero8(z);
+
+@instruction Z80.DEC|op=w
+$0 = $0 - 1;
+
+@instruction Z80.DI
+$if = 0;
+
+@instruction Z80.DJNZ
+$b = $b - 1;
+if($b != 0)
+	$pc = $0;
+
+@instruction Z80.EI
+$if = 1;
+
+@instruction Z80.EX|op0=af
+emu->af_bank ^= 1;
+
+@instruction Z80.EX
+_uint16 tmp = $0;
+$0 = $1;
+$1 = tmp;
+
+@instruction Z80.EXX
+emu->main_bank ^= 1;
+
+@instruction Z80.HALT
+$pc = $old_pc;
+return X86_RESULT(X86_RESULT_HALT, 0);
+
+@instruction Z80.IM
+emu->im = $0;
+
+@instruction Z80.IN|cnt=2
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_IN, 0);
+else
+{
+	_uint8 x = x80_input8(emu, $1);
+	if(emu->cpu_type == X80_CPU_Z80)
+	{
+		$f = ($f & 1) | (x & 0xA8);
+		$zf = _zero8(x);
+	}
+	$0 = x;
+}
+
+@instruction Z80.IN|cnt=1
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_OUT, 0);
+else
+{
+	_uint8 x = x80_input8(emu, $0);
+	$f = ($f & 1) | (x & 0xA8);
+	$zf = _zero8(x);
+}
+
+@instruction Z80.INC|op=b
+_uint8 x = $0;
+_uint8 z = x + 1;
+$0 = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0x01) | (z & 0xA8);
+	$nf = 1;
+	$pf = _add_overflow8(x, 0, z);
+}
+else
+{
+	$pf = _parity(z);
+	$sf = _sign8(z);
+}
+$af = _add_auxiliary(x, 0, z);
+$zf = _zero8(z);
+
+@instruction Z80.INC|op=w
+$0 = $0 + 1;
+
+@instruction Z80.INI
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_IN, 0);
+else
+{
+	_write80b($hl, x80_input8(emu, $bc));
+	$hl ++;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+}
+
+@instruction Z80.INIR
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_IN, 0);
+else
+{
+	_write80b($hl, x80_input8(emu, $bc));
+	$hl ++;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+	if($b != 0)
+		$pc = $old_pc;
+}
+
+@instruction Z80.IND
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_IN, 0);
+else
+{
+	_write80b($hl, x80_input8(emu, $bc));
+	$hl --;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+}
+
+@instruction Z80.INDR
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_IN, 0);
+else
+{
+	_write80b($hl, x80_input8(emu, $bc));
+	$hl --;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+	if($b != 0)
+		$pc = $old_pc;
+}
+
+@instruction Z80.JP|cnt=2
+if(X80_CHECK_$0.cond(emu))
+{
+	$pc = (_uint16)$1;
+}
+
+@instruction Z80.JP|cnt=1
+$pc = (_uint16)$0;
+
+@instruction Z80.JR|cnt=2
+if(X80_CHECK_$0.cond(emu))
+{
+	$pc = (_int8)$1;
+}
+
+@instruction Z80.JR|cnt=1
+$pc = (_int8)$0;
+
+@instruction Z80.LD|op1=i
+$0 = $1;
+$f = ($f & 1) | ($a & 0xA8);
+$pf = emu->iff2;
+$zf = _zero8($a);
+
+@instruction Z80.LD|op1=r
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_LDAR, 0);
+else
+{
+	$0 = $1;
+	$f = ($f & 1) | ($a & 0xA8);
+	$pf = emu->iff2;
+	$zf = _zero8($a);
+}
+
+@instruction Z80.LD
+$0 = $1;
+
+@instruction Z80.LDI
+_uint8 x = _read80b($hl);
+_write80b($de, x);
+$de ++;
+$hl ++;
+$bc --;
+$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$pf = $bc != 0;
+
+@instruction Z80.LDIR
+_uint8 x = _read80b($hl);
+_write80b($de, x);
+$de ++;
+$hl ++;
+$bc --;
+$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$pf = $bc != 0;
+if($bc != 0)
+	$pc = $old_pc;
+
+@instruction Z80.LDD
+_uint8 x = _read80b($hl);
+_write80b($de, x);
+$de --;
+$hl --;
+$bc --;
+$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$pf = $bc != 0;
+
+@instruction Z80.LDDR
+_uint8 x = _read80b($hl);
+_write80b($de, x);
+$de --;
+$hl --;
+$bc --;
+$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$pf = $bc != 0;
+if($bc != 0)
+	$pc = $old_pc;
+
+@instruction Z80.NEG
+_uint8 x = $a;
+_uint8 z = -x;
+$a = z;
+$f = z & 0xA8;
+$cf = _sub_carry8(0, x, z);
+$nf = 1;
+$pf = _sub_overflow8(0, x, z);
+$af = _sub_auxiliary(0, x, z);
+$zf = _zero8(z);
+
+@instruction Z80.NOP
+
+@instruction Z80.OR
+_uint8 x = $a, y = $0;
+_uint8 z = x | y;
+$a = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = z & 0xA8;
+}
+else
+{
+	$cf = 0;
+	$af = 0;
+}
+$zf = _zero8(z);
+$pf = _parity(z);
+
+@instruction Z80.OUTI
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_OUT, 0);
+else
+{
+	x80_output8(emu, $bc, _read80b($hl));
+	$hl ++;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+}
+
+@instruction Z80.OTIR
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_OUT, 0);
+else
+{
+	x80_output8(emu, $bc, _read80b($hl));
+	$hl ++;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+	if($bc != 0)
+		$pc = $old_pc;
+}
+
+@instruction Z80.OUTD
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_OUT, 0);
+else
+{
+	x80_output8(emu, $bc, _read80b($hl));
+	$hl --;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+}
+
+@instruction Z80.OTDR
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_OUT, 0);
+else
+{
+	x80_output8(emu, $bc, _read80b($hl));
+	$hl --;
+	$b = $b - 1;
+	$f = ($f & 0x01) | ($b & 0xA8);
+	$zf = _zero8($b);
+	if($bc != 0)
+		$pc = $old_pc;
+}
+
+@instruction Z80.OUT
+if(emu86->cpu_type == X86_CPU_UPD9002 && !emu86->full_z80_emulation)
+	_int80em(X86_EXC_OUT, 0);
+else
+{
+	x80_output8(emu, $0, $1);
+}
+
+@instruction Z80.POP
+$0 = _pop80();
+
+@instruction Z80.PUSH
+_push80($0);
+
+@instruction Z80.RET|cnt=1
+if(X80_CHECK_$0.cond(emu))
+{
+	$pc = _pop80();
+}
+
+@instruction Z80.RET|cnt=0
+$pc = _pop80();
+
+@instruction Z80.RETEM
+emu86->md_enabled = false;
+emu86->md = X86_FL_MD;
+x86_return_interrupt16(emu86);
+
+@instruction Z80.RETI
+/* TODO */
+$pc = _pop80();
+
+@instruction Z80.RETN
+$if = emu->iff2;
+$pc = _pop80();
+
+@instruction Z80.RLA
+_uint8 a = ($a << 1) | $cf;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0xC4) | (a & 0x28);
+}
+$cf = ($a >> 7) & 1;
+$a = a;
+
+@instruction Z80.RLCA
+_uint8 a = ($a << 1) | ($a >> 7);
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0xC4) | (a & 0x28);
+}
+$cf = a & 1;
+$a = a;
+
+@instruction Z80.RLD
+_uint8 x = _read80b($hl);
+_write80b($hl, (x << 4) | ($a & 0x0F));
+x = ($a & 0xF0) | (x >> 4);
+$f = ($f & 1) | (x & 0xA8);
+$zf = _zero8(x);
+$pf = _parity(x);
+$a = x;
+
+@instruction Z80.RRA
+_uint8 a = ($a >> 1) | ($cf << 7);
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0xC4) | (a & 0x28);
+}
+$cf = $a & 1;
+$a = a;
+
+@instruction Z80.RRCA
+_uint8 a = ($a >> 1) | ($a << 7);
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0xC4) | (a & 0x28);
+}
+$cf = $a & 1;
+$a = a;
+
+@instruction Z80.RRD
+_uint8 x = _read80b($hl);
+_write80b($hl, (x >> 4) | ($a << 4));
+x = ($a & 0xF0) | (x & 0x0F);
+$f = ($f & 1) | (x & 0xA8);
+$zf = _zero8(x);
+$pf = _parity(x);
+$a = x;
+
+@instruction Z80.SBC|op=b
+_uint8 x = $0, y = $1;
+_uint8 z = x - y - $cf;
+$0 = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = z;
+	$nf = 0;
+	$af = _sub_auxiliary(x, y, z);
+	$pf = _sub_overflow8(x, y, z);
+}
+else
+{
+	$af = _add_auxiliary(x, y, z);
+	$sf = _sign8(z);
+	$pf = _parity(z);
+}
+$zf = _zero8(z);
+$cf = _add_carry8(x, y, z);
+
+@instruction Z80.SBC|op=w
+_uint16 x = $0, y = $1;
+_uint16 z = x + y + $cf;
+$0 = z;
+$f = z;
+$nf = 0;
+$pf = _sub_overflow16(x, y, z);
+$zf = _zero16(z);
+$cf = _sub_carry16(x, y, z);
+$af = _sub_auxiliaryh(x, y, z);
+
+@instruction Z80.SCF
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & 0xC4) | ($a & 0x28);
+	$nf = 0;
+	$af = 0;
+}
+$cf = 1;
+
+@instruction Z80.SUB
+_uint8 x = $a, y = $0;
+_uint8 z = x - y;
+$a = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = z;
+	$nf = 0;
+	$af = _sub_auxiliary(x, y, z);
+	$pf = _sub_overflow8(x, y, z);
+}
+else
+{
+	$af = _add_auxiliary(x, y, z);
+	$sf = _sign8(z);
+	$pf = _parity(z);
+}
+$zf = _zero8(z);
+$cf = _add_carry8(x, y, z);
+
+@instruction Z80.XOR
+_uint8 x = $a, y = $0;
+_uint8 z = x ^ y;
+$a = z;
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = z & 0xA8;
+}
+else
+{
+	$cf = 0;
+	$af = 0;
+	$zf = _zero8(z);
+}
+$pf = _parity(z);
+
+@instruction Z80.RIM
+// Note: this is an 8085 exclusive instruction, not present on the Z80
+$a =
+	(emu->m5_5 ? 0x01 : 0)
+	| (emu->m6_5 ? 0x02 : 0)
+	| (emu->m7_5 ? 0x04 : 0)
+	| (emu->iff2 ? 0x08 : 0);
+	// TODO: other bits
+// we can use the Z80 IFF2 flag to simulate the 8085 TRAP instruction reporting the previous IFF1 on first call
+emu->iff2 = emu->iff1;
+
+@instruction Z80.SIM
+// Note: this is an 8085 exclusive instruction, not present on the Z80
+if(($a & 0x08) != 0)
+{
+	emu->m5_5 = $a & 0x01 ? 1 : 0;
+	emu->m6_5 = $a & 0x02 ? 1 : 0;
+	emu->m7_5 = $a & 0x04 ? 1 : 0;
+}
+// TODO: other bits
+
+@processors
+
+#### Intel CPUs
+
+- id: 8086
+  description: Intel 8086
+  vendor: Intel
+  class: 8086
+  fpu: 8087
+  aliases: 8086, i8086, 86, i86, intel8086, intel86, iapx86, mcs86, mcs-86
+
+- id: 8088
+  description: Intel 8088
+  vendor: Intel
+  class: 8086
+  fpu: 8087
+  aliases: 8088, i8088, 88, i88, intel8088, intel88, iapx88
+
+- id: 80186
+  description: Intel 80186
+  vendor: Intel
+  class: 186
+  fpu: 80c187
+  aliases: 80186, i80186, 186, i186, intel80186, intel186, iapx186
+
+- id: 80188
+  description: Intel 80188
+  vendor: Intel
+  class: 186
+  fpu: 80c187
+  aliases: 80188, i80188, 188, i188, intel80188, intel188, iapx188
+
+- id: 80286
+  description: Intel 80286
+  vendor: Intel
+  class: 286
+  fpu: 80287
+  aliases: 80286, i80286, 286, i286, intel80286, intel286, iapx286
+
+- id: 80386
+  description: Intel 80386
+  vendor: Intel
+  class: 386
+  fpu: 80387, 80287
+  family: 3
+  aliases: 80386, i80386, 386, i386, intel80386, intel386, iapx386
+
+- id: 80386b0
+  description: Intel 80386 stepping B0
+  vendor: Intel
+  class: 386
+  fpu: 80387, 80287
+  variant: 386b0
+  family: 3
+  aliases: 80386b0, i80386b0, 386b0, i386b0, intel80386b0, intel386b0, iapx386b0
+
+- id: 80386sl
+  description: Intel 80386SL
+  vendor: Intel
+  class: 386
+  fpu: 80387, 80287
+  family: 3
+  aliases: 80386sl, i80386sl, 386sl, i386sl, intel80386sl, intel386sl, iapx386sl
+  smmformat: 80386sl
+
+- id: 80376
+  description: Intel 80376
+  vendor: Intel
+  class: 386
+  fpu: 80387, 80287
+  variant: 376
+  family: 3
+  aliases: 80376, i80376, 376, i376, intel80376, intel376
+
+- id: 80486
+  description: Intel 80486
+  vendor: Intel
+  class: 486
+  features: fpu
+  family: 4
+  aliases: 80486, i80486, 486, i486, intel80486, intel486
+
+- id: 80486a
+  description: Intel 80486 stepping A
+  vendor: Intel
+  class: 486
+  variant: 486a
+  features: $80486
+  family: 4
+  aliases: 80486a, i80486a, 486a, i486a, intel80486a, intel486a
+
+- id: 80486sx
+  description: Intel 80486SX (no x87 unit)
+  vendor: Intel
+  class: 486
+  features: $80486, -fpu
+  family: 4
+  aliases: 80486sx, i80486sx, 486sx, i486sx, intel80486sx, intel486sx
+
+- id: 80486sl
+  description: Intel 80486SL
+  vendor: Intel
+  class: 486
+  features: $80486
+  family: 4
+  aliases: 80486sl, i80486sl, 486sl, i486sl, intel80486sl, intel486sl
+  smmformat: 80386sl
+
+- id: p5
+  description: Intel Pentium (P5)
+  vendor: Intel
+  class: intel
+  features: fpu, vme, cpuid, msr, cx8, tsc
+  family: 5
+  aliases: 80586, i80586, 586, i586, intel80586, intel586, pentium, p5
+  smmformat: p5
+
+- id: p6
+  description: Intel Pentium Pro (P6)
+  vendor: Intel
+  class: intel
+  features: $p5, rdpmc, cmov, nop_e, pae
+  family: 6
+  aliases: 80686, i80686, 686, i686, intel80686, intel686, pentiumpro, ppro, p6
+  smmformat: p6
+
+- id: p5mmx
+  description: Intel Pentium MMX
+  vendor: Intel
+  class: intel
+  features: $p5, rdpmc, mmx
+  family: 5
+  aliases: 80586mmx, i80586mmx, 586mmx, i586mmx, intel80586mmx, intel586mmx, pentiummmx, pentium_mmx, pentium-mmx, p5mmx, mmx
+  smmformat: p5
+
+- id: p6_2
+  description: Intel Pentium II (P6-2)
+  vendor: Intel
+  class: intel
+  features: $p6, mmx, sep, fxsr
+  family: 6
+  aliases: pentiumii, pentium2, pentium-2, pentium_2, p6-2, p6_2, p2
+  smmformat: p6
+
+- id: p6_3
+  description: Intel Pentium III (P6-3)
+  vendor: Intel
+  class: intel
+  features: $p6_2, sse_non_simd, sse_simd
+  family: 6
+  aliases: pentiumiii, pentium3, pentium-3, pentium_3, p6-3, p6_3, p3
+  smmformat: p6
+
+- id: ia64
+  description: Intel Itanium, IA-32 emulation
+  vendor: Intel
+  class: intel
+  features: $p6_3, nx_ia64, ia64
+  family: 7
+  aliases: itanium, ia64, ia-64, ia_64
+
+- id: itanium2
+  description: Intel Itanium 2, IA-32 emulation
+  vendor: Intel
+  class: intel
+  features: $ia64
+  family: 17
+
+- id: p4
+  description: Intel Pentium 4 (P4)
+  vendor: Intel
+  class: intel
+  features: $p6_3, sse2, clfl
+  family: 15
+  aliases: pentiumiv, pentium4, pentium-4, pentium_4, p4, p7, netburst, ia32, ia-32, ia_32
+  smmformat: p4
+
+- id: prescott
+  description: Intel Pentium 4 "Prescott"
+  vendor: Intel
+  class: intel
+  features: $p4, lm, syscall, cx16, nx, sse3
+  family: 15
+  aliases: prescott, nocona, ia32e, ia-32e, ia_32e, em64t, intel64
+  smmformat: amd64
+
+# Intel Core line
+
+- id: merom
+  description: Intel Core 2 "Merom"
+  vendor: Intel
+  class: intel
+  features: $prescott, ssse3
+  family: 6
+  aliases: core
+  smmformat: amd64
+
+- id: penryn
+  description: Intel Core 2 "Penryn"
+  vendor: Intel
+  class: intel
+  features: $merom, sse4.1, vtx, vtd
+  family: 6
+  smmformat: amd64
+
+- id: nehalem
+  description: Intel "Nehalem"
+  vendor: Intel
+  class: intel
+  features: $penryn, sse4.2, popcnt, ahf64
+  family: 6
+  smmformat: amd64
+
+- id: westmere
+  description: Intel "Westmere"
+  vendor: Intel
+  class: intel
+  features: $nehalem, aes, clmul
+  family: 6
+  smmformat: amd64
+
+- id: sandybridge
+  description: Intel "Sandy Bridge"
+  vendor: Intel
+  class: intel
+  features: $westmere, avx, txt
+  family: 6
+  smmformat: amd64
+
+- id: ivybridge
+  description: Intel "Ivy Bridge"
+  vendor: Intel
+  class: intel
+  features: $sandybridge, f16c, rdrand
+  family: 6
+  smmformat: amd64
+
+- id: haswell
+  description: Intel "Haswell"
+  vendor: Intel
+  class: intel
+  features: $ivybridge, fma3, avx2, bmi1, abm
+  family: 6
+  smmformat: amd64
+
+- id: broadwell
+  description: Intel "Broadwell"
+  vendor: Intel
+  class: intel
+  features: $haswell, tsx, adx, rdseed, 3dnowp, smap
+  family: 6
+  smmformat: amd64
+
+- id: skylake
+  description: Intel "Skylake"
+  vendor: Intel
+  class: intel
+  features: $broadwell, mpx, sgx, avx512_f
+  family: 6
+  aliases: intel
+  smmformat: amd64
+
+# Intel Atom line
+
+- id: bonnell
+  description: Intel Atom "Bonnell"
+  vendor: Intel
+  class: intel
+  features: $prescott, ssse3
+  family: 6
+  smmformat: amd64
+
+- id: silvermont
+  description: Intel Atom "silvermont"
+  vendor: Intel
+  class: intel
+  features: $bonnell, sse4.1, sse4.2, aes, rdrand, clmul, vtx, popcnt, ahf64
+  family: 6
+  smmformat: amd64
+
+- id: goldmont
+  description: Intel Atom "Goldmont"
+  vendor: Intel
+  class: intel
+  features: $silvermont, sha, pclmul, rdseed, mpx, vtd
+  family: 6
+  smmformat: amd64
+
+- id: gracemont
+  description: Intel Atom "Gracemont"
+  vendor: Intel
+  class: intel
+  features: $goldmont, avx, avx2, avx_vnni, fma3
+  family: 6
+  smmformat: amd64
+
+# Larrabee and Xeon Phi
+
+- id: knf
+  description: Intel "Knights Ferry"
+  vendor: Intel
+  class: intel
+  features: $p5, l10m
+  family: 6
+  smmformat: amd64
+
+- id: knc
+  description: Intel Xeon Phi x100 "Knights Corner"
+  vendor: Intel
+  class: intel
+  features: $knf, -l10m, mvex
+  family: 11
+  smmformat: amd64
+
+- id: knl
+  description: Intel Xeon Phi x200 "Knights Landing"
+  vendor: Intel
+  class: intel
+  features: $knc, -mvex, avx512_f
+  family: 6
+  smmformat: amd64
+
+- id: x86s
+  description: hypothetical x86s Intel CPU
+  vendor: Intel
+  class: intel
+  features: $skylake, x86s
+  family: 19
+  smmformat: amd64
+
+#### AMD and NexGen CPUs
+
+- id: am386
+  description: AMD Am386
+  vendor: AMD
+  class: 386
+  feature: amd_smm
+  fpu: 80387, 80287
+  family: 3
+
+- id: am486
+  description: AMD Am486
+  vendor: AMD
+  class: 486
+  feature: amd_smm
+  features: fpu
+  family: 4
+
+- id: am5x86
+  description: AMD Am5x86
+  vendor: amd
+  class: amd
+  features: cpuid, fpu
+  family: 4
+  smmformat: p5
+
+- id: nx586
+  description: NexGen Nx586
+  vendor: nexgen
+  class: amd
+  features: cpuid
+  family: 5
+
+- id: nx586fp
+  description: NexGen Nx586 with FPU
+  vendor: nexgen
+  class: amd
+  features: cpuid, fpu
+  family: 5
+
+# unreleased
+- id: nx686
+  description: NexGen Nx686
+  vendor: nexgen
+  class: amd
+# TODO: features/family unknown
+  features: $nx586fp
+  family: 5
+
+- id: k5
+  description: AMD K5
+  vendor: amd
+  class: amd
+  features: $am5x86, vme, msr, cx8, tsc
+  family: 5
+  smmformat: k5
+
+- id: k6
+  description: AMD K6
+  vendor: amd
+  class: amd
+  features: $k5, syscall_k6, mmx
+  family: 5
+  smmformat: k6
+
+- id: k6_2
+  description: AMD K6-2
+  vendor: amd
+  class: amd
+  features: $k6, 3dnow, 3dnowp
+  family: 5
+  aliases: k6-2, k6_2, k6-ii
+  smmformat: k6
+
+- id: k6_3
+  description: AMD K6-III
+  vendor: amd
+  class: amd
+  features: $k6_2
+  family: 5
+  aliases: k6-3, k6_3, k6-iii, k6_iii
+  smmformat: k6
+
+- id: k6_2plus
+  description: AMD K6-2+
+  vendor: amd
+  class: amd
+  features: $k6_2, 3dnowext
+  family: 5
+  aliases: k6-2+, k6_2+, k6-2plus, k6_2plus
+  smmformat: k6
+
+- id: k6_3plus
+  description: AMD K6-III+
+  vendor: amd
+  class: amd
+  features: $k6_3, 3dnowext
+  family: 5
+  aliases: k6-3+, k6_3+, k6-3plus, k6_3plus, k6-iii, k6_iii, k6iii+, k6-iii+, k6_iii+, k6iii+
+  smmformat: k6
+
+- id: k7
+  description: AMD Athlon (K7)
+  vendor: amd
+  class: amd
+  features: $k6_2plus, -syscall_k6, syscall, rdpmc, cmov, nop_e, sep, sse_non_simd, pae, fxsr
+  family: 6
+  aliases: k7, athlon
+# TODO: unsure, double check
+  smmformat: k6
+
+- id: athlonxp
+  description: AMD Athlon XP
+  vendor: amd
+  class: amd
+  features: $k7, sse_simd
+  family: 6
+  smmformat: k6
+
+- id: k8old
+  description: AMD Athlon 64 (K8), pre-stepping F
+  vendor: amd
+  class: amd
+  features: $athlonxp, lm, sse2, clfl, nx
+  family: 15
+  smmformat: amd64
+
+- id: k8
+  description: AMD Athlon 64 (K8)
+  vendor: amd
+  class: amd
+  features: $k8old, tscp, cr8d, cx16, amdv
+  family: 15
+  aliases: amd64, opteron, athlon64
+  smmformat: amd64
+
+- id: venice
+  description: AMD Athlon 64 "Venice"
+  vendor: amd
+  class: amd
+  features: $k8, sse3
+  family: 15
+  smmformat: amd64
+
+- id: k10
+  description: AMD K10
+  vendor: amd
+  class: amd
+  features: $venice, abm, sse4a, rvi, ahf64
+  family: 16
+  smmformat: amd64
+
+- id: bobcat
+  description: AMD "Bobcat"
+  vendor: amd
+  class: amd
+  features: $k10, ssse3, -3dnow, -3dnowext
+  family: 20
+  smmformat: amd64
+
+- id: jaguar
+  description: AMD "Jaguar"
+  vendor: amd
+  class: amd
+  features: $bobcat, sse4.1, sse4.2, avx, f16c, clmul, aes, bmi1, movbe, xsave, amdv
+  family: 22
+  smmformat: amd64
+
+- id: drex
+  description: hypothetical AMD CPU with DREX support
+  vendor: amd
+  class: amd
+# copying features and family number from bulldozer, except XOP/FMA4 is replaced with DREX
+  features: $k10, -sse4a, ssse3, sse4.1, sse4.2, avx, aes, clmul, drex, f16c, -3dnow, -3dnowext
+  family: 21
+  smmformat: amd64
+
+- id: bulldozer
+  description: AMD "Bulldozer"
+  vendor: amd
+  class: amd
+  features: $k10, -sse4a, ssse3, sse4.1, sse4.2, avx, aes, clmul, xop, fma4, f16c, -3dnow, -3dnowext
+  family: 21
+  smmformat: amd64
+
+- id: piledriver
+  description: AMD "Piledriver"
+  vendor: amd
+  class: amd
+  features: $bulldozer, fma3, bmi1, tbm
+  family: 21
+  smmformat: amd64
+
+- id: excavator
+  description: AMD "Excavator"
+  vendor: amd
+  class: amd
+  features: $piledriver, avx2, avic, rdrand, mwaitx, movbe
+  family: 21
+  smmformat: amd64
+
+- id: zen
+  description: AMD Zen
+  vendor: amd
+  class: amd
+  features: $excavator, rdseed, smap, smep, xsavec, adx, sha, clzero, pte_coalescing, sme, tsme, -fma4, -tbm, -xop
+  family: 23
+  smmformat: amd64
+
+- id: zen2
+  description: AMD Zen 2
+  vendor: amd
+  class: amd
+  features: $zen, wbnoinvd, clwb, rdpid, rdpru, mcommit, gmet
+  family: 23
+  smmformat: amd64
+
+- id: zen3
+  description: AMD Zen 3
+  vendor: amd
+  class: amd
+  features: $zen2, vaes, invlpgb, cet_ss, mpk
+  family: 25
+  smmformat: amd64
+
+- id: zen4
+  description: AMD Zen 4
+  vendor: amd
+  class: amd
+  features: $zen3, avx512_f
+  family: 25
+  smmformat: amd64
+
+- id: zen5
+  description: AMD Zen 5
+  vendor: AMD
+  class: amd
+  features: $zen4
+  aliases: amd, zen5
+  family: 26
+  smmformat: amd64
+
+#### Cyrix CPUs (including National Semiconductor, AMD, VIA)
+
+- id: cx486
+  description: Cyrix Cx486SLC
+  vendor: cyrix
+  class: cyrix
+  variant: cx486slc
+  aliases: cx486slc, cx486dlc, cx486
+
+- id: cx486fp
+  description: Cyrix Cx486SLC with FPU
+  vendor: cyrix
+  class: cyrix
+  features: fpu
+  aliases: cx486slc, cx486dlc, cx486
+
+- id: cx486slce
+  description: Cyrix Cx486SLC/e
+  vendor: cyrix
+  class: cyrix
+  variant: cx486slce
+  smmformat: cx486slce
+
+- id: cx5x86
+  description: Cyrix 5x86
+  vendor: cyrix
+  class: cyrix
+  variant: 5x86
+  features: $cx486slce, cpuid
+  family: 4
+  aliases: 5x86, cx5x86
+  smmformat: 5x86
+
+- id: mediagx
+  description: Cyrix MediaGX
+  vendor: cyrix
+  class: cyrix
+  variant: mediagx
+  features: $cx5x86, media_gx
+  family: 4
+  aliases: mediagx, gx, cxgx, mediagxi, gxi
+  smmformat: mediagx
+
+- id: gxm
+  description: Cyrix MediaGXm, National Semiconductor Geode GXm
+  vendor: cyrix
+  class: cyrix
+  variant: gxm
+  features: $mediagx, msr, cx8, tsc, cmov, mmx, emmi, media_gx
+  family: 5
+  aliases: mediagxm, geode
+  smmformat: mediagx
+
+- id: gx1
+  description: National Semiconductor Geode GX1
+  vendor: nsc
+  class: cyrix
+  variant: gx1
+  features: $gxm
+  family: 5
+  smmformat: mediagx
+
+- id: gx2
+  description: National Semiconductor Geode GX2, AMD Geode GX
+  vendor: nsc
+  class: cyrix
+  variant: gx2
+  features: $gx1, sep, sse_non_simd, 3dnow, pfrcpv, dmm, -emmi, -media_gx
+  family: 5
+  aliases: gx2, amdgx
+# TODO: unsure
+  smmformat: gx2
+
+- id: lx
+  description: AMD Geode LX
+  vendor: amd
+  class: cyrix
+  variant: lx
+  features: $gx2, rdpmc, clfl
+  family: 5
+  aliases: lx, amdlx
+  smmformat: gx2
+
+# Note: not an actual Geode based core
+- id: nx
+  description: AMD Geode NX
+  vendor: amd
+  class: amd
+  features: $athlonxp
+  family: 6
+  aliases: nx, amdnx
+# TODO: unsure, double check athlon xp
+  smmformat: k6
+
+- id: cx6x86
+  description: Cyrix 6x86
+  vendor: cyrix
+  class: cyrix
+  variant: 6x86
+  features: $cx5x86
+  family: 5
+  aliases: 6x86, cx6x86
+  smmformat: 5x86
+
+- id: cx6x86l
+  description: Cyrix 6x86L
+  vendor: cyrix
+  class: cyrix
+  variant: 6x86
+  features: $cx6x86, rdshr, cx8
+  family: 5
+  smmformat: 5x86
+
+- id: m2
+  description: Cyrix 6x86MX, Cyrix MII
+  vendor: cyrix
+  class: cyrix
+  variant: m2
+  features: $cx6x86l, msr, tsc, rdpmc, cmov, mmx, emmi, rdshr
+  family: 6
+  aliases: 6x86mx, cx6x86mx, mii, m2, m-2, m_2
+  smmformat: m2
+
+# unreleased
+- id: cyrix3
+  description: VIA Cyrix III "Joshua"
+  vendor: cyrix
+  class: cyrix
+  variant: iii
+  features: $m2, 3dnow, -emmi
+  family: 6
+  aliases: cyrixiii, cyrix3, viacyrixiii, viacyrix3, viacyrix, joshua
+  smmformat: m2
+
+#### Centaur/IDT, VIA and Zhaoxin CPUs
+
+- id: wc6
+  description: Centaur/IDT WinChip C6
+  vendor: centaur
+  class: via
+# Note: CX8 is sometimes not reported
+  features: cpuid, fpu, tsc, msr, cx8, mmx, rdpmc
+  family: 5
+# TODO: smmformat, guessing
+  smmformat: p5
+
+- id: wc2
+  description: Centaur/IDT WinChip 2
+  vendor: centaur
+  class: via
+# Note: CX8 is sometimes not reported
+  features: $wc6, 3dnow
+  family: 5
+# TODO: smmformat, guessing
+  smmformat: p5
+
+# unreleased
+- id: wc3
+  description: Centaur/IDT WinChip 3
+  vendor: centaur
+  class: via
+# Note: CX8 is sometimes not reported
+  features: $wc2
+  family: 5
+# TODO: smmformat, guessing
+  smmformat: p5
+
+# unreleased
+- id: samuel
+  description: VIA Cyrix III "Samuel"
+  vendor: centaur
+  class: via
+# TODO: features/family unknown
+  features: $wc3
+  family: 5
+# TODO: smmformat, guessing
+  smmformat: p5
+
+- id: c3
+  description: VIA C3
+  vendor: centaur
+  class: via
+  features: $samuel, altinst
+  family: 6
+  aliases: viac3, c3, viac3, samuel2, c5b, ezra, c5c, c5n
+# TODO: smmformat, guessing
+  smmformat: p5
+
+- id: nehemiah
+  description: VIA C3 "Nehemiah"
+  vendor: centaur
+  class: via
+  features: $c3, cmov, sse_non_simd, sse_simd, fxsr, padlock_rng, -altinst, -3dnow
+  family: 6
+  aliases: nehemiah, c5xl
+# TODO: smmformat, guessing
+  smmformat: p5
+
+- id: c5
+  description: VIA C5 (C5P) "Nehemiah+"
+  vendor: centaur
+  class: via
+  features: $nehemiah, vme, sep, padlock_aes
+  family: 6
+  aliases: viac5, nehemiah+, c5p
+# TODO: smmformat, guessing
+  smmformat: p5
+
+- id: c7
+  description: VIA C7
+  vendor: centaur
+  class: via
+  features: $c5, nop_e, sse2, clfl, sse3, nx, pae, padlock_sha, padlock_pmm
+  family: 6
+  aliases: viac7, esther, eden, c5j
+# TODO: smmformat, guessing
+  smmformat: p5
+
+- id: nano
+  description: VIA Nano
+  vendor: centaur
+  class: via
+# Note: vtx is supported from stepping 3 (https://en.wikipedia.org/wiki/List_of_VIA_Nano_microprocessors)
+  features: $c7, lm, syscall, monitor, tscp, cx16, pae, ssse3, vtx
+  family: 6
+  aliases: vianano, isaiah, via64
+# TODO: guessing
+  smmformat: amd64
+
+- id: nano3000
+  description: VIA Nano "3000"
+  vendor: centaur
+  class: via
+  features: $nano, sse4.1
+  family: 6
+# TODO: guessing
+  smmformat: amd64
+
+- id: nanox2
+  description: VIA Nano "X2"
+  vendor: centaur
+  class: via
+  features: $nano3000
+  family: 6
+  aliases: zxa, zx-a, zx_a, zxb, zx-b, zx_b
+# TODO: guessing
+  smmformat: amd64
+
+- id: nanoc4000
+  description: VIA Nano "QuadCore C4000"
+  vendor: centaur
+  class: via
+# TODO: Wikipedia's listings seem to indicate AVX2 is not supported by Zhangjiang
+  features: $nanox2, sse4.2, avx, avx2
+  family: 6
+  aliases: quadcore, c4000, zxc, zx-c, zx_c, zhangjiang, 张江高, 張江高
+# TODO: guessing
+  smmformat: amd64
+
+# unreleased
+- id: cns
+  description: Centaur Technology CNS
+  vendor: centaur
+  class: via
+  features: $nanoc4000, avx512_f
+  family: 6
+# TODO: guessing
+  smmformat: amd64
+
+- id: zxcplus
+  description: Zhaoxin ZX-C+
+  vendor: centaur
+  class: via
+  features: $nanoc4000, avx2, aes
+  family: 6
+  aliases: zxc+, zx-c+, zx_c+, zxcplus, zx-cplus, zx_cplus
+# TODO: guessing
+  smmformat: amd64
+
+- id: zxd
+  description: Zhaoxin ZX-D/KX-5000/KH-20000 "Wudaoku"
+  vendor: centaur
+  class: via
+  features: $zxcplus
+  family: 7
+  aliases: zxd, zx-d, zx_d, kx5000, kx-5000, kx_5000, kx5k, kx-5k, kx_5k, kh20000, kh-20000, kh_20000, kh20k, kh-20k, kh_20k, wudaokou, 五道口
+# TODO: guessing
+  smmformat: amd64
+
+- id: zxe
+  description: Zhaoxin ZX-E/KX-6000/KH-30000 "Lujiazui"
+  vendor: centaur
+  class: via
+  features: $zxd, rdseed, rdrand, sha, umip
+  family: 7
+  aliases: zxe, zx-e, zx_e, kx6000, kx-6000, kx_6000, kx6k, kx-6k, kx_6k, kh30000, kh-23000, kh_30000, kh30k, kh-30k, kh_30k, lujiazui, 陆家嘴
+# TODO: guessing
+  smmformat: amd64
+
+- id: kh40000
+  description: Zhaoxin KH-40000 "Yongfeng"
+  vendor: centaur
+  class: via
+  features: $zxe, fma3
+  family: 7
+  aliases: kh40000, kh-40000, kh_40000, kh40k, kh-40k, kh_40k, yongfeng, 永豐, 永丰
+# TODO: guessing
+  smmformat: amd64
+
+- id: zxf
+  description: Zhaoxin ZX-F "Shijidadao"
+  vendor: centaur
+  class: via
+  features: $kh40000
+  family: 7
+  aliases: zx, via, kx7000, kx-7000, kx_7000, kx7k, kx-7k, kx_7k, shijidadao, 世纪大道
+# TODO: guessing
+  smmformat: amd64
+
+#### NEC CPUs
+
+- id: v20
+  description: NEC V20
+  class: v20
+  aliases: v20, upd70108, 70108
+  fpu: 8087, 72091, 72191
+
+- id: v30
+  description: NEC V30
+  class: v20
+  aliases: v30, upd70116, 70116
+  fpu: 8087, 72091, 72191
+
+- id: v40
+  description: NEC V40
+  class: v20
+  aliases: v40, upd70208, 70208
+  fpu: 8087, 72091, 72191
+
+- id: v50
+  description: NEC V50
+  class: v20
+  aliases: v50, upd70216, 70216
+  fpu: 8087, 72091, 72191
+
+- id: upd9002
+  description: NEC µPD9002
+  class: upd9002
+  aliases: upd9002, 9002, pc-88va, pc88va, 88va, pc-88-va, pc88-va, 88-va
+
+- id: v33
+  description: NEC V33/V53
+  class: v33
+  aliases: v33, upd70136, 70108, v53, upd70236, 70116
+#  fpu: 72291
+
+- id: v25
+  description: NEC V25
+  class: v25
+  aliases: v25, upd70320, 70320, v35, upd70330, 70330
+
+- id: v55
+  description: NEC V55PI/V55SC
+  class: v55
+  aliases: v55, upd70433, 70433, upd70423, 70423, v55pi, v55sc
+
+- id: v60
+  description: NEC V60, V30 emulation
+  class: v60
+  aliases: v60, upd70616, 70616, v70, upd70632, 70632, v80, upd70832, 70832
+
+#### others
+
+- id: extended
+  description: Extended
+  vendor: custom
+  class: intel
+  features: $skylake
+  family: 15
+  smmformat: amd64
+
+#### FPUs
+
+- id: 8087
+  description: Intel 8087
+  type: fpu
+  class: 8087
+  aliases: 8087, i8087, 87, i87
+
+# unreleased
+- id: 72091
+  description: NEC µPD72091
+  type: fpu
+# TODO: not much is known
+  class: 8087
+
+- id: 287
+  description: Intel 80287
+  type: fpu
+  class: 287
+  aliases: 80287, i80287, 287, i287
+
+- id: 287xl
+  description: Intel 80287XL
+  type: fpu
+  class: 287
+  variant: 287xl
+  aliases: 80287xl, i80287xl, 287xl, i287xl
+
+- id: 387
+  description: Intel 80387
+  type: fpu
+  class: 387
+  aliases: 80387, i80387, 387, i387
+
+- id: 387sl
+  description: Intel 80387SL
+  type: fpu
+  class: 387
+  variant: 387sl
+  aliases: 80387sl, i80387sl, 387sl, i387sl
+
+- id: 187
+  description: Intel 80C187
+  type: fpu
+  # this is not a typo
+  class: 387
+  aliases: 80187, i80187, 187, i187, 80c187, i80c187
+
+# unreleased
+- id: 72191
+  description: NEC µPD72191
+  type: fpu
+  class: 387
+
+- id: emc87
+  description: Cyrix EMC87
+  type: fpu
+  class: emc87
+  aliases: emc87, fasmath, cyrix
+
+- id: iit
+  description: IIT 3c87
+  type: fpu
+  class: iit
+
+#- id: 72291
+#  description: NEC µPD72291, NEC µPD76291
+#  type: fpu
+## not x87 compatible
+## TODO: not much is known
+#  class: 72291
+
