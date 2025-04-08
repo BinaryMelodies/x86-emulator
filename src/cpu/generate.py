@@ -129,6 +129,11 @@ class Instruction:
 		return opd in {'Cy', 'Dy', 'Gb', 'Gw', 'Gd', 'Gz', 'Gv', 'Sw', 'Ty'}
 
 	@staticmethod
+	def is_reg_only_opd(opd):
+		""" Whether the operand is a register operand that ignores the MOD field """
+		return opd in {'Cy', 'Dy', 'Ty'}
+
+	@staticmethod
 	def is_mem_or_reg_opd(opd):
 		""" Whether the operand is a ModRM memory/register operand """
 		return opd in {'E', 'Eb', 'Ew', 'Ed', 'Ez', 'Ev', 'Mw/Rv'}
@@ -137,9 +142,15 @@ class Instruction:
 		if 'modrm' in self.kwds:
 			return True
 		for opd in self.kwds['opds']:
-			if Instruction.is_reg_opd(opd) or Instruction.is_mem_reg_opd(opd):
-				self.kwds['modrm'] = False # if no memory operand, don't parse modrm byte fully
-			elif Instruction.is_mem_opd(opd) or Instruction.is_mem_or_reg_opd(opd):
+			if Instruction.is_reg_only_opd(opd):
+				# For MOV Cy/Dy/Ty instructions
+				self.kwds['modrm'] = False # don't parse modrm byte fully
+				return True
+		for opd in self.kwds['opds']:
+			#if Instruction.is_reg_opd(opd) or Instruction.is_mem_reg_opd(opd):
+			#	if 'modrm' not in self.kwds:
+			#		self.kwds['modrm'] = False # if no memory operand, don't parse modrm byte fully
+			if Instruction.is_mem_opd(opd) or Instruction.is_mem_or_reg_opd(opd) or Instruction.is_mem_reg_opd(opd):
 				self.kwds['modrm'] = True
 				return True
 		return 'modrm' in self.kwds
@@ -224,6 +235,9 @@ class Entry:
 		entry.tab = entry.tab.deepcopy() if entry.tab is not None else None
 		return entry
 
+	def is_empty(self):
+		return self.tab is None and len(self.ins) == 0
+
 class Table:
 	def __init__(self, size, **kwds):
 		# Every entry should contain at most one Table and any number of Instruction elements
@@ -259,6 +273,7 @@ class Table:
 
 	def assign(self, index, value):
 		assert len(index) > 0
+		assert isinstance(value, Instruction)
 		if len(index) == 1:
 			assert type(index[0][0]) is int
 			self.entries[index[0][0]].ins.append(value)
@@ -267,29 +282,13 @@ class Table:
 			table_type = index[1][1]
 
 			subtable = self.entries[index[0][0]].tab
-			if subtable is None and table_type != 'prefix':
-				#assert modify
+			if subtable is None:
 				self.entries[index[0][0]].tab = Table({'modfield': 2, 'regfield': 8, 'memfield': 8, 'subtable': 256, 'prefix': 4}[table_type], discriminator = table_type)
 				subtable = self.entries[index[0][0]].tab
 				subtable.assign(index[1:], value)
 			elif subtable is not None and subtable.kwds['discriminator'] == table_type:
 				subtable.assign(index[1:], value)
-			elif table_type == 'prefix':
-				# TODO: check and possibly rework this
-				noprefix_entry = self.entries[index[0][0]]
-				self.entries[index[0][0]] = new_entry = Entry()
-				new_entry.tab = Table(4, discriminator = 'prefix')
-				for i in range(4):
-					if i != 0:
-						noprefix_entry = noprefix_entry.deepcopy()
-						if i == 1:
-							for item in ([noprefix_entry.tab] if noprefix_entry.tab is not None else []) + noprefix_entry.ins:
-								if 'flags' not in item.kwds:
-									item.kwds['flags'] = set()
-								item.kwds['flags'].add('fallback')
-					new_entry.tab.entries[i] = noprefix_entry
-				self.assign(index, value) # try again
-			elif subtable.kwds['discriminator'] == 'modfield' and table_type == 'subtable':
+			elif subtable is not None and subtable.kwds['discriminator'] == 'modfield' and table_type == 'subtable':
 				# if the step specifies an entire byte, split it up to MOD, REG, MEM fields
 				assert (index[1][0] & 0xC0) == 0xC0
 				newindex = Path((1, 'modfield'), ((index[1][0] >> 3) & 7, 'regfield'), (index[1][0] & 7, 'memfield')) + index[2:]
@@ -346,12 +345,46 @@ class Table:
 			self.kwds['modrm'] = False
 			for entry in self.entries:
 				for item in ([entry.tab] if entry.tab is not None else []) + entry.ins:
-				#if entry is not None and 'modrm' in entry.kwds:
 					if 'modrm' in item.kwds:
 						self.kwds['modrm'] |= item.kwds['modrm']
 						item.kwds['modrm'] = False
 
+		elif self.kwds.get('discriminator') == 'prefix':
+			for entry in self.entries:
+				for item in ([entry.tab] if entry.tab is not None else []) + entry.ins:
+					if 'modrm' in item.kwds:
+						if 'modrm' not in self.kwds or item.kwds['modrm'] == True:
+							self.kwds['modrm'] = item.kwds['modrm']
+						item.kwds['modrm'] = False
+
 		return 'modrm' in self.kwds
+
+	def check_prefix_defaults(self, fallbacks = None):
+		if self.kwds['discriminator'] == 'prefix':
+			if fallbacks is None:
+				return
+			for entry in self.entries:
+				assert entry.tab is None
+				new_ins = []
+				for fallback in fallbacks:
+					isas = self.kwds['isas'].intersection(fallback.kwds['isas'])
+					for ins in entry.ins:
+						isas.difference_update(self.kwds['isas'].intersection(fallback.kwds['isas']))
+					if len(isas) != 0:
+						fallback1 = fallback.deepcopy()
+						fallback1.kwds['isas'] = isas
+						new_ins.append(fallback1)
+				entry.ins += new_ins
+		else:
+			for entry in self.entries:
+				if entry.tab is not None:
+					assert fallbacks is None
+					if entry.tab.kwds['discriminator'] == 'prefix':
+						entry.tab.check_prefix_defaults(entry.ins.copy())
+						for ins in entry.ins:
+							ins.kwds['isas'].difference_update(entry.tab.kwds['isas'])
+					else:
+						entry.tab.check_prefix_defaults()
 
 def is_instruction_exclusive(opds):
 	"""Whether only memory or register operands are accepted for the ModRM byte, returns 'M' or 'R' or None"""
@@ -685,11 +718,10 @@ def read_data(filename):
 
 	X80_TABLE.check_flags()
 	X86_TABLE.check_flags()
+	X86_TABLE.check_prefix_defaults()
 	X86_TABLE.check_if_has_modrm()
 	X87_TABLE.check_flags()
 	X87_TABLE.check_if_has_modrm() # Note: these all have modrm
-
-read_data(sys.argv[1])
 
 def print_table(table, path = Path()):
 	for index, entry in enumerate(table.entries):
@@ -697,8 +729,10 @@ def print_table(table, path = Path()):
 		for ins in entry.ins:
 			print(path1, ins)
 		if entry.tab is not None:
-			print(path1, ">", entry.tab.kwds['discriminator'])
+			print(path1, ">", entry.tab.kwds['discriminator'], sorted(entry.tab.kwds.items()))
 			print_table(entry.tab, path1)
+
+read_data(sys.argv[1])
 
 #print_table(X80_TABLE)
 #print_table(X86_TABLE)
@@ -2908,14 +2942,13 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 			if prefix == 'NONE':
 				print_file(f"{indent}default:", file = file)
 			else:
-				try:
-					imode, impl_range, entry = next(get_implementation_ranges(mode, path, 'prefix', index1, actual_range, modrm))
-					if impl_range == actual_range and entry is None:
-						continue
-				except StopIteration:
-					continue
+				#try:
+				#	imode, impl_range, entry = next(get_implementation_ranges(mode, path, 'prefix', index1, actual_range, modrm))
+				#	if impl_range == actual_range and entry is None:
+				#		continue
+				#except StopIteration:
+				#	continue
 				print_file(f"{indent}case X86_PREF_{prefix}:", file = file)
-			# TODO: even after CPU checks, UNDEFINED should go back to the default case
 			if print_implementations(mode, path, 'prefix', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
 				print_file(indent + "\tbreak;", file = file)
 		print_file(f"{indent}}}", file = file)
