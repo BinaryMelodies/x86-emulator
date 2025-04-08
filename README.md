@@ -90,6 +90,7 @@ This project would not have been possible without the resources and amazing work
 * [OPCODE.LST](http://phg.chat.ru/opcode.txt)
 * [rep-lodsb.mataroa.blog](https://rep-lodsb.mataroa.blog/blog/intel-286-secrets-ice-mode-and-f1-0f-04/) for documenting how STOREALL works on an Intel 286
 * [Robert R. Collins's excellent resources](https://www.rcollins.org/) on Intel CPUs up until the late 90s
+* [x86, x64 Instruction Latency, Memory Latency and CPUID](http://users.atw.hu/instlatx64/)
 * and many more resources I don't remember
 
 Furthermore, this project took inspiration from many other emulator projects, including:
