@@ -6,5 +6,8 @@ test/*.com
 test/*.jrc
 test/*.bin
 test/*.hex
+external/*
+verify/8088
+verify/v20
 x86emu
 *~

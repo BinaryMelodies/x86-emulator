@@ -398,6 +398,7 @@ static inline uaddr_t x86_page_translate(x86_state_t * emu, uaddr_t full_address
 	else if((emu->cr[0] == X86_CR0_PG) == 0)
 	{
 		/* paging disabled */
+		address &= x86_get_memory_mask(emu);
 		*length = x86_get_memory_mask(emu) - address + 1;
 		return address;
 	}

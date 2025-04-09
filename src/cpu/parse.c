@@ -456,7 +456,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _sub_carry64(x, y, z) ((((x & ~y) | (x & ~z) | (~y & ~z)) & 0x8000000000000000) == 0)
 
 #define _add_auxiliary(x, y, z) (((x ^ y ^ z) & 0x10) != 0)
-#define _sub_auxiliary(x, y, z) (((x ^ y ^ z) & 0x10) == 0)
+#define _sub_auxiliary(x, y, z) (((x ^ y ^ z) & 0x10) != 0)
 
 #define _add_auxiliaryh(x, y, z) (((x ^ y ^ z) & 0x1000) != 0)
 #define _sub_auxiliaryh(x, y, z) (((x ^ y ^ z) & 0x1000) == 0)
