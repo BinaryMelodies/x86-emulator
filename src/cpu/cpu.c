@@ -622,7 +622,7 @@ void x86_reset(x86_state_t * emu, bool reset)
 	}
 	emu->bndcfgs = emu->bndcfgu = emu->bndstatus = 0;
 
-	emu->halted = false;
+	emu->state = X86_STATE_RUNNING;
 }
 
 static void x86_debug64(FILE * file, x86_state_t * emu)
@@ -1146,8 +1146,14 @@ x86_result_t x86_step(x86_state_t * emu)
 {
 	emu->emulation_result = X86_RESULT(X86_RESULT_SUCCESS, 0);
 
-	if(emu->halted)
+	switch(emu->state)
+	{
+	case X86_STATE_RUNNING:
+		break;
+	case X86_STATE_HALTED:
+	case X86_STATE_STOPPED:
 		return X86_RESULT(X86_RESULT_HALT, 0);
+	}
 
 	emu->current_exception = X86_EXC_CLASS_BENIGN;
 	if(setjmp(emu->exc) != 0)
@@ -1400,7 +1406,8 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 		}
 		else if(emu->_if != 0 || exception_number == X86_EXC_NMI)
 		{
-			//x86_trigger_interrupt(emu, exception_number, 0);
+			if(emu->state == X86_STATE_STOPPED)
+				return false;
 			if(setjmp(emu->exc) != 0)
 				return true;
 			x86_enter_interrupt(emu, exception_number, 0);

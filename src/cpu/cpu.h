@@ -1010,12 +1010,21 @@ union x86_sse_register_t
 };
 typedef union x86_sse_register_t x86_sse_register_t;
 
+/* Current execution state of the CPU, typically running or halted */
+enum x86_execution_state_t
+{
+	X86_STATE_RUNNING,
+	X86_STATE_HALTED,
+	X86_STATE_STOPPED, // v25/v55 specific
+};
+typedef enum x86_execution_state_t x86_execution_state_t;
+
 /* Results from x86 execution, low 8 bits represent the type, remaining bits a value */
 enum x86_result_t
 {
 	/* Execution succeeded */
 	X86_RESULT_SUCCESS,
-	/* Execution halted */
+	/* Execution halted (also includes stopped) */
 	X86_RESULT_HALT,
 	/* An interrupt was invoked, interrupt number is value, execution will continue */
 	X86_RESULT_CPU_INTERRUPT,
@@ -1027,6 +1036,8 @@ enum x86_result_t
 	X86_RESULT_TRIPLE_FAULT,
 	/* Interrupts should not be delivered until next instruction */
 	X86_RESULT_INHIBIT_INTERRUPTS,
+	/* An undefined instruction occured, however 186+ would report an X86_CPU_INTERRUPT instead */
+	X86_RESULT_UNDEFINED,
 };
 typedef enum x86_result_t x86_result_t;
 
@@ -1813,8 +1824,8 @@ struct x86_state_t
 		};
 	};
 
-	/* Set when the CPU entered a halted state */
-	bool halted;
+	/* Current execution state, typically running or halted */
+	x86_execution_state_t state;
 	/* Current privilege level, stored separately because different CPU types store it in different places */
 	int cpl;
 	/* Whether code segment is writable */

@@ -2112,7 +2112,7 @@ static inline void x86_interrupt_via_task_gate(x86_state_t * emu, int exception,
 
 static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t error_code)
 {
-	emu->halted = false; // TODO: what happens if an interrupt resumes to halt?
+	emu->state = X86_STATE_RUNNING;
 
 	x86_store_x80_registers(emu);
 	if((exception & X86_EXC_FAULT) != 0)

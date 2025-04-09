@@ -724,7 +724,7 @@ static inline void x86_smm_store_state32(x86_state_t * emu, uaddr_t offset, x86_
 	x86_memory_write32(emu, offset - 0x8000 + 0x7FAC, emu->sr[X86_R_CS].selector);
 	x86_memory_write32(emu, offset - 0x8000 + 0x7FA8, emu->sr[X86_R_ES].selector);
 
-	x86_memory_write16(emu, offset - 0x8000 + 0x7F02, emu->halted ? 1 : 0);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7F02, emu->state == X86_STATE_HALTED ? 1 : 0);
 	x86_memory_write16(emu, offset - 0x8000 + 0x7F00, 0); // I/O trap slot
 	x86_memory_write32(emu, offset - 0x8000 + 0x7EFC, emu->smm_revision_identifier);
 	if((emu->smm_revision_identifier & SMM_REVID_SMBASE_RELOC) != 0)
@@ -784,7 +784,7 @@ static inline void x86_smm_store_state64(x86_state_t * emu, uaddr_t offset, x86_
 
 	x86_memory_write8(emu, offset - 0x8000 + 0x7ECB, emu->cpl);
 	// TODO: block NMI
-	x86_memory_write8(emu, offset - 0x8000 + 0x7EC9, emu->halted ? 1 : 0);
+	x86_memory_write8(emu, offset - 0x8000 + 0x7EC9, emu->state == X86_STATE_HALTED ? 1 : 0);
 	x86_memory_write8(emu, offset - 0x8000 + 0x7EC8, 0); // I/O trap slot
 
 	// TODO: guessing
@@ -823,7 +823,7 @@ static inline void x86_smm_store_state_cyrix(x86_state_t * emu, uaddr_t offset, 
 	bool ins_had_rep = attributes.source == X86_SMISRC_IO && x86_io_instruction_has_rep_prefix(attributes.io_type);
 	bool ins_is_write = attributes.source == X86_SMISRC_MEMORY;
 	bool ins_smint = attributes.source == X86_SMISRC_SMINT;
-	bool cpu_in_halt = emu->halted;
+	bool cpu_in_halt = emu->state == X86_STATE_HALTED;
 	bool memory_access = attributes.source == X86_SMISRC_MEMORY; // TODO: how is this different from ins_is_write?
 	uint32_t write_address = attributes.write_address;
 	uint32_t write_data = attributes.write_data;
@@ -1369,7 +1369,7 @@ static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 	x86_memory_write32(emu, offset - 0x8000 + 0x7FAC, emu->sr[X86_R_CS].selector);
 	x86_memory_write32(emu, offset - 0x8000 + 0x7FA8, emu->sr[X86_R_ES].selector);
 
-	x86_memory_write16(emu, offset - 0x8000 + 0x7F02, emu->halted ? 1 : 0);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7F02, emu->state == X86_STATE_HALTED ? 1 : 0);
 	x86_memory_write16(emu, offset - 0x8000 + 0x7F00, 0); // I/O trap slot
 	x86_memory_write32(emu, offset - 0x8000 + 0x7EFC, emu->smm_revision_identifier);
 	if((emu->smm_revision_identifier & SMM_REVID_SMBASE_RELOC) != 0)

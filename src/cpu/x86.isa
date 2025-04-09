@@ -971,9 +971,9 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0FAB	386+	BTS	Ev, Gv
 0FAC	386+	SHRD	Ev, Gv, Ib
 0FAD	386+	SHRD	Ev, Gv, CL
-NP0FAE/0	586+	FXSAVE/FXSAVE64	M	feature:	FXSR	# TODO: parser generator does not generate it
+NP0FAE/0	586+	FXSAVE/FXSAVE64	M	feature:	FXSR
 F30FAE/0	64,586+	RDFSBASE	Ry	feature:	FSGSBASE
-NP0FAE/1	586+	FXRSTOR/FXRSTOR64	M	feature:	FXSR	# TODO: parser generator does not generate it
+NP0FAE/1	586+	FXRSTOR/FXRSTOR64	M	feature:	FXSR
 F30FAE/1	64,586+	RDGSBASE	Ry	feature:	FSGSBASE
 F30FAE/2	64,586+	WRFSBASE	Ry	feature:	FSGSBASE
 F30FAE/3	64,586+	WRGSBASE	Ry	feature:	FSGSBASE
@@ -2341,8 +2341,7 @@ if(emu->cpu_type == X86_CPU_V60)
 if(x86_is_ia64(emu))
 	x86_ia64_intercept(emu, 0); // TODO
 PRIVILEGED();
-$rip = $old_rip; // TODO: should the xIP not point to the next instruction? hard to return from interrupts
-emu->halted = true;
+emu->state = X86_STATE_HALTED;
 emu->emulation_result = X86_RESULT(X86_RESULT_HALT, 0);
 
 @instruction IBTS
@@ -3619,7 +3618,7 @@ if(!had_if)
 @instruction STOP
 @comment NEC specific
 PRIVILEGED();
-/* TODO: (v25) STOP */
+emu->state = X86_STATE_STOPPED;
 
 @instruction STOREALL286
 PRIVILEGED();
