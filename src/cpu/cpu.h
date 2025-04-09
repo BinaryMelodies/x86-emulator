@@ -2097,9 +2097,10 @@ void x86_flags_set64(x86_state_t * emu, uint64_t value);
 
 // convenience functions
 
-static inline bool x86_is_nec(x86_state_t * emu)
+static inline bool x86_is_nec(void * arg)
 {
-	return emu->cpu_type >= X86_CPU_V60 && emu->cpu_type <= X86_CPU_V55;
+	x86_parser_t * prs = arg;
+	return prs->cpu_type >= X86_CPU_V60 && prs->cpu_type <= X86_CPU_V55;
 }
 
 static inline bool x86_is_z80(x86_state_t * emu)

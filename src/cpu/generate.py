@@ -836,13 +836,13 @@ OPERAND_CODE = {
 		'size':    'w',
 		'read':    "x86_register_get16(emu, X86_R_AX)",
 		'write':   "x86_register_set16(emu, X86_R_AX, $$)",
-		'format':  ("%s", ["x86_is_nec(emu) ? \"aw\" : \"ax\""]),
+		'format':  ("%s", ["x86_is_nec(prs) ? \"aw\" : \"ax\""]),
 	},
 	'DX': {
 		'size':    'w',
 		'read':    "x86_register_get16(emu, X86_R_DX)",
 		'write':   "x86_register_set16(emu, X86_R_DX, $$)",
-		'format':  ("%s", ["x86_is_nec(emu) ? \"dw\" : \"dx\""]),
+		'format':  ("%s", ["x86_is_nec(prs) ? \"dw\" : \"dx\""]),
 	},
 	'rAX': {
 		'size':    'wlq',
@@ -1148,7 +1148,7 @@ X80_OPERAND_CODE = {
 	'Jb': {
 		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8(prs, emu);',
 		'read':    "imm$# + (emu->pc & 0xFFFF)",
-		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + (emu->pc & 0xFFFF))"]),
+		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + (prs->current_position & 0xFFFF))"]),
 	},
 	'A': {
 		'read':   "x86_get_high(emu->bank[emu->af_bank].af)",
@@ -2971,7 +2971,7 @@ with open(outfile, 'w') as fp:
 
 	print_file("static inline x86_result_t x80_parse(x80_parser_t * prs, x80_state_t * emu, x86_state_t * emu86, bool disassemble, bool execute)", file = fp)
 	print_file("{", file = fp)
-	print_file("\tuint16_t old_pc = emu->pc;", file = fp)
+	print_file("\tuint16_t old_pc = prs->current_position;", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
 	print_switch('8', Path(), '\t', file = fp)
 	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)

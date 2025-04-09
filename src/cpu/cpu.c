@@ -1074,6 +1074,7 @@ void x86_debug(FILE * file, x86_state_t * emu)
 
 void x80_debug(FILE * file, x80_state_t * emu)
 {
+	fprintf(file, "[CPU]\t");
 	switch(emu->cpu_type)
 	{
 	case X80_CPU_I80:
@@ -1156,8 +1157,6 @@ x86_result_t x86_step(x86_state_t * emu)
 	}
 
 	emu->current_exception = X86_EXC_CLASS_BENIGN;
-	if(setjmp(emu->exc) != 0)
-		return emu->emulation_result; /* exception occured */
 
 	bool disassemble = emu->option_disassemble;
 #define prs (emu->parser)
@@ -1166,42 +1165,54 @@ x86_result_t x86_step(x86_state_t * emu)
 
 	if(x86_is_emulation_mode(emu))
 	{
-		emu->x80.parser->index_prefix = NONE;
-		emu->emulation_result = x80_parse(emu->x80.parser, &emu->x80, emu, disassemble, true);
+		if(setjmp(emu->exc) == 0)
+		{
+			emu->x80.parser->debug_output[0] = '\0';
+			emu->x80.parser->index_prefix = NONE;
+			emu->emulation_result = x80_parse(emu->x80.parser, &emu->x80, emu, disassemble, true);
+		}
+
+		strcat(emu->parser->debug_output, emu->x80.parser->debug_output);
 	}
 	else
 	{
-		emu->old_xip = emu->xip;
+		if(setjmp(emu->exc) == 0)
+		{
+			emu->old_xip = emu->xip;
 
-		emu->parser->segment = NONE;
-		emu->parser->source_segment = X86_R_DS;
-		emu->parser->source_segment2 = X86_R_DS;
-		emu->parser->source_segment3 = X86_R_DS;
-		emu->parser->destination_segment = X86_R_ES;
+			emu->parser->segment = NONE;
+			emu->parser->source_segment = X86_R_DS;
+			emu->parser->source_segment2 = X86_R_DS;
+			emu->parser->source_segment3 = X86_R_DS;
+			emu->parser->destination_segment = X86_R_ES;
 
-		emu->parser->rep_prefix = X86_PREF_NOREP;
-		emu->parser->simd_prefix = X86_PREF_NONE;
-		emu->parser->lock_prefix = emu->parser->user_mode = false;
+			emu->parser->rep_prefix = X86_PREF_NOREP;
+			emu->parser->simd_prefix = X86_PREF_NONE;
+			emu->parser->lock_prefix = emu->parser->user_mode = false;
 
-		emu->parser->address_size = emu->parser->code_size = x86_get_code_size(emu);
-		emu->parser->operation_size = emu->parser->code_size == X86_SIZE_WORD ? X86_SIZE_WORD : X86_SIZE_DWORD;
+			emu->parser->address_size = emu->parser->code_size = x86_get_code_size(emu);
+			emu->parser->operation_size = emu->parser->code_size == X86_SIZE_WORD ? X86_SIZE_WORD : X86_SIZE_DWORD;
 
-		emu->parser->rex_prefix = emu->parser->rex_w = false;
-		emu->parser->rex_r = emu->parser->rex_x = emu->parser->rex_b = 0;
-		emu->parser->opcode_map = 0;
-		emu->parser->vex_l = emu->parser->vex_v = emu->parser->evex_vb = emu->parser->evex_vx = emu->parser->evex_a = 0;
-		emu->parser->evex_z = false;
+			emu->parser->rex_prefix = emu->parser->rex_w = false;
+			emu->parser->rex_r = emu->parser->rex_x = emu->parser->rex_b = 0;
+			emu->parser->opcode_map = 0;
+			emu->parser->vex_l = emu->parser->vex_v = emu->parser->evex_vb = emu->parser->evex_vx = emu->parser->evex_a = 0;
+			emu->parser->evex_z = false;
 
-		emu->parser->address_offset = 0;
-		emu->parser->register_field = 0;
-		x86_parse(emu->parser, emu, disassemble, true);
+			emu->parser->address_offset = 0;
+			emu->parser->register_field = 0;
+			x86_parse(emu->parser, emu, disassemble, true);
+		}
 	}
 
 	if((x86_memory_segmented_read8(emu, X86_R_TR, 0x64) & 0x01) != 0)
 	{
 		emu->dr[6] |= X86_DR6_BS;
-		x86_trigger_interrupt(emu, X86_EXC_DB | X86_EXC_TRAP, 0);
-		// TODO: what happens to the emulation result?
+		if(setjmp(emu->exc) == 0)
+		{
+			x86_trigger_interrupt(emu, X86_EXC_DB | X86_EXC_TRAP, 0);
+			// TODO: what happens to the emulation result?
+		}
 	}
 
 	return emu->emulation_result;
@@ -1219,7 +1230,9 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 {
 	if(emu != NULL && x86_is_emulation_mode(emu))
 	{
+		emu->x80.parser->debug_output[0] = '\0';
 		x80_disassemble(emu->x80.parser);
+		strcat(emu->parser->debug_output, emu->x80.parser->debug_output);
 	}
 	else
 	{

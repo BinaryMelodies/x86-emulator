@@ -406,6 +406,18 @@ static inline bool x86_rep_condition(x86_state_t * emu)
 	}
 }
 
+static inline void x86_undefined_instruction(x86_state_t * emu)
+{
+	if(emu->cpu_type == X86_CPU_186 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type >= X86_CPU_286)
+	{
+		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+	}
+	else
+	{
+		emu->emulation_result = X86_RESULT(X86_RESULT_UNDEFINED, 0);
+	}
+}
+
 #define _int8 int8_t
 #define _int16 int16_t
 #define _int32 int32_t
@@ -457,18 +469,6 @@ static inline bool x86_rep_condition(x86_state_t * emu)
 #define _sub_overflow64(x, y, z) ((((x & ~y & ~z) | (~x & y & z)) & 0x8000000000000000) != 0)
 
 #define DEBUG(...) do { if(disassemble) debug_printf((prs)->debug_output, __VA_ARGS__); } while(0) // TODO: better type
-
-static inline void x86_undefined_instruction(x86_state_t * emu)
-{
-	if(emu->cpu_type == X86_CPU_186 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type >= X86_CPU_286)
-	{
-		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
-	}
-	else
-	{
-		emu->emulation_result = X86_RESULT(X86_RESULT_UNDEFINED, 0);
-	}
-}
 
 // Called when the instruction is not defined, either triggers an interrupt or returns without any action
 #define UNDEFINED() \

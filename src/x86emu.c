@@ -2357,7 +2357,7 @@ int main(int argc, char * argv[])
 
 	memset(emu, 0, sizeof(emu));
 
-	x86_cpu_version_t cpu_version = X86_CPU_TYPE_EXTENDED;
+	x86_cpu_version_t cpu_version = (x86_cpu_version_t)-1;
 	x87_fpu_type_t fpu_type = (x87_fpu_type_t)-1;
 	x87_fpu_subtype_t fpu_subtype = 0;
 
@@ -2466,7 +2466,6 @@ int main(int argc, char * argv[])
 				|| strcasecmp(arg, "i89") == 0)
 				{
 					emu->x89.present = true;
-					fpu_subtype = 0;
 				}
 				else if(strcasecmp(arg, "8080") == 0
 				|| strcasecmp(arg, "i8080") == 0
@@ -2477,7 +2476,6 @@ int main(int argc, char * argv[])
 				{
 					emu->x80.cpu_type = X80_CPU_I80;
 					emu->x80.cpu_method = X80_CPUMETHOD_SEPARATE;
-					fpu_subtype = 0;
 				}
 				else if(strcasecmp(arg, "8085") == 0
 				|| strcasecmp(arg, "i8085") == 0
@@ -2488,13 +2486,11 @@ int main(int argc, char * argv[])
 				{
 					emu->x80.cpu_type = X80_CPU_I85;
 					emu->x80.cpu_method = X80_CPUMETHOD_SEPARATE;
-					fpu_subtype = 0;
 				}
 				else if(strcasecmp(arg, "z80") == 0)
 				{
-					emu->x80.cpu_type = X80_CPU_I80;
+					emu->x80.cpu_type = X80_CPU_Z80;
 					emu->x80.cpu_method = X80_CPUMETHOD_SEPARATE;
-					fpu_subtype = 0;
 				}
 				else
 				{
@@ -2678,7 +2674,8 @@ int main(int argc, char * argv[])
 					pc_type = X86_PCTYPE_NEC_PC88_VA;
 				}
 				else if(strcasecmp(arg, "apricot") == 0
-				|| strcasecmp(arg, "apc") == 0)
+				|| strcasecmp(arg, "apc") == 0
+				|| strcasecmp(arg, "act") == 0)
 				{
 					pc_type = X86_PCTYPE_APRICOT;
 				}
@@ -2743,13 +2740,53 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
+	if(pc_type == X86_PCTYPE_DEFAULT)
+	{
+		pc_type = X86_PCTYPE_IBM_PC_CGA;
+		if(cpu_version == (x86_cpu_version_t)-1)
+			cpu_version = X86_CPU_TYPE_EXTENDED;
+	}
+
+	if(cpu_version == (x86_cpu_version_t)-1)
+	{
+		switch(pc_type)
+		{
+		case X86_PCTYPE_NONE:
+			cpu_version = X86_CPU_TYPE_EXTENDED;
+			break;
+		case X86_PCTYPE_IBM_PC_MDA:
+		case X86_PCTYPE_IBM_PC_CGA:
+		case X86_PCTYPE_IBM_PCJR:
+			cpu_version = X86_CPU_TYPE_8088;
+			break;
+		case X86_PCTYPE_NEC_PC98:
+			cpu_version = X86_CPU_TYPE_8086;
+			break;
+		case X86_PCTYPE_NEC_PC88_VA:
+			cpu_version = X86_CPU_TYPE_UPD9002;
+			break;
+		case X86_PCTYPE_APRICOT:
+			cpu_version = X86_CPU_TYPE_8086;
+			emu->x89.present = true;
+			break;
+		case X86_PCTYPE_TANDY2000:
+			cpu_version = X86_CPU_TYPE_80186;
+			break;
+		case X86_PCTYPE_DEC_RAINBOW:
+			cpu_version = X86_CPU_TYPE_8088;
+			emu->x80.cpu_type = X80_CPU_Z80;
+			emu->x80.cpu_method = X80_CPUMETHOD_SEPARATE;
+			break;
+		}
+	}
+
 	emu->cpu_traits = x86_cpu_traits[cpu_version];
 	if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_FPU) != 0)
 	{
 		emu->x87.fpu_type = X87_FPU_INTEGRATED;
 		emu->x87.fpu_subtype = 0;
 	}
-	else if(fpu_type == X87_FPU_NONE)
+	else if(fpu_type == X87_FPU_NONE || fpu_type == (x87_fpu_type_t)-1)
 	{
 		emu->x87.fpu_type = X87_FPU_NONE;
 		emu->x87.fpu_subtype = 0;
@@ -2773,11 +2810,15 @@ int main(int argc, char * argv[])
 	emu->parser->use_nec_syntax = x86_is_nec(emu);
 	emu->x80.parser->use_intel8080_syntax = emu->cpu_type == X86_CPU_V20;
 
+printf("ok %d\n", emu->x80.cpu_method);
+
 	x86_reset(emu, true);
+
+printf("ok %d\n", emu->x80.cpu_method);
 
 	if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 	{
-		emu->x80.memory_read = _x80_memory_read;
+		emu->x80.memory_read = emu->x80.memory_fetch = _x80_memory_read;
 		emu->x80.memory_write = _x80_memory_write;
 		emu->x80.port_read = _x80_port_read;
 		emu->x80.port_write = _x80_port_write;
@@ -3114,8 +3155,10 @@ int main(int argc, char * argv[])
 			fprintf(stderr, "Tandy 2000 not yet implemented\n");
 			exit(1);
 		case X86_PCTYPE_DEC_RAINBOW:
-			fprintf(stderr, "DEC Rainbow not yet implemented\n");
-			exit(1);
+//			fprintf(stderr, "DEC Rainbow not yet implemented\n");
+//			exit(1);
+				load_bin(emu, input, 0, &registers, 0x100);
+break;
 		}
 		break;
 
@@ -3398,6 +3441,8 @@ int main(int argc, char * argv[])
 		{
 			breakpoint = 0;
 			x86_debug(stderr, emu);
+			if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
+				x80_debug(stderr, &emu->x80);
 //			printf("%X\n", x86_memory_segmented_read16(emu, X86_R_CS, emu->xip));
 			if(option_debug && !continuous)
 			{
@@ -3423,37 +3468,37 @@ int main(int argc, char * argv[])
 		if(option_debug)
 		{
 			emu->parser->debug_output[0] = '\0';
-			fprintf(stderr, "* ");
+			fprintf(stderr, "Testing disassembly: <<<\n[X86]\t");
 			uoff_t old_position = emu->parser->current_position;
-			x86_disassemble(emu->parser, NULL);
+			x86_disassemble(emu->parser, emu);
 			emu->parser->current_position = old_position;
 			fprintf(stderr, "%s", emu->parser->debug_output);
-			fprintf(stderr, "~*\n");
 			if(emu->x89.present)
 			{
 				emu->parser->debug_output[0] = '\0';
-				fprintf(stderr, "* ");
 
 				for(unsigned channel_number = 0; channel_number < 2; channel_number++)
 				{
 					if(emu->x89.channel[channel_number].running)
 					{
+						fprintf(stderr, "[X89:%d]\t", channel_number);
 						x89_parser_t * prs = x89_setup_parser(emu, channel_number);
 						x89_disassemble(prs);
 						fprintf(stderr, "%s", prs->debug_output);
 						free(prs);
 					}
 				}
-				fprintf(stderr, "~*\n");
+				fprintf(stderr, "\n");
 			}
 			if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 			{
-				emu->parser->debug_output[0] = '\0';
-				fprintf(stderr, "* ");
+				emu->x80.parser->debug_output[0] = '\0';
+				fprintf(stderr, "[X80]\t");
 				x80_disassemble(emu->x80.parser);
-				fprintf(stderr, "%s", emu->parser->debug_output);
-				fprintf(stderr, "~*\n");
+				fprintf(stderr, "%s", emu->x80.parser->debug_output);
+				fprintf(stderr, "\n");
 			}
+			fprintf(stderr, ">>>\n");
 		}
 
 		bool inhibit_interrupts = false;
