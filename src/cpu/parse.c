@@ -83,6 +83,7 @@ static inline void x86_parse_modrm16(x86_parser_t * prs, x86_state_t * emu, bool
 		break;
 	}
 
+	prs->address_offset &= 0xFFFF;
 	if(prs->segment == NONE)
 	{
 		prs->segment = default_segment;
@@ -170,6 +171,7 @@ static inline void x86_parse_modrm32(x86_parser_t * prs, x86_state_t * emu, bool
 		break;
 	}
 
+	prs->address_offset &= 0xFFFFFFFF;
 	if(prs->segment == NONE)
 	{
 		prs->segment = default_segment;
@@ -256,6 +258,7 @@ static inline void x86_parse_modrm64_32(x86_parser_t * prs, x86_state_t * emu, b
 		break;
 	}
 
+	prs->address_offset &= 0xFFFFFFFF;
 	if(prs->segment == NONE)
 	{
 		prs->segment = X86_R_DS;
