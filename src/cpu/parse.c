@@ -458,11 +458,73 @@ static inline bool x86_rep_condition(x86_state_t * emu)
 
 #define DEBUG(...) do { if(disassemble) debug_printf((prs)->debug_output, __VA_ARGS__); } while(0) // TODO: better type
 
-#define UNDEFINED() do { if(emu->cpu_type == X86_CPU_186 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type >= X86_CPU_286) { DEBUG("ud"); if(execute) x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); else return; } } while(0)
-#define X87_UNDEFINED() do { DEBUG("ud"); if(prs->fpu_type == X87_FPU_INTEGRATED && execute) { x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); } else { return; } } while(0)
-#define PRIVILEGED() do { if(execute && x86_get_cpl(emu) != 0) { x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); } } while(0)
-#define NO_LOCK() do { if(emu->cpu_type == X86_CPU_186 || emu->cpu_type >= X86_CPU_286) { if(emu->parser->lock_prefix) UNDEFINED(); } } while(0)
-#define IO_PRIVILEGED() do { if(execute && emu->ibrk_ == 0) x86_trigger_interrupt(emu, X86_EXC_IO | X86_EXC_FAULT, 0); } while(0) /* v25+ */
+static inline void x86_undefined_instruction(x86_state_t * emu)
+{
+	if(emu->cpu_type == X86_CPU_186 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type >= X86_CPU_286)
+	{
+		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+	}
+	else
+	{
+		emu->emulation_result = X86_RESULT(X86_RESULT_UNDEFINED, 0);
+	}
+}
+
+// Called when the instruction is not defined, either triggers an interrupt or returns without any action
+#define UNDEFINED() \
+	do \
+	{ \
+		DEBUG("ud"); \
+		if(execute) \
+		{ \
+			x86_undefined_instruction(emu); \
+		} \
+		return; \
+	} while(0)
+
+// Called when the instruction is not defined, either triggers an interrupt or returns without any action
+#define X87_UNDEFINED() \
+	do \
+	{ \
+		DEBUG("ud"); \
+		if(execute) \
+		{ \
+			if(prs->fpu_type == X87_FPU_INTEGRATED) \
+			{ \
+				x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
+			} \
+		} \
+		return; \
+	} while(0)
+
+// Should be called before executing an instruction requiring system mode (current privilege level 0)
+#define PRIVILEGED() \
+	do \
+	{ \
+		if(execute && x86_get_cpl(emu) != 0) \
+		{ \
+			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
+		} \
+	} while(0)
+
+// Should be called before executing an instruction that may not have a LOCK prefix
+#define NO_LOCK() \
+	do \
+	{ \
+		if(emu->cpu_type == X86_CPU_186 || emu->cpu_type >= X86_CPU_286) \
+		{ \
+			if(emu->parser->lock_prefix) \
+				x86_undefined_instruction(emu); \
+		} \
+	} while(0)
+
+// Should be called before I/O instructions, only relevant for v25/v55
+#define IO_PRIVILEGED() \
+	do \
+	{ \
+		if(execute && emu->ibrk_ == 0) \
+			x86_trigger_interrupt(emu, X86_EXC_IO | X86_EXC_FAULT, 0); \
+	} while(0)
 
 #define REGFLDVAL(prs) (((prs)->modrm_byte >> 3) & 7)
 #define REGFLD(prs) (REGFLDVAL(prs) | ((prs)->rex_r))
