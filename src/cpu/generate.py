@@ -3148,12 +3148,6 @@ with open(outfile, 'w') as file:
 			{{
 {highest_function}				X86_CPUID_VENDOR_{architecture['vendor'].upper()},
 			}},"""
-				if 'highest_extended_function' in architecture:
-					highest_extended_function_number = 0x80000000 + int(architecture['highest_extended_function'], 16)
-					feature_sequence += f"""\n\t\t\t.cpuid_ext0 =
-			{{
-				.eax = 0x{highest_extended_function_number:08X},
-			}},"""
 
 			for leaf, registers in cpuid_feature_list:
 				for reg in registers.keys():
@@ -3165,6 +3159,13 @@ with open(outfile, 'w') as file:
 					info = ((family - 15) << 20) | (15 << 8)
 				else:
 					info = family << 8
+				if 'model' in architecture:
+					model = int(architecture['model'])
+					info |= (model & 0xF) << 4
+					info |= (model & 0xF0) << (16 - 2)
+				if 'stepping' in architecture:
+					stepping = int(architecture['stepping'])
+					info |= stepping & 0xF
 				info_text = f'0x{info:08X}'
 				for i in range(len(cpuid_feature_list)):
 					if cpuid_feature_list[i][0] == 'cpuid1':
@@ -3175,6 +3176,11 @@ with open(outfile, 'w') as file:
 						break
 				else:
 					cpuid_feature_list.append(('cpuid1', {'eax': info_text}))
+
+			if 'highest_extended_function' in architecture:
+				highest_extended_function_number = 0x80000000 + int(architecture['highest_extended_function'], 16)
+				highest_extended_function = f"\t\t\t\t.eax = 0x{highest_extended_function_number:08X},\n"
+				cpuid_feature_list.append(('cpuid_ext0', {'eax': f'0x{highest_extended_function_number:08X}'}))
 
 			for leaf, registers in cpuid_feature_list:
 				feature_sequence += f"""\n\t\t\t.{leaf} =

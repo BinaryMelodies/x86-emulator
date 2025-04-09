@@ -5627,6 +5627,7 @@ if(($a & 0x08) != 0)
   class: 486
   features: fpu
   family: 4
+  model: 8
   highest_function: 0x01
   aliases: 80486, i80486, 486, i486, intel80486, intel486
 
@@ -5664,6 +5665,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: fpu, vme, cpuid, msr, cx8, tsc
   family: 5
+  model: 7
+  highest_function: 0x01
   aliases: 80586, i80586, 586, i586, intel80586, intel586, pentium, p5
   smmformat: p5
 
@@ -5673,6 +5676,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p5, rdpmc, cmov, nop_e, pae
   family: 6
+  model: 1
   highest_function: 0x02
   aliases: 80686, i80686, 686, i686, intel80686, intel686, pentiumpro, ppro, p6
   smmformat: p6
@@ -5683,6 +5687,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p5, rdpmc, mmx
   family: 5
+  model: 8
   highest_function: 0x01
   aliases: 80586mmx, i80586mmx, 586mmx, i586mmx, intel80586mmx, intel586mmx, pentiummmx, pentium_mmx, pentium-mmx, p5mmx, mmx
   smmformat: p5
@@ -5693,6 +5698,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p6, mmx, sep, fxsr
   family: 6
+  model: 6
   highest_function: 0x02
   aliases: pentiumii, pentium2, pentium-2, pentium_2, p6-2, p6_2, p2
   smmformat: p6
@@ -5703,6 +5709,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p6_2, sse_non_simd, sse_simd
   family: 6
+  model: 10
   highest_function: 0x03
   aliases: pentiumiii, pentium3, pentium-3, pentium_3, p6-3, p6_3, p3
   smmformat: p6
@@ -5728,6 +5735,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p6_3, sse2, clfl
   family: 15
+  # Northwood
+  model: 2
   highest_function: 0x02
   highest_extended_function: 0x04
   aliases: pentiumiv, pentium4, pentium-4, pentium_4, p4, p7, netburst, ia32, ia-32, ia_32
@@ -5739,6 +5748,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p4, lm, syscall, cx16, nx, sse3
   family: 15
+  model: 4
   highest_function: 0x02
   highest_extended_function: 0x04
   aliases: prescott, nocona, ia32e, ia-32e, ia_32e, em64t, intel64
@@ -5752,6 +5762,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $prescott, ssse3
   family: 6
+  model: 15
   highest_function: 0x0A
   highest_extended_function: 0x08
   aliases: core
@@ -5763,6 +5774,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $merom, sse4.1, vtx, vtd
   family: 6
+  model: 23
   highest_function: 0x0A
   highest_extended_function: 0x08
   smmformat: amd64
@@ -5773,6 +5785,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $penryn, sse4.2, popcnt, ahf64
   family: 6
+  model: 26
   highest_function: 0x0B
   highest_extended_function: 0x08
   smmformat: amd64
@@ -5783,6 +5796,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $nehalem, aes, clmul
   family: 6
+  # TODO: unknown model
+  model: 26
   highest_function: 0x0B
   highest_extended_function: 0x08
   smmformat: amd64
@@ -5793,7 +5808,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $westmere, avx, txt
   family: 6
-  highest_function: 0x0B
+  model: 42
+  highest_function: 0x0D
   highest_extended_function: 0x08
   smmformat: amd64
 
@@ -5803,6 +5819,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $sandybridge, f16c, rdrand
   family: 6
+  model: 58
   highest_function: 0x0D
   highest_extended_function: 0x08
   smmformat: amd64
@@ -5813,6 +5830,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $ivybridge, fma3, avx2, bmi1, abm
   family: 6
+  model: 60
   highest_function: 0x0D
   highest_extended_function: 0x08
   smmformat: amd64
@@ -5823,6 +5841,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $haswell, tsx, adx, rdseed, 3dnowp, smap
   family: 6
+  model: 61
   highest_function: 0x0D
   highest_extended_function: 0x08
   smmformat: amd64
@@ -5833,6 +5852,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $broadwell, mpx, sgx, avx512_f
   family: 6
+  model: 78
   highest_function: 0x16
   highest_extended_function: 0x08
   aliases: intel
@@ -5856,7 +5876,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $bonnell, sse4.1, sse4.2, aes, rdrand, clmul, vtx, popcnt, ahf64
   family: 6
-  highest_function: 0x0A
+  model: 55
+  highest_function: 0x0B
   highest_extended_function: 0x08
   smmformat: amd64
 
@@ -5866,7 +5887,8 @@ if(($a & 0x08) != 0)
   class: intel
   features: $silvermont, sha, pclmul, rdseed, mpx, vtd
   family: 6
-  highest_function: 0x0A
+  model: 92
+  highest_function: 0x15
   highest_extended_function: 0x08
   smmformat: amd64
 
@@ -5904,6 +5926,9 @@ if(($a & 0x08) != 0)
   class: intel
   features: $knc, -mvex, avx512_f
   family: 6
+  model: 87
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   smmformat: amd64
 
 - id: x86s
@@ -5969,6 +5994,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $am5x86, vme, msr, cx8, tsc
   family: 5
+  model: 3
+  highest_function: 0x01
+  highest_extended_function: 0x05 # since at least model 1 stepping 1
   smmformat: k5
 
 - id: k6
@@ -5977,6 +6005,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k5, syscall_k6, mmx
   family: 5
+  model: 7
+  highest_function: 0x01
+  highest_extended_function: 0x05
   smmformat: k6
 
 - id: k6_2
@@ -5985,6 +6016,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k6, 3dnow, 3dnowp
   family: 5
+  model: 8
+  highest_function: 0x01
+  highest_extended_function: 0x05
   aliases: k6-2, k6_2, k6-ii
   smmformat: k6
 
@@ -5994,6 +6028,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k6_2
   family: 5
+  model: 9
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: k6-3, k6_3, k6-iii, k6_iii
   smmformat: k6
 
@@ -6003,6 +6040,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k6_2, 3dnowext
   family: 5
+  model: 13
+  highest_function: 0x01
+  highest_extended_function: 0x07
   aliases: k6-2+, k6_2+, k6-2plus, k6_2plus
   smmformat: k6
 
@@ -6012,6 +6052,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k6_3, 3dnowext
   family: 5
+  model: 13
+  highest_function: 0x01
+  highest_extended_function: 0x07
   aliases: k6-3+, k6_3+, k6-3plus, k6_3plus, k6-iii, k6_iii, k6iii+, k6-iii+, k6_iii+, k6iii+
   smmformat: k6
 
@@ -6021,6 +6064,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k6_2plus, -syscall_k6, syscall, rdpmc, cmov, nop_e, sep, sse_non_simd, pae, fxsr
   family: 6
+  model: 4
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: k7, athlon
 # TODO: unsure, double check
   smmformat: k6
@@ -6031,39 +6077,32 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k7, sse_simd
   family: 6
+  model: 10
+  highest_function: 0x01
+  highest_extended_function: 0x08
   smmformat: k6
-
-- id: k8old
-  description: AMD Athlon 64 (K8), pre-stepping F
-  vendor: amd
-  class: amd
-  features: $athlonxp, lm, sse2, clfl, nx
-  family: 15
-  smmformat: amd64
 
 - id: k8
   description: AMD Athlon 64 (K8)
   vendor: amd
   class: amd
-  features: $k8old, tscp, cr8d, cx16, amdv
+  features: $athlonxp, lm, sse2, clfl, nx, tscp, cr8d, cx16, amdv, sse3
   family: 15
+  model: 127
+  highest_function: 0x01
+  highest_extended_function: 0x18
   aliases: amd64, opteron, athlon64
-  smmformat: amd64
-
-- id: venice
-  description: AMD Athlon 64 "Venice"
-  vendor: amd
-  class: amd
-  features: $k8, sse3
-  family: 15
   smmformat: amd64
 
 - id: k10
   description: AMD K10
   vendor: amd
   class: amd
-  features: $venice, abm, sse4a, rvi, ahf64
+  features: $k8, abm, sse4a, rvi, ahf64
   family: 16
+  model: 10
+  highest_function: 0x06
+  highest_extended_function: 0x1B
   smmformat: amd64
 
 - id: bobcat
@@ -6072,6 +6111,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k10, ssse3, -3dnow, -3dnowext
   family: 20
+  model: 2
+  highest_function: 0x06
+  highest_extended_function: 0x1B
   smmformat: amd64
 
 - id: jaguar
@@ -6080,6 +6122,21 @@ if(($a & 0x08) != 0)
   class: amd
   features: $bobcat, sse4.1, sse4.2, avx, f16c, clmul, aes, bmi1, movbe, xsave, amdv
   family: 22
+  model: 0
+  highest_function: 0x0D
+  highest_extended_function: 0x1E
+  smmformat: amd64
+
+- id: puma
+  description: AMD "Puma"
+  vendor: amd
+  class: amd
+  features: $jaguar
+  family: 22
+  # Steppe Eagle
+  model: 48
+  highest_function: 0x0D
+  highest_extended_function: 0x1E
   smmformat: amd64
 
 - id: drex
@@ -6089,6 +6146,9 @@ if(($a & 0x08) != 0)
 # copying features and family number from bulldozer, except XOP/FMA4 is replaced with DREX
   features: $k10, -sse4a, ssse3, sse4.1, sse4.2, avx, aes, clmul, drex, f16c, -3dnow, -3dnowext
   family: 21
+  model: 0
+  highest_function: 0x0D
+  highest_extended_function: 0x1E
   smmformat: amd64
 
 - id: bulldozer
@@ -6097,6 +6157,10 @@ if(($a & 0x08) != 0)
   class: amd
   features: $k10, -sse4a, ssse3, sse4.1, sse4.2, avx, aes, clmul, xop, fma4, f16c, -3dnow, -3dnowext
   family: 21
+  # Vishera
+  model: 2
+  highest_function: 0x0D
+  highest_extended_function: 0x1E
   smmformat: amd64
 
 - id: piledriver
@@ -6105,6 +6169,10 @@ if(($a & 0x08) != 0)
   class: amd
   features: $bulldozer, fma3, bmi1, tbm
   family: 21
+  # Richland
+  model: 19
+  highest_function: 0x0D
+  highest_extended_function: 0x1E
   smmformat: amd64
 
 - id: excavator
@@ -6113,6 +6181,10 @@ if(($a & 0x08) != 0)
   class: amd
   features: $piledriver, avx2, avic, rdrand, mwaitx, movbe
   family: 21
+  # Stoney Ridge
+  model: 112
+  highest_function: 0x0D
+  highest_extended_function: 0x1E
   smmformat: amd64
 
 - id: zen
@@ -6121,6 +6193,10 @@ if(($a & 0x08) != 0)
   class: amd
   features: $excavator, rdseed, smap, smep, xsavec, adx, sha, clzero, pte_coalescing, sme, tsme, -fma4, -tbm, -xop
   family: 23
+  # Dali
+  model: 32
+  highest_function: 0x0D
+  highest_extended_function: 0x1F
   smmformat: amd64
 
 - id: zen2
@@ -6129,6 +6205,10 @@ if(($a & 0x08) != 0)
   class: amd
   features: $zen, wbnoinvd, clwb, rdpid, rdpru, mcommit, gmet
   family: 23
+  # Mendocino
+  model: 160
+  highest_function: 0x10
+  highest_extended_function: 0x20
   smmformat: amd64
 
 - id: zen3
@@ -6137,6 +6217,10 @@ if(($a & 0x08) != 0)
   class: amd
   features: $zen2, vaes, invlpgb, cet_ss, mpk
   family: 25
+  # Barcelo
+  model: 80
+  highest_function: 0x10
+  highest_extended_function: 0x23
   smmformat: amd64
 
 - id: zen4
@@ -6145,6 +6229,9 @@ if(($a & 0x08) != 0)
   class: amd
   features: $zen3, avx512_f
   family: 25
+  # Phoenix 2
+  highest_function: 0x10
+  highest_extended_function: 0x28
   smmformat: amd64
 
 - id: zen5
@@ -6154,6 +6241,9 @@ if(($a & 0x08) != 0)
   features: $zen4
   aliases: amd, zen5
   family: 26
+  model: 68
+  highest_function: 0x10
+  highest_extended_function: 0x28
   smmformat: amd64
 
 #### Cyrix CPUs (including National Semiconductor, AMD, VIA)
@@ -6206,6 +6296,9 @@ if(($a & 0x08) != 0)
   variant: gxm
   features: $mediagx, msr, cx8, tsc, cmov, mmx, emmi, media_gx
   family: 5
+  model: 3
+  highest_function: 0x02
+  highest_extended_function: 0x05
   aliases: mediagxm, geode
   smmformat: mediagx
 
@@ -6216,6 +6309,9 @@ if(($a & 0x08) != 0)
   variant: gx1
   features: $gxm
   family: 5
+  model: 4
+  highest_function: 0x02
+  highest_extended_function: 0x05
   smmformat: mediagx
 
 - id: gx2
@@ -6225,6 +6321,9 @@ if(($a & 0x08) != 0)
   variant: gx2
   features: $gx1, sep, sse_non_simd, 3dnow, pfrcpv, dmm, -emmi, -media_gx
   family: 5
+  model: 5
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: gx2, amdgx
 # TODO: unsure
   smmformat: gx2
@@ -6236,6 +6335,9 @@ if(($a & 0x08) != 0)
   variant: lx
   features: $gx2, rdpmc, clfl
   family: 5
+  model: 10
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: lx, amdlx
   smmformat: gx2
 
@@ -6257,6 +6359,8 @@ if(($a & 0x08) != 0)
   variant: 6x86
   features: $cx5x86
   family: 5
+  model: 2
+  highest_function: 0x01
   aliases: 6x86, cx6x86
   smmformat: 5x86
 
@@ -6267,6 +6371,8 @@ if(($a & 0x08) != 0)
   variant: 6x86
   features: $cx6x86, rdshr, cx8
   family: 5
+  model: 2
+  highest_function: 0x01
   smmformat: 5x86
 
 - id: m2
@@ -6276,6 +6382,8 @@ if(($a & 0x08) != 0)
   variant: m2
   features: $cx6x86l, msr, tsc, rdpmc, cmov, mmx, emmi, rdshr
   family: 6
+  model: 0
+  highest_function: 0x01
   aliases: 6x86mx, cx6x86mx, mii, m2, m-2, m_2
   smmformat: m2
 
@@ -6299,6 +6407,9 @@ if(($a & 0x08) != 0)
 # Note: CX8 is sometimes not reported
   features: cpuid, fpu, tsc, msr, cx8, mmx, rdpmc
   family: 5
+  model: 4
+  highest_function: 0x01
+  highest_extended_function: 0x00
 # TODO: smmformat, guessing
   smmformat: p5
 
@@ -6309,6 +6420,9 @@ if(($a & 0x08) != 0)
 # Note: CX8 is sometimes not reported
   features: $wc6, 3dnow
   family: 5
+  model: 8
+  highest_function: 0x01
+  highest_extended_function: 0x05
 # TODO: smmformat, guessing
   smmformat: p5
 
@@ -6320,17 +6434,22 @@ if(($a & 0x08) != 0)
 # Note: CX8 is sometimes not reported
   features: $wc2
   family: 5
+# TODO: model/highest functions unknown
+  model: 8
+  highest_function: 0x01
+  highest_extended_function: 0x05
 # TODO: smmformat, guessing
   smmformat: p5
 
-# unreleased
 - id: samuel
   description: VIA Cyrix III "Samuel"
   vendor: centaur
   class: via
-# TODO: features/family unknown
   features: $wc3
-  family: 5
+  family: 6
+  model: 6
+  highest_function: 0x01
+  highest_extended_function: 0x05
 # TODO: smmformat, guessing
   smmformat: p5
 
@@ -6340,6 +6459,10 @@ if(($a & 0x08) != 0)
   class: via
   features: $samuel, altinst
   family: 6
+  # Ezra-T
+  model: 8
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: viac3, c3, viac3, samuel2, c5b, ezra, c5c, c5n
 # TODO: smmformat, guessing
   smmformat: p5
@@ -6350,6 +6473,9 @@ if(($a & 0x08) != 0)
   class: via
   features: $c3, cmov, sse_non_simd, sse_simd, fxsr, padlock_rng, -altinst, -3dnow
   family: 6
+  model: 9
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: nehemiah, c5xl
 # TODO: smmformat, guessing
   smmformat: p5
@@ -6360,6 +6486,10 @@ if(($a & 0x08) != 0)
   class: via
   features: $nehemiah, vme, sep, padlock_aes
   family: 6
+  model: 9
+  stepping: 5
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: viac5, nehemiah+, c5p
 # TODO: smmformat, guessing
   smmformat: p5
@@ -6370,6 +6500,9 @@ if(($a & 0x08) != 0)
   class: via
   features: $c5, nop_e, sse2, clfl, sse3, nx, pae, padlock_sha, padlock_pmm
   family: 6
+  model: 13
+  highest_function: 0x01
+  highest_extended_function: 0x06
   aliases: viac7, esther, eden, c5j
 # TODO: smmformat, guessing
   smmformat: p5
@@ -6381,6 +6514,10 @@ if(($a & 0x08) != 0)
 # Note: vtx is supported from stepping 3 (https://en.wikipedia.org/wiki/List_of_VIA_Nano_microprocessors)
   features: $c7, lm, syscall, monitor, tscp, cx16, pae, ssse3, vtx
   family: 6
+  # TODO: unsure
+  model: 15
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   aliases: vianano, isaiah, via64
 # TODO: guessing
   smmformat: amd64
@@ -6391,6 +6528,10 @@ if(($a & 0x08) != 0)
   class: via
   features: $nano, sse4.1
   family: 6
+  # TODO: unsure
+  model: 15
+  highest_function: 0x0D
+  highest_extended_function: 0x08
 # TODO: guessing
   smmformat: amd64
 
@@ -6400,6 +6541,10 @@ if(($a & 0x08) != 0)
   class: via
   features: $nano3000
   family: 6
+  # TODO: unsure
+  model: 15
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   aliases: zxa, zx-a, zx_a, zxb, zx-b, zx_b
 # TODO: guessing
   smmformat: amd64
@@ -6411,6 +6556,10 @@ if(($a & 0x08) != 0)
 # TODO: Wikipedia's listings seem to indicate AVX2 is not supported by Zhangjiang
   features: $nanox2, sse4.2, avx, avx2
   family: 6
+  # TODO: unsure
+  model: 15
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   aliases: quadcore, c4000, zxc, zx-c, zx_c, zhangjiang, 张江高, 張江高
 # TODO: guessing
   smmformat: amd64
@@ -6422,6 +6571,9 @@ if(($a & 0x08) != 0)
   class: via
   features: $nanoc4000, avx512_f
   family: 6
+  model: 71
+  highest_function: 0x0D
+  highest_extended_function: 0x08
 # TODO: guessing
   smmformat: amd64
 
@@ -6431,6 +6583,10 @@ if(($a & 0x08) != 0)
   class: via
   features: $nanoc4000, avx2, aes
   family: 6
+  # TODO: unsure
+  model: 15
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   aliases: zxc+, zx-c+, zx_c+, zxcplus, zx-cplus, zx_cplus
 # TODO: guessing
   smmformat: amd64
@@ -6441,6 +6597,10 @@ if(($a & 0x08) != 0)
   class: via
   features: $zxcplus
   family: 7
+  # TODO: unsure
+  model: 15
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   aliases: zxd, zx-d, zx_d, kx5000, kx-5000, kx_5000, kx5k, kx-5k, kx_5k, kh20000, kh-20000, kh_20000, kh20k, kh-20k, kh_20k, wudaokou, 五道口
 # TODO: guessing
   smmformat: amd64
@@ -6451,6 +6611,9 @@ if(($a & 0x08) != 0)
   class: via
   features: $zxd, rdseed, rdrand, sha, umip
   family: 7
+  model: 11
+  highest_function: 0x0D
+  highest_extended_function: 0x08
   aliases: zxe, zx-e, zx_e, kx6000, kx-6000, kx_6000, kx6k, kx-6k, kx_6k, kh30000, kh-23000, kh_30000, kh30k, kh-30k, kh_30k, lujiazui, 陆家嘴
 # TODO: guessing
   smmformat: amd64
@@ -6461,6 +6624,9 @@ if(($a & 0x08) != 0)
   class: via
   features: $zxe, fma3
   family: 7
+  model: 11
+  highest_function: 0x1F
+  highest_extended_function: 0x08
   aliases: kh40000, kh-40000, kh_40000, kh40k, kh-40k, kh_40k, yongfeng, 永豐, 永丰
 # TODO: guessing
   smmformat: amd64
@@ -6471,6 +6637,9 @@ if(($a & 0x08) != 0)
   class: via
   features: $kh40000
   family: 7
+  model: 11
+  highest_function: 0x1F
+  highest_extended_function: 0x08
   aliases: zx, via, kx7000, kx-7000, kx_7000, kx7k, kx-7k, kx_7k, shijidadao, 世纪大道
 # TODO: guessing
   smmformat: amd64
