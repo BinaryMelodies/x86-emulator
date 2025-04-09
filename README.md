@@ -91,6 +91,7 @@ This project would not have been possible without the resources and amazing work
 * [rep-lodsb.mataroa.blog](https://rep-lodsb.mataroa.blog/blog/intel-286-secrets-ice-mode-and-f1-0f-04/) for documenting how STOREALL works on an Intel 286
 * [Robert R. Collins's excellent resources](https://www.rcollins.org/) on Intel CPUs up until the late 90s
 * [x86, x64 Instruction Latency, Memory Latency and CPUID](http://users.atw.hu/instlatx64/)
+* Single step tests for the [Intel 8086](https://github.com/SingleStepTests/8088) and the [NEC V20](https://github.com/SingleStepTests/v20)
 * and many more resources I don't remember
 
 Furthermore, this project took inspiration from many other emulator projects, including:
@@ -101,4 +102,5 @@ Furthermore, this project took inspiration from many other emulator projects, in
 * [PCem](https://www.pcem-emulator.co.uk/) and [86Box](https://86box.net/)
 * [libx86emu](https://github.com/wfeldt/libx86emu)
 * [Fake86](https://sourceforge.net/projects/fake86/) (to which [I added 8080 emulation support](https://github.com/BinaryMelodies/fake86), similarly to NEC V20)
+* [MartyPC](https://github.com/dbalsom/martypc)
 
