@@ -2034,7 +2034,7 @@ else
 $ax.$O = (_int$Ohalf)$ax.$Ohalf;
 
 @instruction CWD/CDQ/CQO
-$dx.$O = (_int$O)$ax.$O < 0 ? -1 : 1;
+$dx.$O = (_int$O)$ax.$O < 0 ? -1 : 0;
 
 @instruction CLAC
 $ac = 0;
@@ -2593,7 +2593,7 @@ if(X86_CHECK_$C(emu))
 }
 
 @instruction LAHF
-$al = $flagsl;
+$ah = $flagsl;
 
 @instruction LAR
 if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
