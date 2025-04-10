@@ -53,13 +53,19 @@ for name in zfp.namelist():
 
 	MEMBLOCK.clear()
 	zfp2 = gzip.open(zfp.open(name, 'r'), 'r')
+	print(name)
 	obj = json.load(zfp2)
-	key = name[name.rfind('/') + 1:name.find('.')]
-	with open('8088/' + key + '.gen.c', 'w') as file:
+	testname = name[name.rfind('/') + 1:-8]
+	if '.' in testname:
+		key, reg = testname.split('.')
+		info = opcodes[key]['reg'][reg]
+	else:
+		info = opcodes[testname]
+	with open('8088/' + testname + '.gen.c', 'w') as file:
 		print("struct mem testcase_memory_changes[];", file = file)
 		print("struct testcase testcases[] =\n{", file = file)
 		for entry in obj:
-			print_test(entry, opcodes[key], file = file)
+			print_test(entry, info, file = file)
 		print("};", file = file)
 		print("struct mem testcase_memory_changes[] = { ", end = '', file = file)
 		print(", ".join(MEMBLOCK), end = '', file = file)
