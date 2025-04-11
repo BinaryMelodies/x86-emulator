@@ -1719,6 +1719,8 @@ $pf = _parity(al);
 if(x86_is_nec(emu))
 	$0 = 10; // set the immediate to 10
 _uint8 al = $al;
+if($0 == 0)
+	_int(X86_EXC_DE | X86_EXC_FAULT, 0);
 $ah = al / $0;
 al %= $0;
 $al = al;
@@ -2212,6 +2214,9 @@ if(($al & 0x0F) > 0x09 || $af)
 	$al += 0x06;
 	$af = X86_FL_AF;
 }
+$zf = _zero8($al);
+$sf = _sign8($al);
+$pf = _parity($al);
 
 @instruction DAS
 if($al > 0x99 || $cf)
@@ -2230,6 +2235,9 @@ else
 {
 	$af = 0;
 }
+$zf = _zero8($al);
+$sf = _sign8($al);
+$pf = _parity($al);
 
 @instruction DEC
 _uint$O x = $0.$O;
