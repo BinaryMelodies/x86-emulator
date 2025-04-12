@@ -2205,15 +2205,29 @@ else
 x86_cpuid(emu);
 
 @instruction DAA
-if($al > 0x99 || $cf)
-{
-	$al += 0x60;
-	$cf = X86_FL_CF;
-}
 if(($al & 0x0F) > 0x09 || $af)
 {
-	$al += 0x06;
+	if(
+		emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
+			? ($af ? $al > 0x9F : $al > 0x99) || $cf
+		: $al > 0x99 || $cf)
+	{
+		$al += 0x66;
+		$cf = X86_FL_CF;
+	}
+	else
+	{
+		$al += 0x06;
+	}
 	$af = X86_FL_AF;
+}
+else
+{
+	if($al > 0x99 || $cf)
+	{
+		$al += 0x60;
+		$cf = X86_FL_CF;
+	}
 }
 $zf = _zero8($al);
 $sf = _sign8($al);
