@@ -2273,26 +2273,30 @@ $pf = _parity(z);
 @instruction DIV|op=b
 _uint$O x = $0.$O;
 _uint$Odup ax = $ax;
-if(x == 0) /* TODO: or division overflows */
+_uint$Odup quot = ax / x;
+_uint$Odup rem  = ax % x;
+if(x == 0 || (_uint$Odup)(_uint$O)quot != quot)
 {
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
-$ah = ax / x;
-$al = ax % x;
+$al = quot;
+$ah = rem;
 
 @instruction DIV|op=w|op=l
 _uint$O x = $0.$O;
 _uint$Odup dxax = $ax.$O | ((_uint$Odup)$dx.$O << $O);
-if(x == 0) /* TODO: or division overflows */
+_uint$Odup quot = dxax / x;
+_uint$Odup rem  = dxax % x;
+if(x == 0 || (_uint$Odup)(_uint$O)quot != quot)
 {
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
-$ax.$O = dxax / x;
-$dx.$O = dxax % x;
+$ax.$O = quot;
+$dx.$O = rem;
 
 @instruction DIV|op=q
 _uint$O x = $0.$O;
