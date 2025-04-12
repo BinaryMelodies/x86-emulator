@@ -2219,21 +2219,28 @@ $sf = _sign8($al);
 $pf = _parity($al);
 
 @instruction DAS
-if($al > 0x99 || $cf)
-{
-	$al -= 0x60;
-	$cf = X86_FL_CF;
-}
 if(($al & 0x0F) > 0x09 || $af)
 {
-	if($al < 0x06)
-		$cf = X86_FL_CF;
-	$al -= 0x06;
-	$af = X86_FL_AF;
+	if((emu->cpu_type == X86_CPU_8086 && $af ? $al > 0x9F : $al > 0x99) || $cf)
+	{
+		$cf = 1;
+		$al -= 0x66;
+	}
+	else
+	{
+		if(emu->cpu_type > X86_CPU_8086)
+			$cf |= $al < 6;
+		$al -= 0x06;
+	}
+	$af = 1;
 }
 else
 {
-	$af = 0;
+	if($al > 0x99 || $cf)
+	{
+		$cf = 1;
+		$al -= 0x60;
+	}
 }
 $zf = _zero8($al);
 $sf = _sign8($al);
