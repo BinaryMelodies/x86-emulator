@@ -1703,7 +1703,8 @@ if(($al & 0xF) > 9 || $af)
 else
 {
 	$ax = $ax & 0xFF0F;
-	$af = $cf = 0;
+	$af = 0;
+	$cf = 0;
 }
 
 @instruction AAD
@@ -1721,8 +1722,12 @@ if(x86_is_nec(emu))
 _uint8 al = $al;
 if($0 == 0)
 {
-	$of = $sf = $af = $cf = 0;
-	$zf = $pf = 1;
+	$of = 0;
+	$sf = 0;
+	$af = 0;
+	$cf = 0;
+	$zf = 1;
+	$pf = 1;
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
@@ -1744,7 +1749,8 @@ if(($al & 0xF) > 9 || $af)
 else
 {
 	$ax = $ax & 0xFF0F;
-	$af = $cf = 0;
+	$af = 0;
+	$cf = 0;
 }
 
 @instruction ADC
@@ -2414,13 +2420,15 @@ $dx.$O = z;
 @instruction IMUL|cnt=1 op=b
 _int$O x = $al, y = $0.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
+$of = (_int$O)result < 0 ? result >= 0 : result < 0;
 $ax = result;
 
 @instruction IMUL|cnt=1 op=w|cnt=1 op=l
 _int$O x = $ax.$O, y = $0.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
+$of = (_int$O)result < 0 ? result >= 0 : result < 0;
 $ax.$O = result;
 $dx.$O = result >> $O;
 
@@ -2428,34 +2436,39 @@ $dx.$O = result >> $O;
 _int$O x = $ax.$O, y = $0.$O;
 _int$Odup result;
 _imul$Odup(result, x, y);
-$cf = $of = _ioverflow$Odup(result);
+$cf = _ioverflow$Odup(result);
+$of = _ioverflow$Odup(result);
 $ax.$O = _low$Odup(result);
 $dx.$O = _high$Odup(result);
 
 @instruction IMUL|cnt=2 op=w|cnt=2 op=l
 _int$O x = $0.$O, y = $1.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
+$of = (_int$O)result < 0 ? result >= 0 : result < 0;
 $0.$O = result;
 
 @instruction IMUL|cnt=2 op=q
 _int$O x = $0.$O, y = $1.$O;
 _int$Odup result;
 _imul$Odup(result, x, y);
-$cf = $of = _ioverflow$Odup(result);
+$cf = _ioverflow$Odup(result);
+$of = _ioverflow$Odup(result);
 $0.$O = _low$Odup(result);
 
 @instruction IMUL|cnt=3 op=w|cnt=3 op=l
 _int$O x = $1.$O, y = $2;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = $of = (_int$O)result < 0 ? result < 0 : result >= 0;
+$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
+$of = (_int$O)result < 0 ? result >= 0 : result < 0;
 $0.$O = result;
 
 @instruction IMUL|cnt=3 op=q
 _int$O x = $1.$O, y = $2;
 _int$Odup result;
 _imul$Odup(result, x, y);
-$cf = $of = _ioverflow$Odup(result);
+$cf = _ioverflow$Odup(result);
+$of = _ioverflow$Odup(result);
 $0.$O = _low$Odup(result);
 
 @instruction IN|op1=ub
@@ -2938,13 +2951,17 @@ $0.$O = (_uint$1.size)$1;
 @instruction MUL|op=b
 _uint$O x = $al, y = $0.$O;
 _uint$Odup result = (_uint$Odup)x * (_uint$Odup)y;
-$cf = $of = result == (_uint$Odup)(_uint$O)result;
+// check that the upper half of the result is clear
+$cf = result != (_uint$Odup)(_uint$O)result;
+$of = result != (_uint$Odup)(_uint$O)result;
 $ax = result;
 
 @instruction MUL|op=w|op=l
 _uint$O x = $ax.$O, y = $0.$O;
 _uint$Odup result = (_uint$Odup)x * (_uint$Odup)y;
-$cf = $of = result == (_uint$Odup)(_uint$O)result;
+// check that the upper half of the result is clear
+$cf = result != (_uint$Odup)(_uint$O)result;
+$of = result != (_uint$Odup)(_uint$O)result;
 $ax.$O = result;
 $dx.$O = result >> $O;
 
@@ -2952,7 +2969,9 @@ $dx.$O = result >> $O;
 _uint$O x = $ax.$O, y = $0.$O;
 _uint$Odup result;
 _mul$Odup(result, x, y);
-$cf = $of = _overflow$Odup(result);
+// check that the upper half of the result is clear
+$cf = _overflow$Odup(result);
+$of = _overflow$Odup(result);
 $ax.$O = _low$Odup(result);
 $dx.$O = _high$Odup(result);
 
@@ -3069,7 +3088,11 @@ for(int i = 0; i < 16; i++)
 	x <<= 1;
 }
 $0.$O = count;
-$of = $sf = $af = $cf = $pf = 0;
+$of = 0;
+$sf = 0;
+$af = 0;
+$cf = 0;
+$pf = 0;
 $zf = count == 0;
 
 @instruction POPF
@@ -5102,7 +5125,8 @@ case 1:
 	$f = ($f & 1) | (z & 0xA8);
 	$nf = 0;
 	$af = 1;
-	$pf = $zf = _zero8(z);
+	$pf = _zero8(z);
+	$zf = _zero8(z);
 	return X86_RESULT(X86_RESULT_SUCCESS, 0);
 case 2:
 	z = x & ~(1 << ((op2 >> 3) & 7));
@@ -5138,7 +5162,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 	$nf = 0;
 	$af = $cf;
 }
-$cf = $cf ^ 1;
+$cf = $cf ^ X86_FL_CF;
 
 @instruction Z80.CP
 _uint8 x = $a, y = $0;
