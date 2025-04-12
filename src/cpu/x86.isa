@@ -2144,33 +2144,36 @@ for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
 }
 
 @instruction CMPS
-_uint$O x = _read$O(_src_seg, $si.$A), y = _read$O(_dst_seg, $di.$A);
-_uint$O z = x - y;
-$cf = _sub_carry$O(x, y, z);
-$of = _sub_overflow$O(x, y, z);
-$af = _sub_auxiliary(x, y, z);
-$zf = _zero$O(z);
-$sf = _sign$O(z);
-$pf = _parity(z);
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$si.$A = $si.$A - ($O >> 3);
-	$di.$A = $di.$A - ($O >> 3);
-}
-else
-{
-	$si.$A = $si.$A + ($O >> 3);
-	$di.$A = $di.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0 && _rep())
+	_uint$O x = _read$O(_src_seg, $si.$A), y = _read$O(_dst_seg, $di.$A);
+	_uint$O z = x - y;
+	$cf = _sub_carry$O(x, y, z);
+	$of = _sub_overflow$O(x, y, z);
+	$af = _sub_auxiliary(x, y, z);
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$si.$A = $si.$A - ($O >> 3);
+		$di.$A = $di.$A - ($O >> 3);
+	}
+	else
+	{
+		$si.$A = $si.$A + ($O >> 3);
+		$di.$A = $di.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0 && _rep())
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
@@ -2609,27 +2612,30 @@ if(emu->cpu_type == X86_CPU_V60)
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
-emu->io_type = emu->parser->rep_prefix == X86_PREF_NOREP ? X86_INS : X86_REP_INS;
-emu->io_restart_xdi = $di.$A;
-emu->io_restart_xcx = $cx.$A;
-_write$O(_dst_seg, $di.$A, _input$O($dx));
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$di.$A = $di.$A - ($O >> 3);
-}
-else
-{
-	$di.$A = $di.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0)
+	emu->io_type = emu->parser->rep_prefix == X86_PREF_NOREP ? X86_INS : X86_REP_INS;
+	emu->io_restart_xdi = $di.$A;
+	emu->io_restart_xcx = $cx.$A;
+	_write$O(_dst_seg, $di.$A, _input$O($dx));
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$di.$A = $di.$A - ($O >> 3);
+	}
+	else
+	{
+		$di.$A = $di.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0)
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
@@ -2879,24 +2885,27 @@ PRIVILEGED();
 x86_ice_loadall_386(emu, ((_uint32)emu->sr[X86_R_ES].selector << 4) + $edi);
 
 @instruction LODS
-$ax.$O = _read$O(_src_seg, $si.$A);
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$si.$A = $si.$A - ($O >> 3);
-}
-else
-{
-	$si.$A = $si.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0)
+	$ax.$O = _read$O(_src_seg, $si.$A);
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$si.$A = $si.$A - ($O >> 3);
+	}
+	else
+	{
+		$si.$A = $si.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0)
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
@@ -2996,26 +3005,29 @@ $0.$O = $1.$O;
 $0.$O = x86_bswap$O($1.$O);
 
 @instruction MOVS
-_write$O(_dst_seg, $di.$A, _read$O(_src_seg, $si.$A));
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$si.$A = $si.$A - ($O >> 3);
-	$di.$A = $di.$A - ($O >> 3);
-}
-else
-{
-	$si.$A = $si.$A + ($O >> 3);
-	$di.$A = $di.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0)
+	_write$O(_dst_seg, $di.$A, _read$O(_src_seg, $si.$A));
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$si.$A = $si.$A - ($O >> 3);
+		$di.$A = $di.$A - ($O >> 3);
+	}
+	else
+	{
+		$si.$A = $si.$A + ($O >> 3);
+		$di.$A = $di.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0)
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
@@ -3128,27 +3140,30 @@ if(emu->cpu_type == X86_CPU_V60)
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
-emu->io_type = emu->parser->rep_prefix == X86_PREF_NOREP ? X86_OUTS : X86_REP_OUTS;
-emu->io_restart_xsi = $si.$A;
-emu->io_restart_xcx = $cx.$A;
-_output$O($dx, _read$O(_src_seg3, $si.$A));
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$si.$A = $si.$A - ($O >> 3);
-}
-else
-{
-	$si.$A = $si.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0)
+	emu->io_type = emu->parser->rep_prefix == X86_PREF_NOREP ? X86_OUTS : X86_REP_OUTS;
+	emu->io_restart_xsi = $si.$A;
+	emu->io_restart_xcx = $cx.$A;
+	_output$O($dx, _read$O(_src_seg3, $si.$A));
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$si.$A = $si.$A - ($O >> 3);
+	}
+	else
+	{
+		$si.$A = $si.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0)
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
@@ -3654,31 +3669,34 @@ $sf = _sign$O(z);
 $pf = _parity(z);
 
 @instruction SCAS
-_uint$O x = $ax.$O, y = _read$O(_dst_seg, $di.$A);
-_uint$O z = x - y;
-$cf = _sub_carry$O(x, y, z);
-$of = _sub_overflow$O(x, y, z);
-$af = _sub_auxiliary(x, y, z);
-$zf = _zero$O(z);
-$sf = _sign$O(z);
-$pf = _parity(z);
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$di.$A = $di.$A - ($O >> 3);
-}
-else
-{
-	$di.$A = $di.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0 && _rep())
+	_uint$O x = $ax.$O, y = _read$O(_dst_seg, $di.$A);
+	_uint$O z = x - y;
+	$cf = _sub_carry$O(x, y, z);
+	$of = _sub_overflow$O(x, y, z);
+	$af = _sub_auxiliary(x, y, z);
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$di.$A = $di.$A - ($O >> 3);
+	}
+	else
+	{
+		$di.$A = $di.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0 && _rep())
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
@@ -3940,24 +3958,27 @@ PRIVILEGED();
 x86_ice_storeall_286(emu);
 
 @instruction STOS
-_write$O(_dst_seg, $di.$A, $ax.$O);
-if($df)
+if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 {
-	$di.$A = $di.$A - ($O >> 3);
-}
-else
-{
-	$di.$A = $di.$A + ($O >> 3);
-}
-
-if(emu->parser->rep_prefix != X86_PREF_NOREP)
-{
-	_uint$A cx = $cx.$A - 1;
-	$cx.$A = cx;
-	if(cx != 0)
+	_write$O(_dst_seg, $di.$A, $ax.$O);
+	if($df)
 	{
-		$rip = $old_rip;
-		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		$di.$A = $di.$A - ($O >> 3);
+	}
+	else
+	{
+		$di.$A = $di.$A + ($O >> 3);
+	}
+
+	if(emu->parser->rep_prefix != X86_PREF_NOREP)
+	{
+		_uint$A cx = $cx.$A - 1;
+		$cx.$A = cx;
+		if(cx != 0)
+		{
+			$rip = $old_rip;
+			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
+		}
 	}
 }
 
