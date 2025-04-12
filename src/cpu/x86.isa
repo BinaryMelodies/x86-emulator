@@ -1703,6 +1703,7 @@ if(($al & 0xF) > 9 || $af)
 	}
 	else
 	{
+		// Bochs and 86Box sources claim this is the proper behavior for 286/386/486
 		$ax = ($ax + 0x0106) & 0xFF0F;
 	}
 	$af = X86_FL_AF;
@@ -1750,13 +1751,14 @@ $pf = _parity(al);
 @instruction AAS
 if(($al & 0xF) > 9 || $af)
 {
-	if(emu->cpu_type <= X86_CPU_486)
+	if(emu->cpu_type < X86_CPU_286)
 	{
 		$al = ($al - 0x06) & 0x0F;
 		$ah -= 1;
 	}
 	else
 	{
+		// 86Box sources claim this is the proper behavior for 286/386/486
 		$ax = ($ax - 0x0106) & 0xFF0F;
 	}
 	$af = X86_FL_AF;
@@ -2225,7 +2227,6 @@ if(($al & 0x0F) > 0x09 || $af)
 {
 	// guessing 186 behavior
 	// 8086 had a different behavior to later CPUs
-	// 286/386/486 behavior seems to be different from Pentium behavior
 	if(
 		emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
 			? ($af ? $al > 0x9F : $al > 0x99) || $cf
@@ -2245,11 +2246,11 @@ if(($al & 0x0F) > 0x09 || $af)
 else
 {
 	// guessing 186 behavior
-	// 286/386/486 behavior seems to be different from Pentium behavior
+	// 286/386/486 behavior seems to be different from Pentium behavior (TODO: are the Intel manuals wrong here?)
 	if(
-		emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386
+		/*emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
 			? $al > 0x9F || $cf
-			: $al > 0x99 || $cf)
+			:*/ $al > 0x99 || $cf)
 	{
 		$al += 0x60;
 		$cf = X86_FL_CF;
@@ -2264,12 +2265,12 @@ if(($al & 0x0F) > 0x09 || $af)
 {
 	// guessing 186 behavior
 	// 8086 had a different behavior to later CPUs
-	// 286/386/486 behavior seems to be different from Pentium behavior
+	// 286/386/486 behavior seems to be different from Pentium behavior (TODO: are the Intel manuals wrong here?)
 	if(
 		emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
 			? ($af ? $al > 0x9F : $al > 0x99) || $cf
-		: emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
-			? $al > 0xA5 || $cf
+		/*: emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
+			? $al > 0xA5 || $cf*/
 			: $al > 0x99 || $cf)
 	{
 		$cf = X86_FL_CF;
@@ -2286,11 +2287,11 @@ if(($al & 0x0F) > 0x09 || $af)
 else
 {
 	// guessing 186 behavior
-	// 286/386/486 behavior seems to be different from Pentium behavior
+	// 286/386/486 behavior seems to be different from Pentium behavior (TODO: are the Intel manuals wrong here?)
 	if(
-		emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
+		/*emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
 			? $al > 0x9F || $cf
-			: $al > 0x99 || $cf)
+			:*/ $al > 0x99 || $cf)
 	{
 		$cf = X86_FL_CF;
 		$al -= 0x60;
