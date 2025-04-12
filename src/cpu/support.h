@@ -55,7 +55,7 @@ typedef struct float80_t
 # define _cons128(x, y) (((_uint128)(x) << 64) | (y))
 # define _icons128(x, y) (((_int128)(x) << 64) | (y))
 # define _overflow128(x) ((x) != (_uint128)(_uint64)(x))
-# define _ioverflow128(x) ((_int64)(x) < 0 ? (x) >= 0 : (x) < 0)
+# define _ioverflow128(x) ((x) != (_int128)(_int64)(x))
 # define _low128(x) ((_uint64)(x))
 # define _high128(x) ((_uint64)((x) >> 64))
 #else
@@ -134,7 +134,7 @@ static inline void _imul128(int128_t * _z, int64_t x, int64_t y)
 # define _cons128(x, y) ((_uint128) { .h = (x), .l = (y) })
 # define _icons128(x, y) ((_int128) { .h = (x), .l = (y) })
 # define _overflow128(x) ((x).h != 0)
-# define _ioverflow128(x) ((_int64)(x).l < 0 ? (_int64)(x).l >= 0 : (_int64)(x).l < 0)
+# define _ioverflow128(x) ((_int64)(x).l < 0 ? (x).h != -1 : (x).h != 0)
 # define _low128(x) ((x).l)
 # define _high128(x) ((x).h)
 #endif

@@ -2317,14 +2317,15 @@ if(x == 0)
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 _uint$Odup dxax = _cons$Odup($dx.$O, $ax.$O);
-if(x == 0) /* TODO: or division overflows */
+_uint$Odup quot;
+_uint$Odup rem;
+_div$Odup(quot, rem, dxax, x);
+if(_overflow$Odup(quot))
 {
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
-_uint$O y, z;
-_div$Odup(y, z, dxax, x);
-$ax.$O = y;
-$dx.$O = z;
+$ax.$O = quot;
+$dx.$O = rem;
 
 @instruction DMINT
 @comment Cyrix specific
@@ -2457,7 +2458,7 @@ _int$Odup dxax = _icons$Odup($dx.$O, $ax.$O);
 _int$Odup quot;
 _int$Odup rem;
 _idiv$Odup(quot, rem, dxax, x);
-if(false) /* TODO: or division overflows */
+if(_ioverflow$Odup(quot))
 {
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
@@ -2470,6 +2471,7 @@ _int$O x = $al, y = $0.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
 $cf = (_int$Odup)(_int$O)result != result;
 $of = (_int$Odup)(_int$O)result != result;
+// TODO: undocumented 8086 REP prefix
 $ax = result;
 
 @instruction IMUL|cnt=1 op=w|cnt=1 op=l
@@ -2477,6 +2479,7 @@ _int$O x = $ax.$O, y = $0.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
 $cf = (_int$Odup)(_int$O)result != result;
 $of = (_int$Odup)(_int$O)result != result;
+// TODO: undocumented 8086 REP prefix
 $ax.$O = result;
 $dx.$O = result >> $O;
 
