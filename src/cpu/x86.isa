@@ -2874,7 +2874,8 @@ $0.$O = i;
 
 @instruction MOV|op0=sw
 $0.$O = $1.$O;
-if(x86_segment_get_number(emu, _reg) == X86_R_SS)
+if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
+		|| x86_segment_get_number(emu, _reg) == X86_R_SS)
 	emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
 
 @instruction MOV
@@ -3035,6 +3036,11 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 @instruction POP|op0=ss
 $0.$O = _pop$O();
 emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
+
+@instruction POP|op0=es|op0=cs|op0=ds
+$0.$O = _pop$O();
+if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+	emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
 
 @instruction POP
 $0.$O = _pop$O();
