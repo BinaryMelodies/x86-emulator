@@ -2170,6 +2170,7 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0 && _rep())
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
 
@@ -2503,7 +2504,6 @@ if(_ioverflow$Odup(quot))
 {
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
-_uint$O y, z;
 $ax.$O = quot;
 $dx.$O = rem;
 
@@ -2629,6 +2629,7 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0)
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
 
@@ -2895,6 +2896,7 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0)
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
 
@@ -2993,21 +2995,6 @@ $0.$O = $1.$O;
 @instruction MOVBE
 $0.$O = x86_bswap$O($1.$O);
 
-@instruction MOVSPA
-@comment NEC specific
-x86_store_register_bank(emu); /* make sure registers are not cached */
-unsigned old_bank = x86_retrieve_register_bank_number(emu, le16toh($bank.w[X86_BANK_PSW_SAVE]));
-$sp = le16toh(emu->bank[old_bank].w[X86_BANK_SP]);
-$ss = le16toh(emu->bank[old_bank].w[X86_BANK_SS]);
-
-@instruction MOVSPB
-@comment NEC specific
-x86_store_register_bank(emu); /* make sure registers are not cached */
-unsigned new_bank = x86_register_bank_number(emu, $0);
-emu->bank[new_bank].w[X86_BANK_SP] = htole16($sp);
-emu->bank[new_bank].w[X86_BANK_SS] = htole16($ss);
-x86_load_register_bank(emu); /* make sure registers are not cached */
-
 @instruction MOVS
 _write$O(_dst_seg, $di.$A, _read$O(_src_seg, $si.$A));
 if($df)
@@ -3028,8 +3015,24 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0)
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
+
+@instruction MOVSPA
+@comment NEC specific
+x86_store_register_bank(emu); /* make sure registers are not cached */
+unsigned old_bank = x86_retrieve_register_bank_number(emu, le16toh($bank.w[X86_BANK_PSW_SAVE]));
+$sp = le16toh(emu->bank[old_bank].w[X86_BANK_SP]);
+$ss = le16toh(emu->bank[old_bank].w[X86_BANK_SS]);
+
+@instruction MOVSPB
+@comment NEC specific
+x86_store_register_bank(emu); /* make sure registers are not cached */
+unsigned new_bank = x86_register_bank_number(emu, $0);
+emu->bank[new_bank].w[X86_BANK_SP] = htole16($sp);
+emu->bank[new_bank].w[X86_BANK_SS] = htole16($ss);
+x86_load_register_bank(emu); /* make sure registers are not cached */
 
 @instruction MOVSX
 $0.$O = (_int$1.size)$1;
@@ -3145,6 +3148,7 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0)
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
 
@@ -3674,6 +3678,7 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0 && _rep())
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
 
@@ -3933,7 +3938,6 @@ emu->state = X86_STATE_STOPPED;
 @instruction STOREALL286
 PRIVILEGED();
 x86_ice_storeall_286(emu);
-/* TODO: STOREALL286 */
 
 @instruction STOS
 _write$O(_dst_seg, $di.$A, $ax.$O);
@@ -3953,6 +3957,7 @@ if(emu->parser->rep_prefix != X86_PREF_NOREP)
 	if(cx != 0)
 	{
 		$rip = $old_rip;
+		emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 	}
 }
 

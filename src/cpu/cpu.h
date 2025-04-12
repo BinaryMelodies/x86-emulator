@@ -1024,6 +1024,8 @@ enum x86_result_t
 {
 	/* Execution succeeded */
 	X86_RESULT_SUCCESS,
+	/* Execution is in the middle of a (still running) string instruction */
+	X86_RESULT_STRING,
 	/* Execution halted (also includes stopped) */
 	X86_RESULT_HALT,
 	/* An interrupt was invoked, interrupt number is value, execution will continue */

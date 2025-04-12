@@ -3510,6 +3510,8 @@ break;
 		{
 		case X86_RESULT_SUCCESS:
 			break;
+		case X86_RESULT_STRING:
+			break;
 		case X86_RESULT_HALT:
 //			fprintf(stderr, "CPU halted\n");
 			break;

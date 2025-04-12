@@ -164,7 +164,12 @@ void run_tests(x86_state_t * emu)
 		}
 		//emu->parser->debug_output[0] = '\0';
 		//emu->option_disassemble = true;
-		x86_step(emu);
+		while(true)
+		{
+			x86_result_t result = x86_step(emu);
+			if(X86_RESULT_TYPE(result) != X86_RESULT_STRING)
+				break;
+		}
 		//printf("%s", emu->parser->debug_output);
 		ASSERT(AX, emu->ax, testcases[i].oregs.ax);
 		ASSERT(CX, emu->cx, testcases[i].oregs.cx);
