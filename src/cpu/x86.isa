@@ -1750,7 +1750,15 @@ $pf = _parity(al);
 @instruction AAS
 if(($al & 0xF) > 9 || $af)
 {
-	$ax = ($ax - 0x0106) & 0xFF0F;
+	if(emu->cpu_type <= X86_CPU_486)
+	{
+		$al = ($al - 0x06) & 0x0F;
+		$ah -= 1;
+	}
+	else
+	{
+		$ax = ($ax - 0x0106) & 0xFF0F;
+	}
 	$af = X86_FL_AF;
 	$cf = X86_FL_CF;
 }
