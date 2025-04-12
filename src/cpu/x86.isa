@@ -3484,18 +3484,25 @@ if(emu->cpu_type >= X86_CPU_286)
 }
 if(y >= $O)
 {
+	_int$O z = (_int$O)x < 0 ? -1 : 0;
 	$cf = (_int$O)x < 0 ? 1 : 0;
-	$0.$O = (_int$O)x < 0 ? -1 : 0;
+	// simulate 8086 behavior
+	$of = 0;
+	$0.$O = z;
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 }
 else if(y != 0)
 {
-	_int$O z = x >> y;
-	$cf = x >> (y - 1);
-	if(y == 1)
-	{
-		$of = 0;
-	}
+	_int$O z = (_int$O)x >> y;
+	$cf = (x >> (y - 1)) & 1;
+	// simulate 8086 behavior
+	$of = 0;
 	$0.$O = z;
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 }
 
 @instruction SAR|op=l|op=q
@@ -3504,13 +3511,16 @@ _uint8 y = $1.b;
 y &= $O - 1;
 if(y != 0)
 {
-	_int$O z = x >> y;
-	$cf = x >> (y - 1);
+	_int$O z = (_int$O)x >> y;
+	$cf = (x >> (y - 1)) & 1;
 	if(y == 1)
 	{
 		$of = 0;
 	}
 	$0.$O = z;
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 }
 
 @instruction SBB
