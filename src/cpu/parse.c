@@ -626,7 +626,6 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _retf32(bytes) x86_return_far32(emu, bytes)
 #define _retf64(bytes) x86_return_far64(emu, bytes)
 
-#define _int(num, param) x86_enter_interrupt(emu, num, param)
 #define _int80em(num, param) do { emu->pc = old_pc; x86_enter_interrupt(emu86, num, param); } while(0)
 
 #define _read80b(off) x80_memory_read8(emu, (off))

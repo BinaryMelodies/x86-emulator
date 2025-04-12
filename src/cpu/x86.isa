@@ -1720,7 +1720,9 @@ if(x86_is_nec(emu))
 	$0 = 10; // set the immediate to 10
 _uint8 al = $al;
 if($0 == 0)
-	_int(X86_EXC_DE | X86_EXC_FAULT, 0);
+{
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
 $ah = al / $0;
 al %= $0;
 $al = al;
@@ -1842,22 +1844,16 @@ $ip = le16toh($bank.w[X86_BANK_VECTOR_PC]);
 
 @instruction BRKEM
 @comment NEC specific
-_push16($flags);
-_push16($cs);
-_push16($ip);
 /* TODO: extensions */
-_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+x86_enter_interrupt(emu, ($0 & 0xFF) | X86_EXC_INT_N, 0);
 emu->md_enabled = true;
 emu->md = x86_emulation_state_flag(emu);
 x86_load_x80_registers(emu);
 
 @instruction BRKEM2
 @comment NEC specific, also mentioned as BRKFEM
-_push16($flags);
-_push16($cs);
-_push16($ip);
 /* TODO: extensions */
-_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+x86_enter_interrupt(emu, ($0 & 0xFF) | X86_EXC_INT_N, 0);
 emu->md_enabled = true;
 emu->md = x86_emulation_state_flag(emu);
 x86_load_x80_registers(emu);
@@ -1865,18 +1861,12 @@ emu->full_z80_emulation = true;
 
 @instruction BRKN
 @comment NEC specific
-_push16($flags);
-_push16($cs);
-_push16($ip);
-_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+x86_enter_interrupt(emu, ($0 & 0xFF) | X86_EXC_INT_N, 0);
 emu->md = x86_native_state_flag(emu);
 
 @instruction BRKS
 @comment NEC specific
-_push16($flags);
-_push16($cs);
-_push16($ip);
-_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+x86_enter_interrupt(emu, ($0 & 0xFF) | X86_EXC_INT_N, 0);
 emu->md = x86_emulation_state_flag(emu);
 
 @instruction BRKXA
@@ -2305,7 +2295,7 @@ $dx.$O = z;
 @comment Cyrix specific
 if(!x86_dmm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 /* TODO: (Cyrix) DMINT */
 
@@ -2535,10 +2525,10 @@ if(emu->cpu_type == X86_CPU_V60)
 }
 if(x86_is_ia64(emu))
 	x86_ia64_intercept(emu, 0); // TODO
-_int(($0 & 0xFF) | X86_EXC_INT_N, 0);
+x86_trigger_interrupt(emu, ($0 & 0xFF) | X86_EXC_INT_N, 0);
 
 @instruction INT1
-_int(X86_EXC_DB | X86_EXC_INT1, 0);
+x86_trigger_interrupt(emu, X86_EXC_DB | X86_EXC_INT1, 0);
 
 @instruction INT3
 if(emu->cpu_type == X86_CPU_V60)
@@ -2546,12 +2536,12 @@ if(emu->cpu_type == X86_CPU_V60)
 	emu->xip = emu->old_xip + 1;
 	x86_v60_exception(emu, V60_EXC_PI);
 }
-_int(X86_EXC_BP | X86_EXC_INT_SW, 0); /* note: fixed */
+x86_trigger_interrupt(emu, X86_EXC_BP | X86_EXC_INT_SW, 0); /* note: fixed */
 
 @instruction INTO
 if($of)
 {
-	_int(X86_EXC_OF | X86_EXC_INT_SW, 0);
+	x86_trigger_interrupt(emu, X86_EXC_OF | X86_EXC_INT_SW, 0);
 }
 
 @instruction INVD
@@ -2625,7 +2615,9 @@ $ah = $flagsl;
 
 @instruction LAR
 if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+{
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+}
 _uint16 selector = $1.w;
 if((selector & ~3) == 0 || selector > emu->sr[selector & 4 ? X86_R_LDTR : X86_R_GDTR].limit)
 {
@@ -2807,7 +2799,9 @@ if($cx.$A != 0 && X86_CHECK_$C(emu))
 
 @instruction LSL
 if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+{
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+}
 _uint16 selector = $1.w;
 if((selector & ~3) == 0 || selector > emu->sr[selector & 4 ? X86_R_LDTR : X86_R_GDTR].limit)
 {
@@ -3206,7 +3200,7 @@ $0.$O = emu->sr[X86_R_GS].base;
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 /* TODO: RDM */
 
@@ -3233,7 +3227,7 @@ $edx = msr >> 32;
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 $0 = emu->smm_hdr;
 
@@ -3321,7 +3315,7 @@ $al = ($al & 0xF0) | (b & 0x0F);
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 int cpl = x86_restore_descriptor(emu, _seg, _off, _reg);
 if(_reg == X86_R_CS)
@@ -3331,7 +3325,7 @@ if(_reg == X86_R_CS)
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 x86_restore_descriptor(emu, _seg, _off, X86_R_LDTR);
 
@@ -3340,7 +3334,7 @@ if(x86_is_ia64(emu))
 	x86_ia64_intercept(emu, 0); // TODO
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 /* TODO: RSM */
 
@@ -3348,7 +3342,7 @@ if(!x86_smm_instruction_valid(emu))
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 x86_restore_descriptor(emu, _seg, _off, X86_R_TR);
 
@@ -3360,10 +3354,7 @@ if((($0 ^ $1) & 0xFF) == 0)
 }
 else
 {
-	_push16($flags);
-	_push16($cs);
-	_push16($ip);
-	_int(0x08 | X86_EXC_INT_N, 0);
+	x86_trigger_interrupt(emu, 0x08 | X86_EXC_INT_N, 0);
 }
 
 @instruction SAHF
@@ -3603,14 +3594,14 @@ if((emu->dr[7] & X86_DR7_ICE) != 0)
 }
 else
 {
-	_int(X86_EXC_DB | X86_EXC_INT1, 0);
+	x86_trigger_interrupt(emu, X86_EXC_DB | X86_EXC_INT1, 0);
 }
 
 @instruction SMINT
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 /* TODO: (Cyrix) SMINT */
 
@@ -3732,7 +3723,7 @@ for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 x86_save_descriptor(emu, _seg, _off, _reg);
 
@@ -3740,7 +3731,7 @@ x86_save_descriptor(emu, _seg, _off, _reg);
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 x86_save_descriptor(emu, _seg, _off, X86_R_LDTR);
 
@@ -3748,7 +3739,7 @@ x86_save_descriptor(emu, _seg, _off, X86_R_LDTR);
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 x86_save_descriptor(emu, _seg, _off, X86_R_TR);
 
@@ -4019,7 +4010,7 @@ x86_msr_set(emu, index, value);
 @comment Cyrix specific
 if(!x86_smm_instruction_valid(emu))
 {
-	_int(X86_EXC_UD | X86_EXC_FAULT, 0);
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
 emu->smm_hdr = $0;
 
