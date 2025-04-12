@@ -2010,8 +2010,9 @@ if(x86_sfr_get(emu, $0) & (1 << ($1 & 7)))
 }
 
 @instruction CALL
+_uint$O target = (_uint$O)$0.$O;
 _push$O($rip);
-$rip = (_uint$O)$0.$O;
+$rip = target;
 
 @instruction CALLF|op=w|op=l
 _callf$O($0@$O.w, (_uint$O)$0.$O);
