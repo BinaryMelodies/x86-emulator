@@ -435,6 +435,16 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 
 #define _parity(x) (x86_flags_p[(x) & 0xFF] >> 2)
 
+#define _rol8(x, y)  (((x) << (y)) | ((x) >> (8  - (y))))
+#define _rol16(x, y) (((x) << (y)) | ((x) >> (16 - (y))))
+#define _rol32(x, y) (((x) << (y)) | ((x) >> (32 - (y))))
+#define _rol64(x, y) (((x) << (y)) | ((x) >> (64 - (y))))
+
+#define _ror8(x, y)  (((x) >> (y)) | ((x) << (8  - (y))))
+#define _ror16(x, y) (((x) >> (y)) | ((x) << (16 - (y))))
+#define _ror32(x, y) (((x) >> (y)) | ((x) << (32 - (y))))
+#define _ror64(x, y) (((x) >> (y)) | ((x) << (64 - (y))))
+
 #define _rcl8(x, y)  (((x) << (y)) | ((uoff_t)emu->cf << ((y) - 1)) | ((x) >> (8  + 1 - (y))))
 #define _rcl16(x, y) (((x) << (y)) | ((uoff_t)emu->cf << ((y) - 1)) | ((x) >> (16 + 1 - (y))))
 #define _rcl32(x, y) (((x) << (y)) | ((uoff_t)emu->cf << ((y) - 1)) | ((x) >> (32 + 1 - (y))))
@@ -471,6 +481,11 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _add_auxiliaryh(x, y, z) ((((x) ^ (y) ^ (z)) & 0x1000) != 0)
 #define _sub_auxiliaryh(x, y, z) ((((x) ^ (y) ^ (z)) & 0x1000) == 0)
 
+#define _overflow8(x, z)  ((((x) ^ (z)) >> (8  - 1)) & 1)
+#define _overflow16(x, z) ((((x) ^ (z)) >> (16 - 1)) & 1)
+#define _overflow32(x, z) ((((x) ^ (z)) >> (32 - 1)) & 1)
+#define _overflow64(x, z) ((((x) ^ (z)) >> (64 - 1)) & 1)
+
 #define _add_overflow8(x, y, z)  (((((x) & (y) & ~(z)) | (~(x) & ~(y) & (z))) & 0x80) != 0)
 #define _add_overflow16(x, y, z) (((((x) & (y) & ~(z)) | (~(x) & ~(y) & (z))) & 0x8000) != 0)
 #define _add_overflow32(x, y, z) (((((x) & (y) & ~(z)) | (~(x) & ~(y) & (z))) & 0x80000000) != 0)
@@ -480,16 +495,6 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _sub_overflow16(x, y, z) (((((x) & ~(y) & ~(z)) | (~(x) & (y) & (z))) & 0x8000) != 0)
 #define _sub_overflow32(x, y, z) (((((x) & ~(y) & ~(z)) | (~(x) & (y) & (z))) & 0x80000000) != 0)
 #define _sub_overflow64(x, y, z) (((((x) & ~(y) & ~(z)) | (~(x) & (y) & (z))) & 0x8000000000000000) != 0)
-
-#define _rcl_overflow8(x, z)  ((((x) ^ (z)) >> (8  - 1)) & 1)
-#define _rcl_overflow16(x, z) ((((x) ^ (z)) >> (16 - 1)) & 1)
-#define _rcl_overflow32(x, z) ((((x) ^ (z)) >> (32 - 1)) & 1)
-#define _rcl_overflow64(x, z) ((((x) ^ (z)) >> (64 - 1)) & 1)
-
-#define _rcr_overflow8(x, z)  ((((x) ^ (z)) >> (8  - 1)) & 1)
-#define _rcr_overflow16(x, z) ((((x) ^ (z)) >> (16 - 1)) & 1)
-#define _rcr_overflow32(x, z) ((((x) ^ (z)) >> (32 - 1)) & 1)
-#define _rcr_overflow64(x, z) ((((x) ^ (z)) >> (64 - 1)) & 1)
 
 #define DEBUG(...) do { if(disassemble) debug_printf((prs)->debug_output, __VA_ARGS__); } while(0) // TODO: better type
 
