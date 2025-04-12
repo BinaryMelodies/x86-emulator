@@ -2272,10 +2272,16 @@ $pf = _parity(z);
 
 @instruction DIV|op=b
 _uint$O x = $0.$O;
+if(x == 0)
+{
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
 _uint$Odup ax = $ax;
 _uint$Odup quot = ax / x;
 _uint$Odup rem  = ax % x;
-if(x == 0 || (_uint$Odup)(_uint$O)quot != quot)
+if((_uint$Odup)(_uint$O)quot != quot)
 {
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
@@ -2286,10 +2292,16 @@ $ah = rem;
 
 @instruction DIV|op=w|op=l
 _uint$O x = $0.$O;
+if(x == 0)
+{
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
 _uint$Odup dxax = $ax.$O | ((_uint$Odup)$dx.$O << $O);
 _uint$Odup quot = dxax / x;
 _uint$Odup rem  = dxax % x;
-if(x == 0 || (_uint$Odup)(_uint$O)quot != quot)
+if((_uint$Odup)(_uint$O)quot != quot)
 {
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
@@ -2300,6 +2312,10 @@ $dx.$O = rem;
 
 @instruction DIV|op=q
 _uint$O x = $0.$O;
+if(x == 0)
+{
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
 _uint$Odup dxax = _cons$Odup($dx.$O, $ax.$O);
 if(x == 0) /* TODO: or division overflows */
 {
@@ -2387,39 +2403,67 @@ x86_bitfield_insert$O(emu, _seg, _off, $ax.$O, $cl, $0.$O);
 
 @instruction IDIV|op=b
 _int$O x = $0.$O;
-_int$Odup ax = $ax;
-if(x == 0) /* TODO: or division overflows */
+if(x == 0)
 {
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
-$ah = ax / x;
-$al = ax % x;
+_int$Odup ax = $ax;
+_int$Odup quot = ax / x;
+_int$Odup rem  = ax % x;
+if((_int$Odup)(_int$O)quot != quot || ((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186) && quot == _lowest$O))
+{
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186) && emu->parser->rep_prefix != X86_PREF_NOREP)
+	quot = -quot;
+$al = quot;
+$ah = rem;
 
 @instruction IDIV|op=w|op=l
 _int$O x = $0.$O;
-_int$Odup dxax = $ax.$O | ((_int$Odup)$dx.$O << $O);
-if(x == 0) /* TODO: or division overflows */
+if(x == 0)
 {
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
-$ax.$O = dxax / x;
-$dx.$O = dxax % x;
+_int$Odup dxax = $ax.$O | ((_int$Odup)$dx.$O << $O);
+_int$Odup quot = dxax / x;
+_int$Odup rem  = dxax % x;
+if((_int$Odup)(_int$O)quot != quot || ((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186) && quot == _lowest$O))
+{
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
+if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186) && emu->parser->rep_prefix != X86_PREF_NOREP)
+	quot = -quot;
+$ax.$O = quot;
+$dx.$O = rem;
 
 @instruction IDIV|op=q
 _int$O x = $0.$O;
+if(x == 0)
+{
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
+	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
 _int$Odup dxax = _icons$Odup($dx.$O, $ax.$O);
-if(x == 0) /* TODO: or division overflows */
+_int$Odup quot;
+_int$Odup rem;
+_idiv$Odup(quot, rem, dxax, x);
+if(false) /* TODO: or division overflows */
 {
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 _uint$O y, z;
-_idiv$Odup(y, z, dxax, x);
-$ax.$O = y;
-$dx.$O = z;
+$ax.$O = quot;
+$dx.$O = rem;
 
 @instruction IMUL|cnt=1 op=b
 _int$O x = $al, y = $0.$O;

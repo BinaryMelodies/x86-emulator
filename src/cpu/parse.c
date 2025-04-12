@@ -433,6 +433,11 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _uint64 uint64_t
 #define _uint128 uint128_t
 
+#define _lowest8  (-0x80)
+#define _lowest16 (-0x8000)
+#define _lowest32 (-0x80000000)
+#define _lowest64 (-0x8000000000000000)
+
 #define _parity(x) (x86_flags_p[(x) & 0xFF] >> 2)
 
 #define _rol8(x, y)  (((x) << (y)) | ((x) >> (8  - (y))))
