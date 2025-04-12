@@ -1726,8 +1726,8 @@ if($0 == 0)
 	$sf = 0;
 	$af = 0;
 	$cf = 0;
-	$zf = 1;
-	$pf = 1;
+	$zf = X86_FL_ZF;
+	$pf = X86_FL_PF;
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
@@ -2232,7 +2232,7 @@ if(($al & 0x0F) > 0x09 || $af)
 			? $al > 0xA5 || $cf
 			: $al > 0x99 || $cf)
 	{
-		$cf = 1;
+		$cf = X86_FL_CF;
 		$al -= 0x66;
 	}
 	else
@@ -2241,7 +2241,7 @@ if(($al & 0x0F) > 0x09 || $af)
 			$cf |= $al < 6;
 		$al -= 0x06;
 	}
-	$af = 1;
+	$af = X86_FL_AF;
 }
 else
 {
@@ -2252,7 +2252,7 @@ else
 			? $al > 0x9F || $cf
 			: $al > 0x99 || $cf)
 	{
-		$cf = 1;
+		$cf = X86_FL_CF;
 		$al -= 0x60;
 	}
 }
@@ -5092,7 +5092,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = (z & 0xA8);
 	$nf = 0;
-	$af = 1;
+	$af = X86_FL_AF;
 }
 else
 {
@@ -5175,7 +5175,7 @@ case 1:
 	z = x & (1 << ((op2 >> 3) & 7));
 	$f = ($f & 1) | (z & 0xA8);
 	$nf = 0;
-	$af = 1;
+	$af = X86_FL_AF;
 	$pf = _zero8(z);
 	$zf = _zero8(z);
 	return X86_RESULT(X86_RESULT_SUCCESS, 0);
@@ -5221,7 +5221,7 @@ _uint8 z = x - y;
 if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = (x & 0x80) | (y & 0x28);
-	$nf = 1;
+	$nf = X86_FL_NF;
 	$pf = _sub_overflow8(x, y, z);
 	$af = _sub_auxiliary(x, y, z);
 }
@@ -5238,7 +5238,7 @@ _uint8 x = $a, y = _read80b($hl);
 _uint8 z = x - y;
 int af = _sub_auxiliary(x, y, z);
 $f = ($f & 1) | ((z - af) & 0x28);
-$nf = 1;
+$nf = X86_FL_NF;
 $af = af;
 $zf = _zero8(z);
 $sf = _sign8(z);
@@ -5251,7 +5251,7 @@ _uint8 x = $a, y = _read80b($hl);
 _uint8 z = x - y;
 int af = _sub_auxiliary(x, y, z);
 $f = ($f & 1) | ((z - af) & 0x28);
-$nf = 1;
+$nf = X86_FL_NF;
 $af = af;
 $zf = _zero8(z);
 $sf = _sign8(z);
@@ -5266,7 +5266,7 @@ _uint8 x = $a, y = _read80b($hl);
 _uint8 z = x - y;
 int af = _sub_auxiliary(x, y, z);
 $f = ($f & 1) | ((z - af) & 0x28);
-$nf = 1;
+$nf = X86_FL_NF;
 $af = af;
 $zf = _zero8(z);
 $sf = _sign8(z);
@@ -5279,7 +5279,7 @@ _uint8 x = $a, y = _read80b($hl);
 _uint8 z = x - y;
 int af = _sub_auxiliary(x, y, z);
 $f = ($f & 1) | ((z - af) & 0x28);
-$nf = 1;
+$nf = X86_FL_NF;
 $af = af;
 $zf = _zero8(z);
 $sf = _sign8(z);
@@ -5300,7 +5300,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 if($a > 0x99 || $cf)
 {
 	$a = $a + (emu->cpu_type == X80_CPU_Z80 && $nf ? -0x60 : 0x60);
-	$cf = 1;
+	$cf = X86_FL_CF;
 }
 if(($a & 0x0F) > 0x09 || $af)
 {
@@ -5319,7 +5319,7 @@ if(($a & 0x0F) > 0x09 || $af)
 	}
 	else
 	{
-		$af = 1;
+		$af = X86_FL_AF;
 		$a = $a + (emu->cpu_type == X80_CPU_Z80 && $nf ? -0x06 : 0x06);
 	}
 }
@@ -5331,7 +5331,7 @@ $0 = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = ($f & 0x01) | (z & 0xA8);
-	$nf = 1;
+	$nf = X86_FL_NF;
 	$pf = _sub_overflow8(x, 0, z);
 	$af = _sub_auxiliary(x, 0, z);
 }
@@ -5406,7 +5406,7 @@ $0 = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = ($f & 0x01) | (z & 0xA8);
-	$nf = 1;
+	$nf = X86_FL_NF;
 	$pf = _add_overflow8(x, 0, z);
 }
 else
@@ -5556,7 +5556,7 @@ _uint8 z = -x;
 $a = z;
 $f = z & 0xA8;
 $cf = _sub_carry8(0, x, z);
-$nf = 1;
+$nf = X86_FL_NF;
 $pf = _sub_overflow8(0, x, z);
 $af = _sub_auxiliary(0, x, z);
 $zf = _zero8(z);
@@ -5759,7 +5759,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 	$nf = 0;
 	$af = 0;
 }
-$cf = 1;
+$cf = X86_FL_CF;
 
 @instruction Z80.SUB
 _uint8 x = $a, y = $0;
