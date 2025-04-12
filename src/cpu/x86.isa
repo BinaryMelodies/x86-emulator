@@ -1696,14 +1696,22 @@ EDFD	i80,z80	RETEM	-	feature:	EMULATED
 @instruction AAA
 if(($al & 0xF) > 9 || $af)
 {
-	$ax = ($ax + 0x0106) & 0xFF0F;
+	if(emu->cpu_type < X86_CPU_286)
+	{
+		$al = ($al + 0x06) & 0x0F;
+		$ah += 1;
+	}
+	else
+	{
+		$ax = ($ax + 0x0106) & 0xFF0F;
+	}
 	$af = X86_FL_AF;
 	$cf = X86_FL_CF;
 }
 else
 {
 	$ax = $ax & 0xFF0F;
-	$af = 0;
+	//$af = 0; //redundant
 	$cf = 0;
 }
 
@@ -1749,7 +1757,7 @@ if(($al & 0xF) > 9 || $af)
 else
 {
 	$ax = $ax & 0xFF0F;
-	$af = 0;
+	//$af = 0; // redundant
 	$cf = 0;
 }
 
