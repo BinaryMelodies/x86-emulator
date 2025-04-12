@@ -12,6 +12,7 @@ all: $(TESTS)
 %: %.gen.c verify.c $(EMUSOURCES)
 	gcc -o $@ verify.c ../src/cpu/cpu.c -DGENFILE=\"$<\" -lm
 	strip $@
+	#gcc -o $@ verify.c ../src/cpu/cpu.c -DGENFILE=\"$<\" -lm -g
 
 .PHONY: all
 

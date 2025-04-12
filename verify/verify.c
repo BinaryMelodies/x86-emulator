@@ -134,7 +134,7 @@ void run_tests(x86_state_t * emu)
 	for(size_t i = 0; i < sizeof testcases / sizeof testcases[0]; i++)
 	{
 		emu->parser->debug_output[0] = '\0';
-		//printf("Test %d\n", i + 1);
+		//printf("Test %d\n", i);
 		emu->ax = testcases[i].iregs.ax;
 		emu->cx = testcases[i].iregs.cx;
 		emu->dx = testcases[i].iregs.dx;

@@ -1205,7 +1205,7 @@ x86_result_t x86_step(x86_state_t * emu)
 		}
 	}
 
-	if((x86_memory_segmented_read8(emu, X86_R_TR, 0x64) & 0x01) != 0)
+	if(emu->tf)
 	{
 		emu->dr[6] |= X86_DR6_BS;
 		if(setjmp(emu->exc) == 0)
