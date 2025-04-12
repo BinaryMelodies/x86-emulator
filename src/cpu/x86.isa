@@ -2207,23 +2207,33 @@ x86_cpuid(emu);
 @instruction DAA
 if(($al & 0x0F) > 0x09 || $af)
 {
+	// guessing 186 behavior
+	// 8086 had a different behavior to later CPUs
+	// 286/386/486 behavior seems to be different from Pentium behavior
 	if(
 		emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
 			? ($af ? $al > 0x9F : $al > 0x99) || $cf
-		: $al > 0x99 || $cf)
+			: $al > 0x99 || $cf)
 	{
 		$al += 0x66;
 		$cf = X86_FL_CF;
 	}
 	else
 	{
+		if(emu->cpu_type > X86_CPU_486 && $al > 0xF9)
+			$cf = X86_FL_CF;
 		$al += 0x06;
 	}
 	$af = X86_FL_AF;
 }
 else
 {
-	if($al > 0x99 || $cf)
+	// guessing 186 behavior
+	// 286/386/486 behavior seems to be different from Pentium behavior
+	if(
+		emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386
+			? $al > 0x9F || $cf
+			: $al > 0x99 || $cf)
 	{
 		$al += 0x60;
 		$cf = X86_FL_CF;
@@ -2251,8 +2261,8 @@ if(($al & 0x0F) > 0x09 || $af)
 	}
 	else
 	{
-		if(emu->cpu_type > X86_CPU_486)
-			$cf |= $al < 6;
+		if(emu->cpu_type > X86_CPU_486 && $al < 0x06)
+			$cf |= X86_FL_CF;
 		$al -= 0x06;
 	}
 	$af = X86_FL_AF;
