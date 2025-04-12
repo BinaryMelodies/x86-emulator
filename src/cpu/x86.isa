@@ -2221,14 +2221,22 @@ $pf = _parity($al);
 @instruction DAS
 if(($al & 0x0F) > 0x09 || $af)
 {
-	if((emu->cpu_type == X86_CPU_8086 && $af ? $al > 0x9F : $al > 0x99) || $cf)
+	// guessing 186 behavior
+	// 8086 had a different behavior to later CPUs
+	// 286/386/486 behavior seems to be different from Pentium behavior
+	if(
+		emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
+			? ($af ? $al > 0x9F : $al > 0x99) || $cf
+		: emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
+			? $al > 0xA5 || $cf
+			: $al > 0x99 || $cf)
 	{
 		$cf = 1;
 		$al -= 0x66;
 	}
 	else
 	{
-		if(emu->cpu_type > X86_CPU_8086)
+		if(emu->cpu_type > X86_CPU_486)
 			$cf |= $al < 6;
 		$al -= 0x06;
 	}
@@ -2236,7 +2244,12 @@ if(($al & 0x0F) > 0x09 || $af)
 }
 else
 {
-	if($al > 0x99 || $cf)
+	// guessing 186 behavior
+	// 286/386/486 behavior seems to be different from Pentium behavior
+	if(
+		emu->cpu_type == X86_CPU_286 || emu->cpu_type == X86_CPU_386 || emu->cpu_type == X86_CPU_486
+			? $al > 0x9F || $cf
+			: $al > 0x99 || $cf)
 	{
 		$cf = 1;
 		$al -= 0x60;
