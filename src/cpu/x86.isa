@@ -1721,6 +1721,8 @@ if(x86_is_nec(emu))
 _uint8 al = $al;
 if($0 == 0)
 {
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 $ah = al / $0;
@@ -2264,7 +2266,8 @@ _uint$O x = $0.$O;
 _uint$Odup ax = $ax;
 if(x == 0) /* TODO: or division overflows */
 {
-	// TODO: on 8086, CS:IP points to next instruction
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 $ah = ax / x;
@@ -2275,7 +2278,8 @@ _uint$O x = $0.$O;
 _uint$Odup dxax = $ax.$O | ((_uint$Odup)$dx.$O << $O);
 if(x == 0) /* TODO: or division overflows */
 {
-	// TODO: on 8086, CS:IP points to next instruction
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 $ax.$O = dxax / x;
@@ -2285,7 +2289,9 @@ $dx.$O = dxax % x;
 _uint$O x = $0.$O;
 _uint$Odup dxax = _cons$Odup($dx.$O, $ax.$O);
 if(x == 0) /* TODO: or division overflows */
+{
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
+}
 _uint$O y, z;
 _div$Odup(y, z, dxax, x);
 $ax.$O = y;
@@ -2371,7 +2377,8 @@ _int$O x = $0.$O;
 _int$Odup ax = $ax;
 if(x == 0) /* TODO: or division overflows */
 {
-	// TODO: on 8086, CS:IP points to next instruction
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 $ah = ax / x;
@@ -2382,7 +2389,8 @@ _int$O x = $0.$O;
 _int$Odup dxax = $ax.$O | ((_int$Odup)$dx.$O << $O);
 if(x == 0) /* TODO: or division overflows */
 {
-	// TODO: on 8086, CS:IP points to next instruction
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
+		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 $ax.$O = dxax / x;
@@ -2393,7 +2401,6 @@ _int$O x = $0.$O;
 _int$Odup dxax = _icons$Odup($dx.$O, $ax.$O);
 if(x == 0) /* TODO: or division overflows */
 {
-	// TODO: on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
 }
 _uint$O y, z;
