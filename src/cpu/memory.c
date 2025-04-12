@@ -635,8 +635,13 @@ static inline void x86_memory_segmented_read_exec(x86_state_t * emu, x86_segnum_
 {
 	assert(segment_number == X86_R_CS);
 
+	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
+	{
+		offset &= 0xFFFF;
+	}
+
 	if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
-		&& ((offset & 0xFFFF) + count > 0x10000))
+		&& offset + count > 0x10000)
 	{
 		// segment wrapping
 		uaddr_t actual_count = min(count, 0x10000 - (offset & 0xFFFF));
@@ -712,8 +717,13 @@ static inline void x86_memory_segmented_read(x86_state_t * emu, x86_segnum_t seg
 	}
 	else
 	{
+		if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
+		{
+			offset &= 0xFFFF;
+		}
+
 		if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
-			&& ((offset & 0xFFFF) + count > 0x10000))
+			&& offset + count > 0x10000)
 		{
 			while(count > 0)
 			{
@@ -783,8 +793,13 @@ static inline void x87_memory_segmented_read(x86_state_t * emu, x86_segnum_t seg
 			buffer = (char *)buffer + actual_count;
 		}
 
+		if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
+		{
+			offset &= 0xFFFF;
+		}
+
 		if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
-			&& ((offset & 0xFFFF) + count > 0x10000))
+			&& offset + count > 0x10000)
 		{
 			while(count > 0)
 			{
@@ -902,8 +917,13 @@ static inline void x86_memory_segmented_write(x86_state_t * emu, x86_segnum_t se
 	}
 	else
 	{
+		if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
+		{
+			offset &= 0xFFFF;
+		}
+
 		if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
-			&& ((offset & 0xFFFF) + count > 0x10000))
+			&& offset + count > 0x10000)
 		{
 			while(count > 0)
 			{
@@ -961,8 +981,13 @@ static inline void x87_memory_segmented_write(x86_state_t * emu, x86_segnum_t se
 	}
 	else
 	{
+		if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
+		{
+			offset &= 0xFFFF;
+		}
+
 		if((emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_V60 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_UPD9002)
-			&& ((offset & 0xFFFF) + count > 0x10000))
+			&& offset + count > 0x10000)
 		{
 			while(count > 0)
 			{
