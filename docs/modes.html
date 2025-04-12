@@ -1,0 +1,240 @@
+<!doctype html>
+<html>
+<head>
+<title>x86 execution modes</title>
+<style>
+td {
+	text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>x86 execution modes</h1>
+<h2>Overview</h2>
+
+<p>Note that no CPU supports all the following modes, and some bits are not present on certain CPUs.</p>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='4'>Mode</td>
+<td rowspan='4'>Instruction set</td>
+<td rowspan='4'>Introduced</td>
+<td colspan='9'>Setting</td>
+<td rowspan='4'>Interrupts</td>
+<td rowspan='4'>Paging</td>
+<td rowspan='4'>Segments</td>
+</tr>
+<tr>
+<td width='36' rowspan='3'><a title="Z80 interrupt mode, likely µPD9002">IM</a></td>
+<td colspan='2'>FLAGS<br><a title="program status word">PSW</a></td>
+<td><a title="machine status word">MSW</a><br><a title="control register 0">CR0</a></td>
+<td><a title="extended feature enable register">EFER</a></td>
+<td colspan='2'><a title="code segment attributes">CS</a></td>
+<td><a title="NEC V60 program status word">PSW</a></td>
+<td><a title="Intel Itanium processor status register">PSR</a></td>
+</tr>
+<tr>
+<td>1<br>5</td>
+<td>1<br>7</td>
+<td>0</td>
+<td>1<br>0</td>
+<td>2<br>2</td>
+<td>2<br>1</td>
+<td>2<br>9</td>
+<td>3<br>4</td>
+</tr>
+<tr>
+<td width='36'><a title="mode flag (V20/µPD9002 only)">MD</a></td>
+<td width='36'><a title="virtual 8086 mode flag (80386 and later)">VM</a></td>
+<td width='36'><a title="protected mode enable">PE</a></td>
+<td width='36'><a title="long mode active">LMA</a></td>
+<td width='36'><a title="default operation/address size, 32-bit">D</a></td>
+<td width='36'><a title="64-bit">L</a></td>
+<td width='36'><a title="emulation mode">EM</a></td>
+<td width='36'><a title="instruction set">IS</a></td>
+</tr>
+<tr>
+<td rowspan='3'>Full Z80 emulation</td>
+<td rowspan='3'>8-bit (Z80)</td>
+<td rowspan='3'>NEC µPD9002</td>
+<td>0</td>
+<td rowspan='3'>0?</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td>8080 mode/Z80 mode 0</td>
+<td rowspan='4' style='background:darkgray;'></td>
+<td rowspan='4' style='background:lightgray;'><i>Real mode</i></td>
+</tr>
+<tr>
+<td>1</td>
+<td>Z80 mode 1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Z80 mode 2<br>2 byte entries</td>
+</tr>
+<tr>
+<td>8080 emulation mode</td>
+<td>8-bit (8080, Z80)</td>
+<td>NEC V20, µPD9002</td>
+<td style='background:darkgray;'></td>
+<td>0</td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td rowspan='4'>Real mode<br>4 byte entries</td>
+</tr>
+<tr>
+<td>(V20) Native mode<br>(286) Real mode</td>
+<td rowspan='2'>16-bit</td>
+<td>Intel 8086</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td>1</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3'>0</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='2'>0</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td>1</td>
+<td rowspan='3'>1</td>
+<td rowspan='3'>off</td>
+<td>Real mode</td>
+</tr>
+<tr>
+<td rowspan='2'><i>Unreal mode</i></td>
+<td>Intel 80286</td>
+<td rowspan='2' style='background:darkgray;'></td>
+<td rowspan='2' style='background:darkgray;'></td>
+<td rowspan='2'><i>Real mode</i></td>
+</tr>
+<tr>
+<td>32-bit</td>
+<td>Intel 80386</td>
+<td>1</td>
+</tr>
+<tr>
+<td rowspan='2'>Protected mode</td>
+<td>16-bit</td>
+<td>Intel 80286</td>
+<td rowspan='2' style='background:darkgray;'></td>
+<td rowspan='2' style='background:darkgray;'></td>
+<td rowspan='2'>0</td>
+<td rowspan='2'>1</td>
+<td rowspan='2'>0</td>
+<td>0</td>
+<td rowspan='2' style='background:darkgray;'></td>
+<td rowspan='2' style='background:darkgray;'></td>
+<td rowspan='2'>1</td>
+<td rowspan='3'>Protected mode<br>8 byte entries</td>
+<td rowspan='3'>option</td>
+<td rowspan='2'>Protected mode</td>
+</tr>
+<tr>
+<td>32-bit</td>
+<td>Intel 80386</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Virtual 8086 mode</td>
+<td>16-bit</td>
+<td>Intel 80386</td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td>1</td>
+<td>Real mode</td>
+</tr>
+<tr>
+<td rowspan='3'>Long mode</td>
+<td>16-bit</td>
+<td rowspan='3'>AMD64</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3'>1</td>
+<td rowspan='3'>1</td>
+<td>0</td>
+<td>0</td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3' style='background:darkgray;'></td>
+<td rowspan='3'>Long mode<br>16 byte entries</td>
+<td rowspan='3'>on</td>
+<td rowspan='2'>Protected mode</td>
+</tr>
+<tr>
+<td>32-bit</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>64-bit</td>
+<td>0</td>
+<td>1</td>
+<td>64-bit mode</td>
+</tr>
+<tr>
+<td>V60 mode</td>
+<td>32-bit</td>
+<td>NEC V60</td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td>0</td>
+<td style='background:darkgray;'></td>
+<td colspan='2'>?</td>
+<td style='background:darkgray;'></td>
+</tr>
+<tr>
+<td>IA-64 mode</td>
+<td>64-bit</td>
+<td>Intel Itanium</td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td style='background:darkgray;'></td>
+<td>0</td>
+<td colspan='2'>?</td>
+<td style='background:darkgray;'></td>
+</tr>
+</table>
+
+<h2>Interrupts</h2>
+<ul>
+<li>8080 mode/Z80 mode 0: takes an arbitrary instruction, usually an RST or CALL</li>
+<li>Z80 mode 1: subroutine call to 0x0038</li>
+<li>Z80 mode 2: table starting at I &ll; 8, a byte offset is obtained to access a value for PC</li>
+<li>Real mode: table starting at 0 (before 80286) or IDTR.base (since 80286), 256 entries, consisting of IP and CS pairs</li>
+<li>Protected mode: table starting at IDTR.base, at most 256 entries, interrupt and trap gate descriptors containing CS selector, IP offset (before 80386) or EIP offset (since 80386) or task gates containing a TR selector, as well as attributes including type, privilege level, 16-bit or 32-bit (80386 only, not for task gates) and if it is present or not</li>
+<li>Long mode: table starting at IDTR.base, at most 256 entries, interrupt and trap gate descriptors containing CS selector, RIP offset, as well as attributes including type, privilege level, interrupt stack index and if it is present or not</li>
+</ul>
+
+<h2>Segmentation</h2>
+<ul>
+<li>Real mode: a 16-bit value is shifted by 4 (on V55, by 8 for DS2/DS3 registers) and it becomes the new base address. In unreal mode, the segment selector and base values might differ</li>
+<li>Protected mode: a 16-bit value selects an entry in the GDT or LDT, which is used to load the base, limit and attribute values after a validation check</li>
+<li>64-bit mode: behaves the same way as in protected mode, but most values are ignored: the base is treated as 0 except for FS and GS, and the limit is ignored (except for some AMD64 CPUs where LMSLE is enabled, a limited form of limit check takes place for ES, SS, DS, FS)</li>
+</ul>
+</body>
+</html>

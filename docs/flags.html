@@ -1,0 +1,415 @@
+<!doctype html>
+<html>
+<head>
+<title>Evolution of the FLAGS register</title>
+<style>
+td {
+	text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>Evolution of the FLAGS register</h1>
+<table align='center' border='1'>
+<tr>
+<td></td>
+<td width='18'>&hellip;</td>
+<td width='18'>3<br>1</td>
+<td width='18'>3<br>0</td>
+<td width='18'>&hellip;</td>
+<td width='18'>2<br>1</td>
+<td width='18'>2<br>0</td>
+<td width='18'>1<br>9</td>
+<td width='18'>1<br>8</td>
+<td width='18'>1<br>7</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='18'>1<br>4</td>
+<td width='18'>1<br>3</td>
+<td width='18'>1<br>2</td>
+<td width='18'>1<br>1</td>
+<td width='18'>1<br>0</td>
+<td width='18'>9</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='18'>6</td>
+<td width='18'>5</td>
+<td width='18'>4</td>
+<td width='18'>3</td>
+<td width='18'>2</td>
+<td width='18'>1</td>
+<td width='18'>0</td>
+<td width='360'>Notes</td>
+</tr>
+
+<tr>
+<td>Intel 8080</td>
+<td colspan='16' style='background:gray;'></td>
+<td style="background:lightgray;font-style:italic;"><a title="interrupt enable flag">I<br>E</a></td>
+<td style='background:gray;'></td>
+<td><a title="sign flag">S</a></td>
+<td><a title="zero flag">Z</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>Zilog Z80</td>
+<td colspan='16' style='background:gray;'></td>
+<td style="background:lightgray;font-style:italic;"><a title="interrupt enable flag">I<br>E</a></td>
+<td style='background:gray;'></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td></td>
+<td><a title="auxiliary carry flag">H<br>F</a></td>
+<td></td>
+<td><a title="parity flag">P<br>F</a></td>
+<td><a title="parity flag">N<br>F</a></td>
+<td><a title="carry flag">C<br>F</a></td>
+<td>Bits 3 and 5 do not have official names, but their behavior is well documented</td>
+</tr>
+
+<tr>
+<td>Intel 8086</td>
+<td colspan='10' style='background:gray;'></td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>Intel 80286</td>
+<td colspan='10' style='background:gray;'></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>Intel 80386</td>
+<td style='background:gray;'></td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td><a title="virtual 8086 mode">V<br>M</a></td>
+<td><a title="resume flag">R<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>Intel 80486</td>
+<td style='background:gray;'></td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td><a title="alignment check">A<br>C</a></td>
+<td><a title="virtual 8086 mode">V<br>M</a></td>
+<td><a title="resume flag">R<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>Intel Pentium</td>
+<td style='background:gray;'></td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td><a title="CPUID available">I<br>D</a></td>
+<td><a title="virtual interrupt pending">V<br>I<br>P</a></td>
+<td><a title="virtual interrupt flag">V<br>I<br>F</a></td>
+<td><a title="alignment check">A<br>C</a></td>
+<td><a title="virtual 8086 mode">V<br>M</a></td>
+<td><a title="resume flag">R<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>VIA C3</td>
+<td style='background:gray;'></td>
+<td><a title="alternate instruction set">A<br>I</a></td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td><a title="CPUID available">I<br>D</a></td>
+<td><a title="virtual interrupt pending">V<br>I<br>P</a></td>
+<td><a title="virtual interrupt flag">V<br>I<br>F</a></td>
+<td><a title="alignment check">A<br>C</a></td>
+<td><a title="virtual 8086 mode">V<br>M</a></td>
+<td><a title="resume flag">R<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>VIA C7</td>
+<td style='background:gray;'></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="AES key schedule loaded flag (not observable by software)">*</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="CPUID available">I<br>D</a></td>
+<td><a title="virtual interrupt pending">V<br>I<br>P</a></td>
+<td><a title="virtual interrupt flag">V<br>I<br>F</a></td>
+<td><a title="alignment check">A<br>C</a></td>
+<td><a title="virtual 8086 mode">V<br>M</a></td>
+<td><a title="resume flag">R<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td>Bit 30 is cleared before any instruction that would store the value of EFLAGS, and it is not observable from software</td>
+</tr>
+
+<tr>
+<td>AMD64</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td><a title="CPUID available">I<br>D</a></td>
+<td><a title="virtual interrupt pending">V<br>I<br>P</a></td>
+<td><a title="virtual interrupt flag">V<br>I<br>F</a></td>
+<td><a title="alignment check">A<br>C</a></td>
+<td><a title="virtual 8086 mode">V<br>M</a></td>
+<td><a title="resume flag">R<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="nested task">N<br>T</a></td>
+<td colspan='2'><a title="I/O privilege level">IOPL</a></td>
+<td><a title="overflow flag">O<br>F</a></td>
+<td><a title="direction flag">D<br>F</a></td>
+<td><a title="interrupt enable flag">I<br>F</a></td>
+<td><a title="trap flag">T<br>F</a></td>
+<td><a title="sign flag">S<br>F</a></td>
+<td><a title="zero flag">Z<br>F</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P<br>F</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>F</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>NEC V33</td>
+<td colspan='10' style='background:gray;'></td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td><a title="overflow flag">V</a></td>
+<td><a title="direction flag">D<br>I<br>R</a></td>
+<td><a title="interrupt enable flag">I<br>E</a></td>
+<td><a title="break flag (trap flag)">B<br>R<br>K</a></td>
+<td><a title="sign flag">S</a></td>
+<td><a title="zero flag">Z</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>Y</a></td>
+<td>NEC calls this register PSW instead of FLAGS</td>
+</tr>
+
+<tr>
+<td>NEC V20</td>
+<td colspan='10' style='background:gray;'></td>
+<td><a title="mode flag">M<br>D</a></td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td><a title="overflow flag">V</a></td>
+<td><a title="direction flag">D<br>I<br>R</a></td>
+<td><a title="interrupt enable flag">I<br>E</a></td>
+<td><a title="break flag (trap flag)">B<br>R<br>K</a></td>
+<td><a title="sign flag">S</a></td>
+<td><a title="zero flag">Z</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>Y</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>NEC V25</td>
+<td colspan='10' style='background:gray;'></td>
+<td><a title="mode flag">M<br>D</a></td>
+<td colspan='3'><a title="register bank">RB</a></td>
+<td><a title="overflow flag">V</a></td>
+<td><a title="direction flag">D<br>I<br>R</a></td>
+<td><a title="interrupt enable flag">I<br>E</a></td>
+<td><a title="break flag (trap flag)">B<br>R<br>K</a></td>
+<td><a title="sign flag">S</a></td>
+<td><a title="zero flag">Z</a></td>
+<td><a title="user flag 1">F<br>1</a></td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td><a title="user flag 0">F<br>0</a></td>
+<td><a title="parity flag">P</a></td>
+<td><a title="I/O break flag" style="text-decoration:overline;">I<br>B<br>R<br>K</a></td>
+<td><a title="carry flag">C<br>Y</a></td>
+<td>Bit 15 works differently from the flag at the same position and name on the NEC V20, and it is only supported on the V25 Software Guard</td>
+</tr>
+
+<tr>
+<td>NEC V55</td>
+<td colspan='10' style='background:gray;'></td>
+<td colspan='4'>RB</td>
+<td><a title="overflow flag">V</a></td>
+<td><a title="direction flag">D<br>I<br>R</a></td>
+<td><a title="interrupt enable flag">I<br>E</a></td>
+<td><a title="break flag (trap flag)">B<br>R<br>K</a></td>
+<td><a title="sign flag">S</a></td>
+<td><a title="zero flag">Z</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P</a></td>
+<td><a title="I/O break flag" style="text-decoration:overline;">I<br>B<br>R<br>K</a></td>
+<td><a title="carry flag">C<br>Y</a></td>
+<td></td>
+</tr>
+
+<tr>
+<td>NEC V60</td>
+<td style='background:gray;'></td>
+<td><a title="I/O control" style="font-style:italic;">C<br>T<br>L</a></td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='font-style:italic;background:lightgray;'>0</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td><a title="overflow flag">V</a></td>
+<td><a title="direction flag">D<br>I<br>R</a></td>
+<td><a title="interrupt enable flag">I<br>E</a></td>
+<td><a title="break flag (trap flag)">B<br>R<br>K</a></td>
+<td><a title="sign flag">S</a></td>
+<td><a title="zero flag">Z</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="auxiliary carry flag">A<br>C</a></td>
+<td style='background:lightgray;'>0</td>
+<td><a title="parity flag">P</a></td>
+<td style='background:lightgray;'>1</td>
+<td><a title="carry flag">C<br>Y</a></td>
+<td>Only the low 16 bits are accessible in x86 emulation mode</td>
+</tr>
+</table>
+</body>
+</html>
