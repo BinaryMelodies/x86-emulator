@@ -3488,10 +3488,10 @@ if(y >= $O)
 	$cf = (_int$O)x < 0 ? 1 : 0;
 	// simulate 8086 behavior
 	$of = 0;
-	$0.$O = z;
 	$zf = _zero$O(z);
 	$sf = _sign$O(z);
 	$pf = _parity(z);
+	$0.$O = z;
 }
 else if(y != 0)
 {
@@ -3499,10 +3499,10 @@ else if(y != 0)
 	$cf = (x >> (y - 1)) & 1;
 	// simulate 8086 behavior
 	$of = 0;
-	$0.$O = z;
 	$zf = _zero$O(z);
 	$sf = _sign$O(z);
 	$pf = _parity(z);
+	$0.$O = z;
 }
 
 @instruction SAR|op=l|op=q
@@ -3601,6 +3601,9 @@ else if(y != 0)
 	{
 		$of = ((x ^ z) >> ($O - 1)) & 1;
 	}
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 	$0.$O = z;
 }
 
@@ -3616,6 +3619,9 @@ if(y != 0)
 	{
 		$of = ((x ^ z) >> ($O - 1)) & 1;
 	}
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 	$0.$O = z;
 }
 
@@ -3639,6 +3645,9 @@ else if(y != 0)
 	{
 		$of = ((x ^ z) >> ($O - 1)) & 1;
 	}
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 	$0.$O = z;
 }
 
@@ -3654,6 +3663,9 @@ if(y != 0)
 	{
 		$of = ((x ^ z) >> ($O - 1)) & 1;
 	}
+	$zf = _zero$O(z);
+	$sf = _sign$O(z);
+	$pf = _parity(z);
 	$0.$O = z;
 }
 
