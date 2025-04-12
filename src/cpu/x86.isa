@@ -1721,6 +1721,8 @@ if(x86_is_nec(emu))
 _uint8 al = $al;
 if($0 == 0)
 {
+	$of = $sf = $af = $cf = 0;
+	$zf = $pf = 1;
 	if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186)
 		emu->old_xip = emu->xip; // on 8086, CS:IP points to next instruction
 	x86_trigger_interrupt(emu, X86_EXC_DE | X86_EXC_FAULT, 0);
