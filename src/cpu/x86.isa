@@ -3591,6 +3591,19 @@ if(emu->cpu_type >= X86_CPU_286)
 if(y >= $O)
 {
 	$cf = y == $O ? x & 1 : 0;
+	// simulate 8086 behavior
+	if(y == $O)
+	{
+		_int$O x0 = x << ($O - 1);
+		$of = _overflow$O(x0, 0);
+	}
+	else
+	{
+		$of = 0;
+	}
+	$zf = X86_FL_ZF;
+	$sf = 0;
+	$pf = X86_FL_PF;
 	$0.$O = 0;
 }
 else if(y != 0)
@@ -3599,7 +3612,13 @@ else if(y != 0)
 	$cf = (x >> ($O - y)) & 1;
 	if(y == 1)
 	{
-		$of = ((x ^ z) >> ($O - 1)) & 1;
+		$of = _overflow$O(x, z);
+	}
+	else
+	{
+		// simulate 8086 behavior
+		_int$O x0 = x << (y - 1);
+		$of = _overflow$O(x0, z);
 	}
 	$zf = _zero$O(z);
 	$sf = _sign$O(z);
