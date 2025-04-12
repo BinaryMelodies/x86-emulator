@@ -3139,16 +3139,31 @@ if(emu->cpu_type >= X86_CPU_286)
 {
 	y &= 0x1F;
 }
-y %= $O + 1;
 if(y != 0)
 {
-	_uint$O z = (x << y) | ($cf << (y - 1)) | (x >> ($O + 1 - y));
-	$cf = (x >> ($O - y)) & 1;
-	if(y == 1)
+	y %= $O + 1;
+	if(y != 0)
 	{
-		$of = ((x ^ z) >> ($O - 1)) & 1;
+		_uint$O z = _rcl$O(x, y);
+		if(y == 1)
+		{
+			$of = _rcl_overflow$O(x, z);
+		}
+		else
+		{
+			// simulate 8086 behavior
+			_uint$O x0 = _rcl$O(x, y - 1);
+			$of = _rcl_overflow$O(x0, z);
+		}
+		$cf = (x >> ($O - y)) & 1;
+		$0.$O = z;
 	}
-	$0.$O = z;
+	else
+	{
+		// simulate 8086 behavior
+		_uint$O x0 = _rcl$O(x, $O);
+		$of = _rcl_overflow$O(x0, x);
+	}
 }
 
 @instruction RCL|op=l|op=q
@@ -3157,7 +3172,7 @@ _uint8 y = $1.b;
 y &= $O - 1;
 if(y != 0)
 {
-	_uint$O z = (x << y) | ($cf << (y - 1)) | (x >> ($O + 1 - y));
+	_uint$O z = _rcl$O(x, y);
 	$cf = (x >> ($O - y)) & 1;
 	if(y == 1)
 	{
@@ -3173,16 +3188,31 @@ if(emu->cpu_type >= X86_CPU_286)
 {
 	y &= 0x1F;
 }
-y %= $O + 1;
 if(y != 0)
 {
-	_uint$O z = (x >> y) | (emu->cf << ($O - y)) | (x << ($O + 1 - y));
-	$cf = x >> (y - 1);
-	if(y == 1)
+	y %= $O + 1;
+	if(y != 0)
 	{
-		$of = (x ^ z) >> ($O - 1);
+		_uint$O z = _rcr$O(x, y);
+		if(y == 1)
+		{
+			$of = _rcr_overflow$O(x, z);
+		}
+		else
+		{
+			// simulate 8086 behavior
+			_uint$O x0 = _rcr$O(x, y - 1);
+			$of = _rcr_overflow$O(x0, z);
+		}
+		$cf = (x >> (y - 1)) & 1;
+		$0.$O = z;
 	}
-	$0.$O = z;
+	else
+	{
+		// simulate 8086 behavior
+		_uint$O x0 = _rcr$O(x, $O);
+		$of = _rcr_overflow$O(x0, x);
+	}
 }
 
 @instruction RCR|op=l|op=q
@@ -3191,7 +3221,7 @@ _uint8 y = $1.b;
 y &= $O - 1;
 if(y != 0)
 {
-	_uint$O z = (x >> y) | (emu->cf << ($O - y)) | (x << ($O + 1 - y));
+	_uint$O z = _rcr$O(x, y);
 	$cf = (x >> (y - 1)) & 1;
 	if(y == 1)
 	{
