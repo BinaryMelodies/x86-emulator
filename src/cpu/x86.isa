@@ -2420,15 +2420,15 @@ $dx.$O = z;
 @instruction IMUL|cnt=1 op=b
 _int$O x = $al, y = $0.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
-$of = (_int$O)result < 0 ? result >= 0 : result < 0;
+$cf = (_int$Odup)(_int$O)result != result;
+$of = (_int$Odup)(_int$O)result != result;
 $ax = result;
 
 @instruction IMUL|cnt=1 op=w|cnt=1 op=l
 _int$O x = $ax.$O, y = $0.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
-$of = (_int$O)result < 0 ? result >= 0 : result < 0;
+$cf = (_int$Odup)(_int$O)result != result;
+$of = (_int$Odup)(_int$O)result != result;
 $ax.$O = result;
 $dx.$O = result >> $O;
 
@@ -2444,8 +2444,8 @@ $dx.$O = _high$Odup(result);
 @instruction IMUL|cnt=2 op=w|cnt=2 op=l
 _int$O x = $0.$O, y = $1.$O;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
-$of = (_int$O)result < 0 ? result >= 0 : result < 0;
+$cf = (_int$Odup)(_int$O)result != result;
+$of = (_int$Odup)(_int$O)result != result;
 $0.$O = result;
 
 @instruction IMUL|cnt=2 op=q
@@ -2459,8 +2459,8 @@ $0.$O = _low$Odup(result);
 @instruction IMUL|cnt=3 op=w|cnt=3 op=l
 _int$O x = $1.$O, y = $2;
 _int$Odup result = (_int$Odup)x * (_int$Odup)y;
-$cf = (_int$O)result < 0 ? result >= 0 : result < 0;
-$of = (_int$O)result < 0 ? result >= 0 : result < 0;
+$cf = (_int$Odup)(_int$O)result != result;
+$of = (_int$Odup)(_int$O)result != result;
 $0.$O = result;
 
 @instruction IMUL|cnt=3 op=q
