@@ -3251,19 +3251,19 @@ $edx = emu->tsc >> 32;
 PRIVILEGED();
 /* TODO: RDTSCP */
 
+@instruction RET|cnt=1
+$rip = _pop$O();
+x86_stack_adjust(emu, $0);
+
 @instruction RET
 $rip = _pop$O();
 
-@instruction RET|i
-$rip = _pop$O();
+@instruction RETF|cnt=1
+_retf$O($0);
 x86_stack_adjust(emu, $0);
 
 @instruction RETF
 _retf$O(0);
-
-@instruction RETF|i
-_retf$O($0);
-x86_stack_adjust(emu, $0);
 
 @instruction RETRBI
 @comment NEC specific
