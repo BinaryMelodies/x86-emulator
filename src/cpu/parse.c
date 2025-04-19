@@ -736,6 +736,14 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 		} \
 	} while(0)
 
+#define _mmx() \
+	do { \
+		if((emu->cr[0] & X86_CR0_EM) != 0) \
+			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
+		_x87_int(); \
+		emu->x87.tw = 0x0000; \
+	} while(0)
+
 static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
 
 #include "x86.gen.c"

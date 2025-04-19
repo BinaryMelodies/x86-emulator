@@ -116,17 +116,17 @@ class Instruction:
 	@staticmethod
 	def is_mem_opd(opd):
 		""" Whether the operand is a ModRM memory operand """
-		return opd in {'M', 'Mb', 'Mw', 'Md', 'Mz', 'Mv', 'Ma', 'Mp', 'M10', 'Mq/Mo', 'M14/M28', 'M94/M108', 'mem32real', 'mem64real', 'mem80real', 'mem80dec'}
+		return opd in {'M', 'Mb', 'Mw', 'Md', 'Mq', 'Mz', 'Mv', 'Ma', 'Mp', 'M10', 'Mq/Mo', 'M14/M28', 'M94/M108', 'mem32real', 'mem64real', 'mem80real', 'mem80dec'}
 
 	@staticmethod
 	def is_mem_reg_opd(opd):
 		""" Whether the operand is a ModRM register (integer or floating point) operand """
-		return opd in {'Rb', 'Rw', 'Rd', 'Rv', 'Ry', 'ST(i)'}
+		return opd in {'Rb', 'Rw', 'Rd', 'Rv', 'Ry', 'ST(i)', 'Nd', 'Nq'}
 
 	@staticmethod
 	def is_reg_opd(opd):
 		""" Whether the operand is a register operand """
-		return opd in {'Cy', 'Dy', 'Gb', 'Gw', 'Gd', 'Gz', 'Gv', 'Sw', 'Ty'}
+		return opd in {'Cy', 'Dy', 'Gb', 'Gw', 'Gd', 'Gz', 'Gv', 'Sw', 'Ty', 'Pd', 'Pq'}
 
 	@staticmethod
 	def is_reg_only_opd(opd):
@@ -136,7 +136,9 @@ class Instruction:
 	@staticmethod
 	def is_mem_or_reg_opd(opd):
 		""" Whether the operand is a ModRM memory/register operand """
-		return opd in {'E', 'Eb', 'Ew', 'Ed', 'Ez', 'Ev', 'Mw/Rv'}
+		# E => M/R
+		# Q => M/N
+		return opd in {'E', 'Eb', 'Ew', 'Ed', 'Ez', 'Ev', 'Mw/Rv', 'Qd', 'Qq'}
 
 	def check_if_has_modrm(self):
 		if 'modrm' in self.kwds:
@@ -173,8 +175,12 @@ class Instruction:
 						r = opd[opd.find('/') + 1:]
 					elif opd == 'E':
 						r = 'Rb'
-					else:
+					elif opd[0] == 'E':
 						r = 'R' + opd[1:]
+					elif opd[0] == 'Q':
+						r = 'N' + opd[1:]
+					else:
+						assert False
 					opdsR.append(r)
 				if opdsM is not None:
 					if '/' in opd:
@@ -934,6 +940,30 @@ OPERAND_CODE = {
 		'write':   "_trset32(REGFLDLOCK(prs), $$)",
 		'format':  ("tr%d", ["REGFLDLOCK(prs)"]), # Note: 386/486 only uses 8 TR registers, but we can assume the LOCK prefix would be extended to them
 	},
+	'Pd': {
+		'size':    '',
+		'read':    "x86_mmx_get(emu, _reg)",
+		'write':   "x86_mmx_set(emu, _reg, $$)",
+		'format':  ("mm%d", ["REGFLD(prs)"]),
+	},
+	'Pq': {
+		'size':    '',
+		'read':    "x86_mmx_get(emu, _reg)",
+		'write':   "x86_mmx_set(emu, _reg, $$)",
+		'format':  ("mm%d", ["REGFLD(prs)"]),
+	},
+	'Nd': {
+		'size':    '',
+		'read':    "x86_mmx_get(emu, _mem)",
+		'write':   "x86_mmx_set(emu, _mem, $$)",
+		'format':  ("mm%d", ["MEMFLD(prs)"]),
+	},
+	'Nq': {
+		'size':    '',
+		'read':    "x86_mmx_get(emu, _mem)",
+		'write':   "x86_mmx_set(emu, _mem, $$)",
+		'format':  ("mm%d", ["MEMFLD(prs)"]),
+	},
 	'M': {
 		'size':    '',
 		'address': "emu->parser->address_offset",
@@ -959,6 +989,13 @@ OPERAND_CODE = {
 		'read':    "(_int32)_read32(_seg, _off$?)",
 		'write':   "_write32(_seg, _off$?, $$)",
 		'format':  ("long %s", ["prs->address_text"]),
+	},
+	'Mq': {
+		'size':    '',
+		'address': "emu->parser->address_offset",
+		'read':    "_read64(_seg, _off$?)",
+		'write':   "_write64(_seg, _off$?, $$)",
+		'format':  ("quad %s", ["prs->address_text"]),
 	},
 	'Mz': {
 		'size':    'wl',

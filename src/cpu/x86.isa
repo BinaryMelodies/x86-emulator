@@ -872,31 +872,38 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 #0F5E
 #0F5F
 
-#0F60
-#0F61
-#0F62
-#0F63
-#0F64
-#0F65
-#0F66
-#0F67
+0F60	586+	PUNPCKLBW	Pq, Qd	feature:	MMX
+0F61	586+	PUNPCKLWD	Pq, Qd	feature:	MMX
+0F62	586+	PUNPCKLDQ	Pq, Qd	feature:	MMX
+0F63	586+	PACKSSWB	Pq, Qq	feature:	MMX
+0F64	586+	PCMPGTB	Pq, Qq	feature:	MMX
+0F65	586+	PCMPGTW	Pq, Qq	feature:	MMX
+0F66	586+	PCMPGTD	Pq, Qq	feature:	MMX
+0F67	586+	PACKUSWB	Pq, Qq	feature:	MMX
 
-#0F68
-#0F69
-#0F6A
-#0F6B
+0F68	586+	PUNPCKHBW	Pq, Qq	feature:	MMX
+0F69	586+	PUNPCKHWD	Pq, Qq	feature:	MMX
+0F6A	586+	PUNPCKHDQ	Pq, Qq	feature:	MMX
+0F6B	586+	PACKSSDW	Pq, Qq	feature:	MMX
 #0F6C
 #0F6D
-#0F6E
-#0F6F
+0F6E	586+	MOVD	Pq, Ed	feature:	MMX
+0F6F	586+	MOVQ	Pq, Qq	feature:	MMX
 
 #0F70
-#0F71
-#0F72
-#0F73
-#0F74
-#0F75
+0F71/2	586+	PSRLW	Nq, Ib	feature:	MMX
+0F71/4	586+	PSRAW	Nq, Ib	feature:	MMX
+0F71/6	586+	PSLLW	Nq, Ib	feature:	MMX
+0F72/2	586+	PSRLD	Nq, Ib	feature:	MMX
+0F72/4	586+	PSRAD	Nq, Ib	feature:	MMX
+0F72/6	586+	PSLLD	Nq, Ib	feature:	MMX
+0F73/2	586+	PSRLQ	Nq, Ib	feature:	MMX
+0F73/4	586+	PSRAQ	Nq, Ib	feature:	MMX
+0F73/6	586+	PSLLQ	Nq, Ib	feature:	MMX
+0F74	586+	PCMPEQB	Pq, Qq	feature:	MMX
+0F75	586+	PCMPEQW	Pq, Qq	feature:	MMX
 0F76	v55	PUSH	DS3
+0F76	586+	PCMPEQD	Pq, Qq	feature:	MMX
 0F77	v55	POP	DS3
 0F77	586+	EMMS		feature:	MMX
 
@@ -913,7 +920,9 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F7D	!64,cyrix+,ext	RSTS	M10
 0F7E	v55	PUSH	DS2
 0F7E	cyrix+	SMINT		feature:	!MMX
+0F7E	586+	MOVD	Ed, Pd	feature:	MMX
 0F7F	v55	POP	DS2
+0F7F	586+	MOVQ	Qq, Pq	feature:	MMX
 
 0F80	386+	JO	Jz
 0F81	386+	JNO	Jz
@@ -1047,58 +1056,61 @@ F30FBD	586+	LZCNT	Gv, Ev	feature:	LZCNT
 0FCF	486+	BSWAP	r7
 
 #0FD0
-#0FD1
-#0FD2
-#0FD3
+0FD1	586+	PSRLW	Pq, Qq	feature:	MMX
+0FD2	586+	PSRLD	Pq, Qq	feature:	MMX
+0FD3	586+	PSRLQ	Pq, Qq	feature:	MMX
 #0FD4
-#0FD5
+0FD5	586+	PMULLW	Pq, Qq	feature:	MMX
 #0FD6
 #0FD7
 
-#0FD8
-#0FD9
+0FD8	586+	PSUBUSB	Pq, Qq	feature:	MMX
+0FD9	586+	PSUBUSW	Pq, Qq	feature:	MMX
 #0FDA
-#0FDB
-#0FDC
-#0FDD
+0FDB	586+	PAND	Pq, Qq	feature:	MMX
+0FDC	586+	PADDUSB	Pq, Qq	feature:	MMX
+0FDD	586+	PADDUSW	Pq, Qq	feature:	MMX
 #0FDE
-#0FDF
+0FDF	586+	PANDN	Pq, Qq	feature:	MMX
 
 0FE0	v33	BRKXA	Ub
 0FE0	v55	QHOUT	Iw
 0FE1	v55	QOUT	Iw
+0FE1	586+	PSRAW	Pq, Qq	feature:	MMX
 0FE2	v55	QTIN	Iw
+0FE2	586+	PSRAD	Pq, Qq	feature:	MMX
 #0FE3
 #0FE4
-#0FE5
+0FE5	586+	PMULHW	Pq, Qq	feature:	MMX
 #0FE6
 #0FE7
 
-#0FE8
-#0FE9
+0FE8	586+	PSUBSB	Pq, Qq	feature:	MMX
+0FE9	586+	PSUBSW	Pq, Qq	feature:	MMX
 #0FEA
-#0FEB
-#0FEC
-#0FED
+0FEB	586+	POR	Pq, Qq	feature:	MMX
+0FEC	586+	PADDSB	Pq, Qq	feature:	MMX
+0FED	586+	PADDSW	Pq, Qq	feature:	MMX
 #0FEE
-#0FEF
+0FEF	586+	PXOR	Pq, Qq	feature:	MMX
 
 0FF0	v33	RETXA	Ub
-#0FF1
-#0FF2
-#0FF3
+0FF1	586+	PSLLW	Pq, Qq	feature:	MMX
+0FF2	586+	PSLLD	Pq, Qq	feature:	MMX
+0FF3	586+	PSLLQ	Pq, Qq	feature:	MMX
 #0FF4
-#0FF5
+0FF5	586+	PMADDWD	Pq, Qq	feature:	MMX
 #0FF6
 #0FF7
 
-#0FF8
-#0FF9
-#0FFA
+0FF8	586+	PSUBB	Pq, Qq	feature:	MMX
+0FF9	586+	PSUBW	Pq, Qq	feature:	MMX
+0FFA	586+	PSUBD	Pq, Qq	feature:	MMX
 #0FFB
-#0FFC
-#0FFD
+0FFC	586+	PADDB	Pq, Qq	feature:	MMX
+0FFD	586+	PADDW	Pq, Qq	feature:	MMX
 0FFE	9002	BRKEM2	Ub
+0FFE	586+	PADDD	Pq, Qq	feature:	MMX
 0FFF	v20+,ext	BRKEM	Ub
 0FFF	286+,!ext	UD0
 
@@ -2409,6 +2421,9 @@ if(!x86_dmm_instruction_valid(emu))
 /* TODO: (Cyrix) DMINT */
 
 @instruction EMMS
+if((emu->cr[0] & X86_CR0_EM) != 0)
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+_x87_int();
 emu->x87.tw = 0xFFFF;
 
 @instruction ENTER
@@ -2833,29 +2848,6 @@ else
 		$0.$O = x86_load_access_rights$O(descriptor);
 }
 
-@instruction MOV|cnt=3 op=w|cnt=3 op=l
-@comment Syntax matches that of NEC CPUs
-@comment LDS, LES, LFS, LGS, LSS fall under here
-_uint$O offset = $2.$O;
-$0 = $2@$O.w;
-$1.$O = offset;
-
-@instruction MOV|cnt=3 op=q
-@comment Syntax matches that of NEC CPUs
-@comment LDS, LES, LFS, LGS, LSS fall under here
-_uint$O offset;
-if(x86_is_intel64(emu))
-{
-	offset = $2.$O;
-	$0 = $2@$O.w;
-}
-else
-{
-	offset = $2.l;
-	$0 = $2@l.w;
-}
-$1.$O = offset;
-
 @instruction LEA|mod=m
 $0.$O = $1.off;
 
@@ -3040,6 +3032,29 @@ for(i = 0; i < $O; i++)
 }
 $0.$O = i;
 
+@instruction MOV|cnt=3 op=w|cnt=3 op=l
+@comment Syntax matches that of NEC CPUs
+@comment LDS, LES, LFS, LGS, LSS fall under here
+_uint$O offset = $2.$O;
+$0 = $2@$O.w;
+$1.$O = offset;
+
+@instruction MOV|cnt=3 op=q
+@comment Syntax matches that of NEC CPUs
+@comment LDS, LES, LFS, LGS, LSS fall under here
+_uint$O offset;
+if(x86_is_intel64(emu))
+{
+	offset = $2.$O;
+	$0 = $2@$O.w;
+}
+else
+{
+	offset = $2.l;
+	$0 = $2@l.w;
+}
+$1.$O = offset;
+
 @instruction MOV|op0=sw
 $0.$O = $1.$O;
 if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
@@ -3051,6 +3066,14 @@ $0.$O = $1.$O;
 
 @instruction MOVBE
 $0.$O = x86_bswap$O($1.$O);
+
+@instruction MOVD
+_mmx();
+$0 = (uint32_t)$1;
+
+@instruction MOVQ
+_mmx();
+$0 = $1;
 
 @instruction MOVS
 if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
@@ -5140,6 +5163,141 @@ x87_pop(emu);
 @instruction FYL2XP1
 $st1 = x87_fyl2xp1(emu, $st, $st1);
 x87_pop(emu);
+/* TODO */
+
+@instruction PACKSSWB
+/* TODO */
+
+@instruction PACKUSWB
+/* TODO */
+
+@instruction PACKSSDW
+/* TODO */
+
+@instruction PADDB
+/* TODO */
+
+@instruction PADDSB
+/* TODO */
+
+@instruction PADDUSB
+/* TODO */
+
+@instruction PADDW
+/* TODO */
+
+@instruction PADDSW
+/* TODO */
+
+@instruction PADDUSW
+/* TODO */
+
+@instruction PADDD
+/* TODO */
+
+@instruction PAND
+/* TODO */
+
+@instruction PANDN
+/* TODO */
+
+@instruction PCMPEQB
+/* TODO */
+
+@instruction PCMPEQW
+/* TODO */
+
+@instruction PCMPEQD
+/* TODO */
+
+@instruction PCMPGTB
+/* TODO */
+
+@instruction PCMPGTW
+/* TODO */
+
+@instruction PCMPGTD
+/* TODO */
+
+@instruction PMADDWD
+/* TODO */
+
+@instruction PMULLW
+/* TODO */
+
+@instruction PMULHW
+/* TODO */
+
+@instruction POR
+/* TODO */
+
+@instruction PSLLW
+/* TODO */
+
+@instruction PSLLD
+/* TODO */
+
+@instruction PSLLQ
+/* TODO */
+
+@instruction PSRAW
+/* TODO */
+
+@instruction PSRAD
+/* TODO */
+
+@instruction PSRAQ
+/* TODO */
+
+@instruction PSRLW
+/* TODO */
+
+@instruction PSRLD
+/* TODO */
+
+@instruction PSRLQ
+/* TODO */
+
+@instruction PSUBB
+/* TODO */
+
+@instruction PSUBSB
+/* TODO */
+
+@instruction PSUBUSB
+/* TODO */
+
+@instruction PSUBW
+/* TODO */
+
+@instruction PSUBSW
+/* TODO */
+
+@instruction PSUBUSW
+/* TODO */
+
+@instruction PSUBD
+/* TODO */
+
+@instruction PUNPCKLBW
+/* TODO */
+
+@instruction PUNPCKLWD
+/* TODO */
+
+@instruction PUNPCKLDQ
+/* TODO */
+
+@instruction PUNPCKHBW
+/* TODO */
+
+@instruction PUNPCKHWD
+/* TODO */
+
+@instruction PUNPCKHDQ
+/* TODO */
+
+@instruction PXOR
 /* TODO */
 
 @instruction Z80.ADC|op=b
