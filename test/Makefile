@@ -1,5 +1,5 @@
 
-all: 86.img 286.img 386.img x64.img cpu.com testv33.img testv25.img testv55.img testx87.com testscr.com testtext.com testkbd.com testpcjr.jrc testact.img testpc88.img testlrel.bin
+all: 86.img 286.img 386.img x64.img cpu.com testv33.img testv25.img testv55.img testx87.com testscr.com testtext.com testkbd.com testpcjr.jrc testact.img testpc88.img testrel.bin
 # testi89.bin testv20.img
 
 clean:
