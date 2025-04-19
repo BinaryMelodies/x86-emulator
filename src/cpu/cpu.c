@@ -1259,6 +1259,7 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 
 		prs->address_offset = 0;
 		prs->register_field = 0;
+		prs->ip_relative = false;
 		x86_parse(prs, NULL, true, false);
 		prs->current_position = old_xip; // TODO
 	}

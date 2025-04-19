@@ -1,5 +1,5 @@
 
-all: 86.img 286.img 386.img x64.img cpu.com testv33.img testv25.img testv55.img testx87.com testscr.com testtext.com testkbd.com testpcjr.jrc testact.img testpc88.img
+all: 86.img 286.img 386.img x64.img cpu.com testv33.img testv25.img testv55.img testx87.com testscr.com testtext.com testkbd.com testpcjr.jrc testact.img testpc88.img testlrel.bin
 # testi89.bin testv20.img
 
 clean:
@@ -58,6 +58,9 @@ testact.img: testact.asm
 	nasm -fbin $< -o $@
 
 testpc88.img: testpc88.asm
+	nasm -fbin $< -o $@
+
+testrel.img: testrel.asm
 	nasm -fbin $< -o $@
 
 .PHONY: all clean distclean

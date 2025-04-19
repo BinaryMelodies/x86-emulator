@@ -1488,6 +1488,7 @@ struct x86_parser_t
 	uint8_t modrm_byte;
 	int register_field; // value of the register field (bits 3 to 5)
 	uoff_t address_offset; // calculated offset (only for memory operands)
+	bool ip_relative; // needed to add EIP/RIP after the instruction has been fetched
 	char address_text[24]; // textual representation of the (memory) operand
 
 	/* Whether a LOCK prefix (0xF0) is present */

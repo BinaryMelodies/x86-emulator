@@ -143,7 +143,7 @@ static inline void x86_parse_modrm32(x86_parser_t * prs, x86_state_t * emu, bool
 		{
 			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s*%d+", x86_register_name32(prs, i), 1 << s);
 		}
-		strcat(format, "%%X]");
+		strcat(format, "%X]");
 	}
 	else if((reg & 7) == 5 && disp_size == 0)
 	{
@@ -151,7 +151,7 @@ static inline void x86_parse_modrm32(x86_parser_t * prs, x86_state_t * emu, bool
 			emu->parser->address_offset = 0;
 		default_segment = X86_R_DS;
 		disp_size = 2;
-		snprintf(format, sizeof format, "[%%s:%%X]");
+		strcpy(format, "[%s:%X]");
 	}
 	else
 	{
@@ -224,7 +224,7 @@ static inline void x86_parse_modrm64_32(x86_parser_t * prs, x86_state_t * emu, b
 				emu->parser->address_offset += x86_register_get32(emu, reg);
 		}
 
-		strcpy(format, "[%%s:");
+		strcpy(format, "[%s:");
 		if(!((reg & 7) == 5 && disp_size == 0))
 		{
 			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s+", x86_register_name32(prs, reg));
@@ -233,13 +233,13 @@ static inline void x86_parse_modrm64_32(x86_parser_t * prs, x86_state_t * emu, b
 		{
 			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s*%d+", x86_register_name32(prs, i), 1 << s);
 		}
-		strcat(format, "%%X]");
+		strcat(format, "%X]");
 	}
 	else if((reg & 7) == 5 && disp_size == 0)
 	{
-		prs->address_offset = (prs->current_position & 0xFFFFFFFF) + 4;
+		prs->ip_relative = true;
 		disp_size = 2;
-		strcpy(format, "[%%s:eip+%%X]");
+		strcpy(format, "[%s:eip+%X]");
 	}
 	else
 	{
@@ -311,7 +311,7 @@ static inline void x86_parse_modrm64(x86_parser_t * prs, x86_state_t * emu, bool
 				emu->parser->address_offset += x86_register_get64(emu, reg);
 		}
 
-		strcpy(format, "[%%s:");
+		strcpy(format, "[%s:");
 		if(!((reg & 7) == 5 && disp_size == 0))
 		{
 			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s+", x86_register_name64(prs, reg));
@@ -320,13 +320,13 @@ static inline void x86_parse_modrm64(x86_parser_t * prs, x86_state_t * emu, bool
 		{
 			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s*%d+", x86_register_name64(prs, i), 1 << s);
 		}
-		strcat(format, "%%X]");
+		strcat(format, "%X]");
 	}
 	else if((reg & 7) == 5 && disp_size == 0)
 	{
-		prs->address_offset = prs->current_position + 4;
+		prs->ip_relative = true;
 		disp_size = 2;
-		strcpy(format, "[%%s:rip+%%X]");
+		strcpy(format, "[%s:rip+%X]");
 	}
 	else
 	{
@@ -338,10 +338,10 @@ static inline void x86_parse_modrm64(x86_parser_t * prs, x86_state_t * emu, bool
 	switch(disp_size)
 	{
 	case 1:
-		prs->address_offset += (int8_t)x86_fetch8(prs, emu);
+		prs->address_offset += displacement = (int8_t)x86_fetch8(prs, emu);
 		break;
 	case 2:
-		prs->address_offset += x86_fetch32(prs, emu);
+		prs->address_offset += displacement = x86_fetch32(prs, emu);
 		break;
 	}
 
@@ -370,6 +370,23 @@ static inline void x86_parse_modrm(x86_parser_t * prs, x86_state_t * emu, bool e
 	else
 	{
 		x86_parse_modrm32(prs, emu, execute);
+	}
+}
+
+static inline void x86_calculate_operand_address(x86_state_t * emu)
+{
+	if(emu->parser->ip_relative)
+		emu->parser->address_offset += emu->xip;
+	switch(emu->parser->address_size)
+	{
+	case SIZE_16BIT:
+		emu->parser->address_offset &= 0xFFFF;
+		break;
+	case SIZE_32BIT:
+		emu->parser->address_offset &= 0xFFFFFFFF;
+		break;
+	default:
+		break;
 	}
 }
 
