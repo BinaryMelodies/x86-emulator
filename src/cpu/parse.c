@@ -741,6 +741,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 		if((emu->cr[0] & X86_CR0_EM) != 0) \
 			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
 		_x87_int(); \
+		x87_set_sw_top(emu, 0); \
 		emu->x87.tw = 0x0000; \
 	} while(0)
 

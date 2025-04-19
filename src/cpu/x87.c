@@ -394,6 +394,7 @@ static inline uint64_t x86_mmx_get(x86_state_t * emu, x86_regnum_t number)
 
 static inline void x86_mmx_set(x86_state_t * emu, x86_regnum_t number, uint64_t value)
 {
+	emu->x87.bank[emu->x87.current_bank].fpr[number].exponent = 0xFFFF;
 	emu->x87.bank[emu->x87.current_bank].fpr[number].mmx.q[0] = value;
 }
 
