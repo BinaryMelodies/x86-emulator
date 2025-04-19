@@ -1814,6 +1814,10 @@ registers = {
 	'$st=': 'x87_register_set80(emu, 0, $$)',
 	'$c0': '(emu->x87.sw & X87_SW_C0)',
 	'$c0=': '($$) != 0 ? (emu->x87.sw |= X87_SW_C0) : (emu->x87.sw &= ~X87_SW_C0)',
+
+	'$ind': 'emu->ind_register',
+	'$opr': 'emu->opr_register',
+	'$tmpb': 'emu->tmpb_register',
 }
 
 for i in range(8):
@@ -2398,7 +2402,6 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						for part in parts:
 							clause = True
 							for morcel in part.split(' '):
-								# TODO: need to add cpu and opcode (for 486A)
 								if morcel.startswith('op='):
 									if size[0] != morcel[3]:
 										clause = False

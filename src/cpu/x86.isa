@@ -482,6 +482,7 @@ X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 8B	86+	MOV	Gv, Ev
 8C	86+	MOV	Mw/Rv, Sw
 8D	86+	LEA	Gv, M	nec:	LDEA	Gv, M
+8D	86	LEA	Gv, Rb
 8E	86+	MOV	Sw, Mw/Rv
 8F	86	POP	Ev
 8F/0	186+	POP	Ev
@@ -662,6 +663,7 @@ EC	86+	IN	AL, DX
 ED	86+	IN	eAX, DX
 EE	86+	OUT	DX, AL
 EF	86+	OUT	DX, eAX
+
 F0	86+	LOCK:	-	nec:	BUSLOCK:
 F1	286	USR:
 F1	86,186,nec+,!v25,!v55	LOCK:	-	nec:	BUSLOCK:
@@ -698,12 +700,20 @@ FC	86+	CLD	-	nec:	CLR1	DIR
 FD	86+	STD	-	nec:	SET1	DIR
 FE/0	86+	INC	Eb
 FE/1	86+	DEC	Eb
+FE/2	86	CALL	Eb
+FE/3	86	CALLF	Eb
+FE/4	86	JMP	Eb
+FE/5	86	JMPF	Eb
+FE/6	86	PUSH	Eb
+FE/7	86	PUSH	Eb
 FF/0	86+	INC	Ev
 FF/1	86+	DEC	Ev
 FF/2	86+	CALL	Ev
 FF/3	86+	CALLF	Mp
+FF/3	86	CALLF	Rv
 FF/4	86+	JMP	Ev
 FF/5	86+	JMPF	Mp
+FF/5	86	JMPF	Rv
 FF/6	86+	PUSH	Ev
 FF/7	86	PUSH	Ev
 FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
@@ -2033,10 +2043,28 @@ if(x86_sfr_get(emu, $0) & (1 << ($1 & 7)))
 	$rip = (_uint$O)$2.$O;
 }
 
-@instruction CALL
+@instruction CALL|op0=rb|op0=mb
+/* 8086 undefined instruction */
+_uint16 target = $0; // TODO: what is the top byte
+_push8($rip);
+$rip = target;
+
+@instruction CALL|op=w|op=l|op=q
 _uint$O target = (_uint$O)$0.$O;
 _push$O($rip);
 $rip = target;
+
+@instruction CALLF|op0=rb
+/* 8086 undefined instruction */
+_callf8(_read8(_seg, $ind + 2), $tmpb); // TODO: what are the top bytes
+
+@instruction CALLF|op0=mb
+/* 8086 undefined instruction */
+_callf8(_read8(_seg, $0.off + 2), $0); // TODO: what are the top bytes
+
+@instruction CALLF|op0=rv
+/* 8086 undefined instruction */
+_callf16(_read16(_seg, $ind + 2), $tmpb);
 
 @instruction CALLF|op=w|op=l
 _callf$O($0@$O.w, (_uint$O)$0.$O);
@@ -2694,7 +2722,11 @@ if(x86_is_ia64(emu))
 	x86_ia64_intercept(emu, 0); // TODO
 _iret$O();
 
-@instruction JMP
+@instruction JMP|op0=rb|op0=mb
+/* 8086 undefined instruction */
+$rip = $0; // TODO: what is the top byte
+
+@instruction JMP|op=w|op=l|op=q
 $rip = (_uint$O)$0.$O;
 
 @instruction JMPAI
@@ -2706,6 +2738,18 @@ $rip = (_uint$O)$0.$O;
 if(!x86_is_ia64(emu))
 	UNDEFINED();
 /* TODO: (ia64) JMPE */
+
+@instruction JMPF|op0=rb
+/* 8086 undefined instruction */
+_jmpf(_read8(_seg, $ind + 2), $tmpb); // TODO: what are the top bytes
+
+@instruction JMPF|op0=mb
+/* 8086 undefined instruction */
+_jmpf(_read8(_seg, $0.off + 2), $0); // TODO: what are the top bytes
+
+@instruction JMPF|op0=rv
+/* 8086 undefined instruction */
+_jmpf(_read16(_seg, $ind + 2), $tmpb);
 
 @instruction JMPF|op=w|op=l
 _jmpf($0@$O.w, (_uint$O)$0.$O);
@@ -2812,8 +2856,12 @@ else
 }
 $1.$O = offset;
 
-@instruction LEA
+@instruction LEA|mod=m
 $0.$O = $1.off;
+
+@instruction LEA|mod=r
+/* 8086 undefined instruction */
+$0.$O = $ind;
 
 @instruction LEAVE
 $sp.$S = $bp.$S;
@@ -3208,6 +3256,10 @@ $zf = count == 0;
 
 @instruction POPF
 $flags.$O = _pop$O();
+
+@instruction PUSH|op0=rb|op0=mb
+/* 8086 undefined instruction */
+_push8($0);
 
 @instruction PUSH|op=w op0=r4
 if(emu->cpu_type <= X86_CPU_186 || emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_V33 || emu->cpu_type == X86_CPU_V25 || emu->cpu_type == X86_CPU_V55)

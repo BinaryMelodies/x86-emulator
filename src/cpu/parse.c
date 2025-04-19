@@ -629,6 +629,8 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _output16(port, value) x86_output16(emu, port, value)
 #define _output32(port, value) x86_output32(emu, port, value)
 
+/* 8086 undefined */
+#define _push8(val)  x86_push8(emu, val)
 #define _push16(val) x86_push16(emu, val)
 #define _push32(val) x86_push32(emu, val)
 #define _push64(val) x86_push64(emu, val)
@@ -661,6 +663,14 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 
 #define _jmpf(seg, off) x86_jump_far(emu, seg, off)
 
+/* 8086 undefined */
+#define _callf8(seg, off) \
+	do { \
+		x86_push8(emu, emu->sr[X86_R_CS].selector); \
+		x86_push8(emu, emu->xip); \
+		x86_segment_load_real_mode(emu, X86_R_CS, seg); \
+		emu->xip = off; \
+	} while(0)
 #define _callf16(seg, off) x86_call_far16(emu, seg, off)
 #define _callf32(seg, off) x86_call_far32(emu, seg, off)
 #define _callf64(seg, off) x86_call_far64(emu, seg, off)

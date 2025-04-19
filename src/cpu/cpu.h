@@ -1827,6 +1827,9 @@ struct x86_state_t
 		};
 	};
 
+	/* 8086 only internal registers */
+	uint16_t ind_register, opr_register, tmpb_register;
+
 	/* Current execution state, typically running or halted */
 	x86_execution_state_t state;
 	/* Current privilege level, stored separately because different CPU types store it in different places */

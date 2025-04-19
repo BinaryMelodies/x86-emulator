@@ -154,6 +154,16 @@ static inline void x86_stack_adjust(x86_state_t * emu, uoff_t value)
 	}
 }
 
+/* 8086 undefined */
+static inline void x86_push8(x86_state_t * emu, uint16_t value)
+{
+	uint16_t sp = x86_register_get16(emu, X86_R_SP);
+	// SP is decremented by 2, but only a single byte is written
+	sp -= 2;
+	x86_memory_segmented_write8(emu, X86_R_SS, sp, value);
+	x86_register_set16(emu, X86_R_SP, sp);
+}
+
 static inline void x86_push16(x86_state_t * emu, uint16_t value)
 {
 	switch(x86_get_stack_size(emu))
