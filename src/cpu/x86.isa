@@ -5168,6 +5168,7 @@ x87_pop(emu);
 
 @instruction PACKSSWB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5179,6 +5180,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PACKUSWB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5190,6 +5192,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PACKSSDW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5201,6 +5204,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5210,6 +5214,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDSB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5219,6 +5224,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDUSB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5228,6 +5234,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5237,6 +5244,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDSW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5246,6 +5254,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDUSW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5255,6 +5264,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PADDD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5264,14 +5274,17 @@ $0 = c.MMX_Q(0);
 
 @instruction PAND
 @comment MMX
+_mmx();
 $0 = $0 & $1;
 
 @instruction PANDN
 @comment MMX
+_mmx();
 $0 = $0 & ~$1;
 
 @instruction PCMPEQB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5281,6 +5294,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PCMPEQW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5290,6 +5304,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PCMPEQD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5299,6 +5314,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PCMPGTB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5308,6 +5324,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PCMPGTW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5317,6 +5334,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PCMPGTD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5326,6 +5344,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PMADDWD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5335,6 +5354,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PMULLW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5344,6 +5364,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PMULHW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5353,10 +5374,12 @@ $0 = c.MMX_Q(0);
 
 @instruction POR
 @comment MMX
+_mmx();
 $0 = $0 | $1;
 
 @instruction PSLLW
 @comment MMX
+_mmx();
 x86_mmx_t a, c;
 _uint8 b = $1;
 if(b > 0xF)
@@ -5371,6 +5394,7 @@ else
 
 @instruction PSLLD
 @comment MMX
+_mmx();
 x86_mmx_t a, c;
 _uint8 b = $1;
 if(b > 0x1F)
@@ -5385,6 +5409,7 @@ else
 
 @instruction PSLLQ
 @comment MMX
+_mmx();
 _uint8 b = $1;
 if(b > 0x3F)
 	$0 = 0;
@@ -5393,6 +5418,7 @@ else
 
 @instruction PSRAW
 @comment MMX
+_mmx();
 x86_mmx_t a, c;
 _uint8 b = $1;
 if(b > 0xF)
@@ -5409,6 +5435,7 @@ else
 
 @instruction PSRAD
 @comment MMX
+_mmx();
 x86_mmx_t a, c;
 _uint8 b = $1;
 if(b > 0x1F)
@@ -5425,6 +5452,7 @@ else
 
 @instruction PSRAQ
 @comment MMX
+_mmx();
 _uint8 b = $1;
 if(b > 0x3F)
 {
@@ -5437,6 +5465,7 @@ else
 
 @instruction PSRLW
 @comment MMX
+_mmx();
 x86_mmx_t a, c;
 _uint8 b = $1;
 if(b > 0xF)
@@ -5451,6 +5480,7 @@ else
 
 @instruction PSRLD
 @comment MMX
+_mmx();
 x86_mmx_t a, c;
 _uint8 b = $1;
 if(b > 0x1F)
@@ -5465,6 +5495,7 @@ else
 
 @instruction PSRLQ
 @comment MMX
+_mmx();
 _uint8 b = $1;
 if(b > 0x3F)
 	$0 = 0;
@@ -5473,6 +5504,7 @@ else
 
 @instruction PSUBB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5482,6 +5514,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PSUBSB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5491,6 +5524,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PSUBUSB
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5500,6 +5534,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PSUBW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5509,6 +5544,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PSUBSW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5518,6 +5554,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PSUBUSW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5527,6 +5564,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PSUBD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5536,6 +5574,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PUNPCKLBW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5547,6 +5586,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PUNPCKHBW
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5558,6 +5598,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PUNPCKLWD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5569,6 +5610,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PUNPCKHWD
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5580,6 +5622,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PUNPCKLDQ
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5589,6 +5632,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PUNPCKHDQ
 @comment MMX
+_mmx();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5598,10 +5642,12 @@ $0 = c.MMX_Q(0);
 
 @instruction PXOR
 @comment MMX
+_mmx();
 $0 = $0 ^ $1;
 
 @instruction PADDSIW
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c;
@@ -5613,6 +5659,7 @@ $0i = c.MMX_Q(0);
 
 @instruction PAVEB
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c;
@@ -5624,6 +5671,7 @@ $0i = c.MMX_Q(0);
 
 @instruction PDISTIB
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c, d;
@@ -5636,6 +5684,7 @@ $0i = d.MMX_Q(0);
 
 @instruction PMACHRIW
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c, d;
@@ -5648,6 +5697,7 @@ $0i = d.MMX_Q(0);
 
 @instruction PMAGW
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c;
@@ -5660,6 +5710,7 @@ $0 = c.MMX_Q(0);
 @instruction PMULHRWC
 @comment Cyrix EMMI
 @comment actual mnemonic PMULHRW
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c;
@@ -5671,6 +5722,7 @@ $0 = c.MMX_Q(0);
 
 @instruction PMULHRIW
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c;
@@ -5682,6 +5734,7 @@ $0i = c.MMX_Q(0);
 
 @instruction PMVZB
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c, d;
@@ -5694,6 +5747,7 @@ $0i = d.MMX_Q(0);
 
 @instruction PMVNZB
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c, d;
@@ -5706,6 +5760,7 @@ $0i = d.MMX_Q(0);
 
 @instruction PMVLZB
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c, d;
@@ -5718,6 +5773,7 @@ $0i = d.MMX_Q(0);
 
 @instruction PMVGEZB
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c, d;
@@ -5730,6 +5786,7 @@ $0i = d.MMX_Q(0);
 
 @instruction PSUBSIW
 @comment Cyrix EMMI
+_mmx();
 if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
 	UNDEFINED();
 x86_mmx_t a, b, c;
@@ -7306,7 +7363,7 @@ if(($a & 0x08) != 0)
   vendor: nsc
   class: cyrix
   variant: gx2
-  features: $gx1, sep, sse_non_simd, 3dnow, pfrcpv, dmm, -emmi, -media_gx
+  features: $gx1, sep, sse_non_simd, 3dnow, 3dnowext, pfrcpv, dmm, -emmi, -media_gx
   family: 5
   model: 5
   highest_function: 0x01
