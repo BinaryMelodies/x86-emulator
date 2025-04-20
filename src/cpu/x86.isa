@@ -2482,7 +2482,10 @@ if((offset + length) >= 16)
 
 @instruction FEMMS
 @comment 3DNow!
-/* TODO */
+if((emu->cr[0] & X86_CR0_EM) != 0)
+	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+_x87_int();
+emu->x87.tw = 0xFFFF;
 
 @instruction FINT
 @comment NEC specific
@@ -5748,7 +5751,7 @@ x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
 _FOR(i, 0, 3)
-	c.MMX_W(i) = (_extswl(a.MMX_W(i)) * _extswl(b.MMX_W(i)) + 0x4000) >> 16;
+	c.MMX_W(i) = (_extswl(a.MMX_W(i)) * _extswl(b.MMX_W(i)) + 0x4000) >> 15;
 $0 = c.MMX_Q(0);
 
 @instruction PMULHRIW
@@ -5830,97 +5833,186 @@ $0i = c.MMX_Q(0);
 @instruction PAVGUSB
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = (a.MMX_B(i) + b.MMX_B(i) + 0x01) >> 1;
+$0 = c.MMX_Q(0);
 
 @instruction PF2ID
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+{
+	float32_t v = truncf(a.MMX_S(i));
+	if(v >= 0x7FFFFFFF)
+		c.MMX_L(i) = 0x7FFFFFFF;
+	else if(v <= -0x80000000)
+		c.MMX_L(i) = 0x80000000;
+	else
+		c.MMX_L(i) = (_int32)v;
+}
+$0 = c.MMX_Q(0);
 
 @instruction PFACC
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+c.MMX_S(0) = a.MMX_S(0) + a.MMX_S(1);
+c.MMX_S(1) = b.MMX_S(0) + b.MMX_S(1);
+$0 = c.MMX_Q(0);
 
 @instruction PFADD
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_S(i) = a.MMX_S(i) + b.MMX_S(i);
+$0 = c.MMX_Q(0);
 
 @instruction PFCMPEQ
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_S(i) == b.MMX_S(i) ? 0xFFFFFFFF : 0x00000000;
+$0 = c.MMX_Q(0);
 
 @instruction PFCMPGE
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_S(i) >= b.MMX_S(i) ? 0xFFFFFFFF : 0x00000000;
+$0 = c.MMX_Q(0);
 
 @instruction PFCMPGT
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_S(i) > b.MMX_S(i) ? 0xFFFFFFFF : 0x00000000;
+$0 = c.MMX_Q(0);
 
 @instruction PFMAX
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = fmaxf(a.MMX_S(i), b.MMX_S(i));
+$0 = c.MMX_Q(0);
 
 @instruction PFMIN
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = fminf(a.MMX_S(i), b.MMX_S(i));
+$0 = c.MMX_Q(0);
 
 @instruction PFMUL
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_S(i) * b.MMX_S(i);
+$0 = c.MMX_Q(0);
 
 @instruction PFRCP
 @comment 3DNow!
+@comment Low precision instruction
 _mmx();
-/* TODO */
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = 1 / a.MMX_S(i);
+$0 = c.MMX_Q(0);
 
 @instruction PFRCPIT1
 @comment 3DNow!
 _mmx();
-/* TODO */
+/* TODO: only specified so that PFRCP/PFRCPIT1/PFRCPIT2 should give the reciprocal, copying the source to the destination achieves this */
+$0 = $1;
 
 @instruction PFRCPIT2
 @comment 3DNow!
 _mmx();
-/* TODO */
+/* TODO: see comment for PFRCPIT1/PFRSQIT1 */
+$0 = $1;
 
 @instruction PFRSQIT1
 @comment 3DNow!
 _mmx();
-/* TODO */
+/* TODO: only specified so that PFRSQRT/PFRSQIT1/PFRCPIT2 should give the reciprocal square root, copying the source to the destination achieves this */
+$0 = $1;
 
 @instruction PFRSQRT
 @comment 3DNow!
+@comment Low precision instruction
 _mmx();
-/* TODO */
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = 1 / sqrtf(a.MMX_S(i));
+$0 = c.MMX_Q(0);
 
 @instruction PFSUB
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_S(i) = a.MMX_S(i) - b.MMX_S(i);
+$0 = c.MMX_Q(0);
 
 @instruction PFSUBR
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_S(i) = b.MMX_S(i) - a.MMX_S(i);
+$0 = c.MMX_Q(0);
 
 @instruction PI2FD
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+	c.MMX_S(i) = (float32_t)(_int32)a.MMX_L(i);
+$0 = c.MMX_Q(0);
 
 @instruction PMULHRW
 @comment 3DNow!
 _mmx();
-/* TODO */
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = (_extswl(a.MMX_W(i)) * _extswl(b.MMX_W(i)) + 0x8000) >> 16;
+$0 = c.MMX_Q(0);
 
 @instruction Z80.ADC|op=b
 _uint8 x = $0, y = $1;
