@@ -736,6 +736,8 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 		} \
 	} while(0)
 
+// SIMD instructions
+
 #define _mmx() \
 	do { \
 		if((emu->cr[0] & X86_CR0_EM) != 0) \
@@ -744,6 +746,64 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 		x87_set_sw_top(emu, 0); \
 		emu->x87.tw = 0x0000; \
 	} while(0)
+
+#define _FOR(__variable, __start, __end) for(uint8_t __variable = (__start); __variable <= (__end); __variable ++)
+
+static inline int16_t _extsbw(int8_t value)
+{
+	return value;
+}
+
+static inline int32_t _extswl(int16_t value)
+{
+	return value;
+}
+
+static inline int8_t _satswsb(int16_t value)
+{
+	if(value < -0x80)
+		return -0x80;
+	else if(value > 0x7F)
+		return 0x7F;
+	else
+		return value;
+}
+
+static inline uint8_t _satswub(int16_t value)
+{
+	if(value < 0x00)
+		return 0x00;
+	else if(value > 0xFF)
+		return 0xFF;
+	else
+		return value;
+}
+
+static inline uint8_t _satuwub(uint16_t value)
+{
+	if(value > 0xFF)
+		return 0xFF;
+	else
+		return value;
+}
+
+static inline int16_t _satslsw(int32_t value)
+{
+	if(value < -0x8000)
+		return -0x8000;
+	else if(value > 0x7FFF)
+		return 0x7FFF;
+	else
+		return value;
+}
+
+static inline uint16_t _satuluw(uint32_t value)
+{
+	if(value > 0xFFFF)
+		return 0xFFFF;
+	else
+		return value;
+}
 
 static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
 

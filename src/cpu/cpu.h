@@ -1191,6 +1191,31 @@ enum x86_revid_flags_t
 };
 typedef enum x86_revid_flags_t x86_revid_flags_t;
 
+union x86_mmx_t
+{
+	uint8_t b[8];
+	uint16_t w[4];
+	uint32_t l[2];
+	uint64_t q[1];
+	float32_t s[2];
+	float64_t d[1];
+};
+typedef union x86_mmx_t x86_mmx_t;
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+# define MMX_B(i) b[(i)]
+# define MMX_W(i) w[(i)]
+# define MMX_L(i) l[(i)]
+# define MMX_S(i) s[(i)]
+#elif BYTE_ORDER == BIT_ENDIAN
+# define MMX_B(i) b[(i) ^ 7]
+# define MMX_W(i) w[(i) ^ 3]
+# define MMX_L(i) l[(i) ^ 1]
+# define MMX_S(i) s[(i) ^ 1]
+#endif
+#define MMX_Q(i) q[(i)]
+#define MMX_D(i) d[(i)]
+
 /* Represents an x87/MMX register */
 struct x87_register_t
 {
@@ -1203,15 +1228,7 @@ struct x87_register_t
 		float80_t f;
 		struct
 		{
-			union
-			{
-				uint8_t b[8];
-				uint16_t w[4];
-				uint32_t l[2];
-				uint64_t q[1];
-				float32_t s[2];
-				float64_t d[1];
-			} mmx;
+			x86_mmx_t mmx;
 			uint16_t exponent;
 		};
 	};

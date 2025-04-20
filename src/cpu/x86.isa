@@ -5167,139 +5167,438 @@ x87_pop(emu);
 /* TODO */
 
 @instruction PACKSSWB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_B(i) = _satswsb(a.MMX_W(i));
+_FOR(i, 4, 7)
+	c.MMX_B(i) = _satswsb(b.MMX_W(i - 4));
+$0 = c.MMX_Q(0);
 
 @instruction PACKUSWB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_B(i) = _satswub(a.MMX_W(i));
+_FOR(i, 4, 7)
+	c.MMX_B(i) = _satswub(b.MMX_W(i - 4));
+$0 = c.MMX_Q(0);
 
 @instruction PACKSSDW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_W(i) = _satslsw(a.MMX_D(i));
+_FOR(i, 2, 3)
+	c.MMX_W(i) = _satslsw(b.MMX_D(i - 2));
+$0 = c.MMX_Q(0);
 
 @instruction PADDB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = a.MMX_B(i) + b.MMX_B(i);
+$0 = c.MMX_Q(0);
 
 @instruction PADDSB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = _satswsb(_extsbw(a.MMX_B(i)) + _extsbw(b.MMX_B(i)));
+$0 = c.MMX_Q(0);
 
 @instruction PADDUSB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = _satuwub(a.MMX_B(i) + b.MMX_B(i));
+$0 = c.MMX_Q(0);
 
 @instruction PADDW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = a.MMX_W(i) + b.MMX_W(i);
+$0 = c.MMX_Q(0);
 
 @instruction PADDSW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = _satslsw(_extswl(a.MMX_W(i)) + _extswl(b.MMX_W(i)));
+$0 = c.MMX_Q(0);
 
 @instruction PADDUSW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = _satuluw((_uint32)a.MMX_W(i) + (_uint32)b.MMX_W(i));
+$0 = c.MMX_Q(0);
 
 @instruction PADDD
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_L(i) + b.MMX_L(i);
+$0 = c.MMX_Q(0);
 
 @instruction PAND
-/* TODO */
+@comment MMX
+$0 = $0 & $1;
 
 @instruction PANDN
-/* TODO */
+@comment MMX
+$0 = $0 & ~$1;
 
 @instruction PCMPEQB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = a.MMX_B(i) == b.MMX_B(i) ? 0xFF : 0x00;
+$0 = c.MMX_Q(0);
 
 @instruction PCMPEQW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = a.MMX_W(i) == b.MMX_W(i) ? 0xFFFF : 0x0000;
+$0 = c.MMX_Q(0);
 
 @instruction PCMPEQD
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_L(i) == b.MMX_L(i) ? 0xFFFFFFFF : 0x00000000;
+$0 = c.MMX_Q(0);
 
 @instruction PCMPGTB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = (_int8)a.MMX_B(i) > (_int8)b.MMX_B(i) ? 0xFF : 0x00;
+$0 = c.MMX_Q(0);
 
 @instruction PCMPGTW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = (_int16)a.MMX_W(i) > (_int16)b.MMX_W(i) ? 0xFFFF : 0x0000;
+$0 = c.MMX_Q(0);
 
 @instruction PCMPGTD
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = (_int32)a.MMX_L(i) > (_int32)b.MMX_L(i) ? 0xFFFFFFFF : 0x00000000;
+$0 = c.MMX_Q(0);
 
 @instruction PMADDWD
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = _extswl(a.MMX_W(i * 2)) * _extswl(b.MMX_W(i * 2)) + _extswl(a.MMX_W(i * 2 + 1)) * _extswl(b.MMX_W(i * 2 + 1));
+$0 = c.MMX_Q(0);
 
 @instruction PMULLW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = _extswl(a.MMX_W(i)) * _extswl(b.MMX_W(i)) & 0xFFFF;
+$0 = c.MMX_Q(0);
 
 @instruction PMULHW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = _extswl(a.MMX_W(i)) * _extswl(b.MMX_W(i)) >> 16;
+$0 = c.MMX_Q(0);
 
 @instruction POR
-/* TODO */
+@comment MMX
+$0 = $0 | $1;
 
 @instruction PSLLW
-/* TODO */
+@comment MMX
+x86_mmx_t a, c;
+_uint8 b = $1;
+if(b > 0xF)
+	$0 = 0;
+else
+{
+	a.MMX_Q(0) = $0;
+	_FOR(i, 0, 3)
+		c.MMX_W(i) = a.MMX_W(i) << b;
+	$0 = c.MMX_Q(0);
+}
 
 @instruction PSLLD
-/* TODO */
+@comment MMX
+x86_mmx_t a, c;
+_uint8 b = $1;
+if(b > 0x1F)
+	$0 = 0;
+else
+{
+	a.MMX_Q(0) = $0;
+	_FOR(i, 0, 1)
+		c.MMX_L(i) = a.MMX_L(i) << b;
+	$0 = c.MMX_Q(0);
+}
 
 @instruction PSLLQ
-/* TODO */
+@comment MMX
+_uint8 b = $1;
+if(b > 0x3F)
+	$0 = 0;
+else
+	$0 <<= b;
 
 @instruction PSRAW
-/* TODO */
+@comment MMX
+x86_mmx_t a, c;
+_uint8 b = $1;
+if(b > 0xF)
+{
+	$0 = (_int16)$0 < 0 ? -1 : 0;
+}
+else
+{
+	a.MMX_Q(0) = $0;
+	_FOR(i, 0, 3)
+		c.MMX_W(i) = (_int16)a.MMX_W(i) >> (_int16)b;
+	$0 = c.MMX_Q(0);
+}
 
 @instruction PSRAD
-/* TODO */
+@comment MMX
+x86_mmx_t a, c;
+_uint8 b = $1;
+if(b > 0x1F)
+{
+	$0 = (_int32)$0 < 0 ? -1 : 0;
+}
+else
+{
+	a.MMX_Q(0) = $0;
+	_FOR(i, 0, 1)
+		c.MMX_L(i) = (_int32)a.MMX_L(i) >> (_int32)b;
+	$0 = c.MMX_Q(0);
+}
 
 @instruction PSRAQ
-/* TODO */
+@comment MMX
+_uint8 b = $1;
+if(b > 0x3F)
+{
+	$0 = (_int32)$0 < 0 ? -1 : 0;
+}
+else
+{
+	$0 = (_int64)$0 >> (_int64)b;
+}
 
 @instruction PSRLW
-/* TODO */
+@comment MMX
+x86_mmx_t a, c;
+_uint8 b = $1;
+if(b > 0xF)
+	$0 = 0;
+else
+{
+	a.MMX_Q(0) = $0;
+	_FOR(i, 0, 3)
+		c.MMX_W(i) = a.MMX_W(i) >> b;
+	$0 = c.MMX_Q(0);
+}
 
 @instruction PSRLD
-/* TODO */
+@comment MMX
+x86_mmx_t a, c;
+_uint8 b = $1;
+if(b > 0x1F)
+	$0 = 0;
+else
+{
+	a.MMX_Q(0) = $0;
+	_FOR(i, 0, 1)
+		c.MMX_L(i) = a.MMX_L(i) >> b;
+	$0 = c.MMX_Q(0);
+}
 
 @instruction PSRLQ
-/* TODO */
+@comment MMX
+_uint8 b = $1;
+if(b > 0x3F)
+	$0 = 0;
+else
+	$0 >>= b;
 
 @instruction PSUBB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = a.MMX_B(i) - b.MMX_B(i);
+$0 = c.MMX_Q(0);
 
 @instruction PSUBSB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = _satswsb(_extsbw(a.MMX_B(i)) - _extsbw(b.MMX_B(i)));
+$0 = c.MMX_Q(0);
 
 @instruction PSUBUSB
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 7)
+	c.MMX_B(i) = _satswsb((_int16)a.MMX_B(i) - (_int16)b.MMX_B(i));
+$0 = c.MMX_Q(0);
 
 @instruction PSUBW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = a.MMX_W(i) - b.MMX_W(i);
+$0 = c.MMX_Q(0);
 
 @instruction PSUBSW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = _satslsw(_extswl(a.MMX_W(i)) - _extswl(b.MMX_W(i)));
+$0 = c.MMX_Q(0);
 
 @instruction PSUBUSW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_W(i) = _satslsw((_int32)a.MMX_W(i) - (_int32)b.MMX_W(i));
+$0 = c.MMX_Q(0);
 
 @instruction PSUBD
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = a.MMX_L(i) - b.MMX_L(i);
+$0 = c.MMX_Q(0);
 
 @instruction PUNPCKLBW
-/* TODO */
-
-@instruction PUNPCKLWD
-/* TODO */
-
-@instruction PUNPCKLDQ
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_B(i * 2)     = a.MMX_B(i);
+_FOR(i, 0, 3)
+	c.MMX_B(i * 2 + 1) = b.MMX_B(i);
+$0 = c.MMX_Q(0);
 
 @instruction PUNPCKHBW
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 3)
+	c.MMX_B(i * 2)     = a.MMX_B(i + 4);
+_FOR(i, 0, 3)
+	c.MMX_B(i * 2 + 1) = b.MMX_B(i + 4);
+$0 = c.MMX_Q(0);
+
+@instruction PUNPCKLWD
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_W(i * 2)     = a.MMX_W(i);
+_FOR(i, 0, 1)
+	c.MMX_W(i * 2 + 1) = b.MMX_W(i);
+$0 = c.MMX_Q(0);
 
 @instruction PUNPCKHWD
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+_FOR(i, 0, 1)
+	c.MMX_W(i * 2)     = a.MMX_W(i + 2);
+_FOR(i, 0, 1)
+	c.MMX_W(i * 2 + 1) = b.MMX_W(i + 2);
+$0 = c.MMX_Q(0);
+
+@instruction PUNPCKLDQ
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+c.MMX_L(0) = a.MMX_L(0);
+c.MMX_L(1) = b.MMX_L(0);
+$0 = c.MMX_Q(0);
 
 @instruction PUNPCKHDQ
-/* TODO */
+@comment MMX
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+c.MMX_L(0) = a.MMX_L(1);
+c.MMX_L(1) = b.MMX_L(1);
+$0 = c.MMX_Q(0);
 
 @instruction PXOR
-/* TODO */
+@comment MMX
+$0 = $0 ^ $1;
 
 @instruction Z80.ADC|op=b
 _uint8 x = $0, y = $1;
