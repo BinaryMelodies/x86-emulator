@@ -752,9 +752,28 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 #0F0A
 0F0B	286+	UD2
 #0F0C
-#0F0D	487+	NOP	E
-#0F0E
-#0F0F
+0F0D/0	586+	PREFETCH	Mb	feature:	3DNOWP
+0F0D/1	586+	PREFETCHW	Mb	feature:	3DNOWP
+0F0E	586+	FEMMS	-	feature:	3DNOW
+0F0F:0D	586+	PI2FD	Pq, Qq	feature:	3DNOW
+0F0F:1D	586+	PF2ID	Pq, Qq	feature:	3DNOW
+0F0F:90	586+	PFCMPGE	Pq, Qq	feature:	3DNOW
+0F0F:94	586+	PFMIN	Pq, Qq	feature:	3DNOW
+0F0F:96	586+	PFRCP	Pq, Qq	feature:	3DNOW
+0F0F:97	586+	PFRSQRT	Pq, Qq	feature:	3DNOW
+0F0F:9A	586+	PFSUB	Pq, Qq	feature:	3DNOW
+0F0F:9E	586+	PFADD	Pq, Qq	feature:	3DNOW
+0F0F:A0	586+	PFCMPGT	Pq, Qq	feature:	3DNOW
+0F0F:A4	586+	PFMAX	Pq, Qq	feature:	3DNOW
+0F0F:A6	586+	PFRCPIT1	Pq, Qq	feature:	3DNOW
+0F0F:A7	586+	PFRSQIT1	Pq, Qq	feature:	3DNOW
+0F0F:AA	586+	PFSUBR	Pq, Qq	feature:	3DNOW
+0F0F:AE	586+	PFACC	Pq, Qq	feature:	3DNOW
+0F0F:B0	586+	PFCMPEQ	Pq, Qq	feature:	3DNOW
+0F0F:B4	586+	PFMUL	Pq, Qq	feature:	3DNOW
+0F0F:B6	586+	PFRCPIT2	Pq, Qq	feature:	3DNOW
+0F0F:B7	586+	PMULHRW	Pq, Qq	feature:	3DNOW	# mnemonic PMULHRW collides with Cyrix EMMI instruction
+0F0F:BF	586+	PAVGUSB	Pq, Qq	feature:	3DNOW
 
 0F10	386,486	UMOV	Eb, Gb
 0F10	nec+	TEST1	Eb, CL
@@ -2461,6 +2480,10 @@ $0.b = (offset + length) & 0xF;
 if((offset + length) >= 16)
 	$si = si + 2;
 
+@instruction FEMMS
+@comment 3DNow!
+/* TODO */
+
 @instruction FINT
 @comment NEC specific
 switch(emu->cpu_type)
@@ -3280,6 +3303,14 @@ $zf = count == 0;
 
 @instruction POPF
 $flags.$O = _pop$O();
+
+@instruction PREFETCH
+@comment 3DNow!
+/* TODO */
+
+@instruction PREFETCHW
+@comment 3DNow!
+/* TODO */
 
 @instruction PUSH|op0=rb|op0=mb
 /* 8086 undefined instruction */
@@ -5795,6 +5826,101 @@ b.MMX_Q(0) = $1;
 _FOR(i, 0, 3)
 	c.MMX_W(i) = _satslsw(_extswl(a.MMX_W(i)) - _extswl(b.MMX_W(i)));
 $0i = c.MMX_Q(0);
+
+@instruction PAVGUSB
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PF2ID
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFACC
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFADD
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFCMPEQ
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFCMPGE
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFCMPGT
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFMAX
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFMIN
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFMUL
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFRCP
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFRCPIT1
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFRCPIT2
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFRSQIT1
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFRSQRT
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFSUB
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PFSUBR
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PI2FD
+@comment 3DNow!
+_mmx();
+/* TODO */
+
+@instruction PMULHRW
+@comment 3DNow!
+_mmx();
+/* TODO */
 
 @instruction Z80.ADC|op=b
 _uint8 x = $0, y = $1;

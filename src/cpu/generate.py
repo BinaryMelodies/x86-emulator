@@ -66,6 +66,8 @@ class Path:
 				parts.append(f'/{value}')
 			elif selector == 'memfield':
 				parts.append(f'+{value}')
+			elif selector == '3dnow_subtable':
+				parts.append(f'/r {value:02X}')
 			elif selector == 'prefix':
 				if value != 0:
 					parts.insert(0, [None, '66', 'F3', 'F2'][value])
@@ -245,6 +247,13 @@ class Entry:
 		return self.tab is None and len(self.ins) == 0
 
 class Table:
+	# Table types:
+	# - subtable: takes a single opcode byte
+	# - modfield: 2 entries for if the operand is a memory operand or a register operand (bits 6-7)
+	# - regfield: the register field (bits 3-5)
+	# - memfield: the memory field (bits 0-2)
+	# - 3dnow_subtable: a single opcode byte following the modrm/sib and displacement bytes
+	# - prefix: the SIMD prefix 0x66/0xF3/0xF2, entry 0 standing for no prefix
 	def __init__(self, size, **kwds):
 		# Every entry should contain at most one Table and any number of Instruction elements
 		self.entries = [Entry() for i in range(size)]
@@ -289,7 +298,7 @@ class Table:
 
 			subtable = self.entries[index[0][0]].tab
 			if subtable is None:
-				self.entries[index[0][0]].tab = Table({'modfield': 2, 'regfield': 8, 'memfield': 8, 'subtable': 256, 'prefix': 4}[table_type], discriminator = table_type)
+				self.entries[index[0][0]].tab = Table({'modfield': 2, 'regfield': 8, 'memfield': 8, 'subtable': 256, 'prefix': 4, '3dnow_subtable': 256}[table_type], discriminator = table_type)
 				subtable = self.entries[index[0][0]].tab
 				subtable.assign(index[1:], value)
 			elif subtable is not None and subtable.kwds['discriminator'] == table_type:
@@ -361,6 +370,13 @@ class Table:
 					if 'modrm' in item.kwds:
 						if 'modrm' not in self.kwds or item.kwds['modrm'] == True:
 							self.kwds['modrm'] = item.kwds['modrm']
+						item.kwds['modrm'] = False
+
+		elif self.kwds.get('discriminator') == '3dnow_subtable':
+			self.kwds['modrm'] = True
+			for entry in self.entries:
+				for item in ([entry.tab] if entry.tab is not None else []) + entry.ins:
+					if 'modrm' in item.kwds:
 						item.kwds['modrm'] = False
 
 		return 'modrm' in self.kwds
@@ -585,8 +601,13 @@ def read_data(filename):
 			if '/' in code:
 				code, regfield = code.split('/')
 				regfield = int(regfield, 16)
+				suffix = None
+			elif ':' in code:
+				code, suffix_code = code.split(':')
+				suffix = (int(suffix_code, 16), '3dnow_subtable')
 			else:
 				regfield = None
+				suffix = None
 
 			prefix = None
 			if code.startswith('NP'):
@@ -621,6 +642,9 @@ def read_data(filename):
 			if exclusive is not None:
 				# Note: modfield will be reordered
 				code.append((['M', 'R'].index(exclusive), 'modfield'))
+
+			if suffix is not None:
+				code.append(suffix)
 
 			if prefix is not None:
 				code.append(prefix)
@@ -2913,9 +2937,23 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 		elif mode == '87':
 			actual_range = [isa for isa in X87_ARCHITECTURE_LIST if ARCHITECTURES[isa].get('generate', 'yes') != 'no']
 
-	# TODO: bad lock should not trigger UNDEFINED() on early CPUs (is this not DONE?)
 	# TODO: remove 32/64-bit support when not present on later CPUs (386/amd64)
-	if discriminator == 'subtable':
+	if discriminator == 'subtable' or discriminator == '3dnow_subtable':
+		if discriminator == '3dnow_subtable' and modrm is None:
+			assert uses_modrm
+			print_file(f"{indent}prs->modrm_byte = x86_fetch8(prs, emu);", file = file)
+			print_file(f"{indent}if((prs->modrm_byte & 0xC0) == 0xC0)", file = file)
+			print_file(f"{indent}{{", file = file)
+			print_switch(mode, path, indent + "\t", actual_range, file, discriminator, uses_modrm, modrm = 'reg', feature = feature, only_mode = only_mode)
+			print_file(f"{indent}}}", file = file)
+			print_file(f"{indent}else", file = file)
+			print_file(f"{indent}{{", file = file)
+			if mode != '87':
+				print_file(f"{indent}\tx86_parse_modrm(prs, emu, execute);", file = file)
+			print_switch(mode, path, indent + "\t", actual_range, file, discriminator, uses_modrm, modrm = 'mem', feature = feature, only_mode = only_mode)
+			print_file(f"{indent}}}", file = file)
+			return True
+
 		if mode == '32':
 			if len(path) == 0:
 				print_file(indent + f"switch((opcode = x86_translate_opcode(prs, x86_fetch8(prs, emu))))", file = file)
@@ -2928,7 +2966,7 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 		print_file(indent + "{", file = file)
 		for index in range(256):
 			print_file(indent + f"case 0x{index:02X}:", file = file)
-			if print_implementations(mode, path, 'subtable', index, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
+			if print_implementations(mode, path, discriminator, index, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
 				print_file(indent + "\tbreak;", file = file)
 		print_file(indent + "}", file = file)
 		return True
