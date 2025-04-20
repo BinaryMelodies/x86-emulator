@@ -187,6 +187,7 @@
 3DNOW	CPUID.EAX=80000001:EDX.31	# 3DNow!
 3DNOWEXT	CPUID.EAX=80000001:EDX.30	# 3DNow!+ (unsure)
 3DNOWP	CPUID.EAX=80000001:ECX.8
+3DNOW_GX	_3dnow_gx
 486A	CPU:486/486A
 ALTINST	altinst
 AMD_SMM	amd_smm
@@ -222,7 +223,6 @@ NOP_E	multibyte_nop
 NX	CPUID.EAX=80000001:EDX.20
 NX_IA64	CPUID.EAX=00000001:EDX.20 "NX"	# IA64 specific
 PAE	CPUID.EAX=00000001:EDX.6
-PFRCPV	pfrcpv
 POPCNT	CPUID.EAX=00000001:ECX.23
 RDPMC	rdpmc
 RDRAND	CPUID.EAX=00000001:ECX.30
@@ -755,8 +755,14 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F0D/0	586+	PREFETCH	Mb	feature:	3DNOWP
 0F0D/1	586+	PREFETCHW	Mb	feature:	3DNOWP
 0F0E	586+	FEMMS	-	feature:	3DNOW
+0F0F:0C	586+	PI2FW	Pq, Qq	feature:	3DNOWEXT
 0F0F:0D	586+	PI2FD	Pq, Qq	feature:	3DNOW
+0F0F:1C	586+	PF2IW	Pq, Qq	feature:	3DNOWEXT
 0F0F:1D	586+	PF2ID	Pq, Qq	feature:	3DNOW
+0F0F:86	586+	PFRCPV	Pq, Qq	feature:	3DNOW_GX
+0F0F:87	586+	PFRSQRTV	Pq, Qq	feature:	3DNOW_GX
+0F0F:8A	586+	PFNACC	Pq, Qq	feature:	3DNOWEXT
+0F0F:8E	586+	PFPNACC	Pq, Qq	feature:	3DNOWEXT
 0F0F:90	586+	PFCMPGE	Pq, Qq	feature:	3DNOW
 0F0F:94	586+	PFMIN	Pq, Qq	feature:	3DNOW
 0F0F:96	586+	PFRCP	Pq, Qq	feature:	3DNOW
@@ -773,6 +779,7 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F0F:B4	586+	PFMUL	Pq, Qq	feature:	3DNOW
 0F0F:B6	586+	PFRCPIT2	Pq, Qq	feature:	3DNOW
 0F0F:B7	586+	PMULHRW	Pq, Qq	feature:	3DNOW	# mnemonic PMULHRW collides with Cyrix EMMI instruction
+0F0F:BB	586+	PSWAPD	Pq, Qq	feature:	3DNOWEXT
 0F0F:BF	586+	PAVGUSB	Pq, Qq	feature:	3DNOW
 
 0F10	386,486	UMOV	Eb, Gb
@@ -5943,8 +5950,7 @@ $0 = c.MMX_Q(0);
 _mmx();
 x86_mmx_t a, c;
 a.MMX_Q(0) = $0;
-_FOR(i, 0, 1)
-	c.MMX_L(i) = 1 / a.MMX_S(i);
+c.MMX_L(0) = c.MMX_L(1) = 1 / a.MMX_S(0);
 $0 = c.MMX_Q(0);
 
 @instruction PFRCPIT1
@@ -5971,8 +5977,7 @@ $0 = $1;
 _mmx();
 x86_mmx_t a, c;
 a.MMX_Q(0) = $0;
-_FOR(i, 0, 1)
-	c.MMX_L(i) = 1 / sqrtf(a.MMX_S(i));
+c.MMX_L(0) = c.MMX_L(1) = 1 / sqrtf(a.MMX_S(0));
 $0 = c.MMX_Q(0);
 
 @instruction PFSUB
@@ -6012,6 +6017,80 @@ a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
 _FOR(i, 0, 3)
 	c.MMX_W(i) = (_extswl(a.MMX_W(i)) * _extswl(b.MMX_W(i)) + 0x8000) >> 16;
+$0 = c.MMX_Q(0);
+
+@instruction PF2IW
+@comment 3DNow! extension
+_mmx();
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+{
+	float32_t v = truncf(a.MMX_S(i));
+	if(v >= 0x00007FFF)
+		c.MMX_L(i) = 0x00007FFF;
+	else if(v <= -0xFFFF8000)
+		c.MMX_L(i) = 0xFFFF8000;
+	else
+		c.MMX_L(i) = (_int16)v;
+}
+$0 = c.MMX_Q(0);
+
+@instruction PFNACC
+@comment 3DNow! extension
+_mmx();
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+c.MMX_S(0) = a.MMX_S(0) - a.MMX_S(1);
+c.MMX_S(1) = b.MMX_S(0) - b.MMX_S(1);
+$0 = c.MMX_Q(0);
+
+@instruction PFPNACC
+@comment 3DNow! extension
+_mmx();
+x86_mmx_t a, b, c;
+a.MMX_Q(0) = $0;
+b.MMX_Q(0) = $1;
+c.MMX_S(0) = a.MMX_S(0) - a.MMX_S(1);
+c.MMX_S(1) = b.MMX_S(0) + b.MMX_S(1);
+$0 = c.MMX_Q(0);
+
+@instruction PI2FW
+@comment 3DNow! extension
+_mmx();
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+	c.MMX_S(i) = (float32_t)(_int16)a.MMX_W(i * 2);
+$0 = c.MMX_Q(0);
+
+@instruction PSWAPD
+@comment 3DNow! extension
+_mmx();
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+c.MMX_L(0) = a.MMX_L(1);
+c.MMX_L(1) = a.MMX_L(0);
+$0 = c.MMX_Q(0);
+
+@instruction PFRCPV
+@comment 3DNow! extension (Geode GX2)
+_mmx();
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = 1 / a.MMX_S(i);
+$0 = c.MMX_Q(0);
+
+@instruction PFRSQRTV
+@comment 3DNow! extension (Geode GX2)
+@comment Low precision instruction
+_mmx();
+x86_mmx_t a, c;
+a.MMX_Q(0) = $0;
+_FOR(i, 0, 1)
+	c.MMX_L(i) = 1 / sqrtf(a.MMX_S(i));
 $0 = c.MMX_Q(0);
 
 @instruction Z80.ADC|op=b
@@ -7581,7 +7660,7 @@ if(($a & 0x08) != 0)
   vendor: nsc
   class: cyrix
   variant: gx2
-  features: $gx1, sep, sse_non_simd, 3dnow, 3dnowext, pfrcpv, dmm, -emmi, -media_gx
+  features: $gx1, sep, sse_non_simd, 3dnow, 3dnowext, 3dnow_gx, dmm, -emmi, -media_gx
   family: 5
   model: 5
   highest_function: 0x01

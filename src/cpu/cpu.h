@@ -1144,7 +1144,7 @@ struct x86_cpu_traits_t
 	bool media_gx; // MediaGX instructions
 	bool emmi; // EMMI support (also CPUID flag)
 	bool dmm; // debug management mode supported
-	bool pfrcpv; // PFRCPV available
+	bool _3dnow_gx; // PFRCPV available
 	// VIA features
 	bool altinst; // alternate instruction set supported
 };
