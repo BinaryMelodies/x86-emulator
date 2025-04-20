@@ -1844,6 +1844,8 @@ registers = {
 	'$tr': 'emu->sr[X86_R_TR].selector',
 	'$0.off': '_off', # Note: this only works if $0 is the EA
 	'$1.off': '_off', # Note: this only works if $1 is the EA
+	'$0i': 'x86_mmx_get(emu, _reg ^ 1)', # Note: this only works if $0 is an MMX register (Pq)
+	'$0i=': 'x86_mmx_set(emu, _reg ^ 1, $$)', # Note: this only works if $0 is an MMX register (Pq)
 
 	'$bank': 'emu->bank[emu->rb]',
 
