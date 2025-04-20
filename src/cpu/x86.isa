@@ -5602,6 +5602,8 @@ $0 = $0 ^ $1;
 
 @instruction PADDSIW
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5611,6 +5613,8 @@ $0i = c.MMX_Q(0);
 
 @instruction PAVEB
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5620,6 +5624,8 @@ $0i = c.MMX_Q(0);
 
 @instruction PDISTIB
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c, d;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5630,6 +5636,8 @@ $0i = d.MMX_Q(0);
 
 @instruction PMACHRIW
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c, d;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5640,6 +5648,8 @@ $0i = d.MMX_Q(0);
 
 @instruction PMAGW
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5650,6 +5660,8 @@ $0 = c.MMX_Q(0);
 @instruction PMULHRWC
 @comment Cyrix EMMI
 @comment actual mnemonic PMULHRW
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5659,6 +5671,8 @@ $0 = c.MMX_Q(0);
 
 @instruction PMULHRIW
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5668,6 +5682,8 @@ $0i = c.MMX_Q(0);
 
 @instruction PMVZB
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c, d;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5678,6 +5694,8 @@ $0i = d.MMX_Q(0);
 
 @instruction PMVNZB
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c, d;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5688,6 +5706,8 @@ $0i = d.MMX_Q(0);
 
 @instruction PMVLZB
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c, d;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5698,6 +5718,8 @@ $0i = d.MMX_Q(0);
 
 @instruction PMVGEZB
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c, d;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;
@@ -5708,6 +5730,8 @@ $0i = d.MMX_Q(0);
 
 @instruction PSUBSIW
 @comment Cyrix EMMI
+if((emu->ccr[7] & X86_CCR7_EMMX) == 0)
+	UNDEFINED();
 x86_mmx_t a, b, c;
 a.MMX_Q(0) = $0;
 b.MMX_Q(0) = $1;

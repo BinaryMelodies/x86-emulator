@@ -725,6 +725,9 @@ enum
 	X86_CCR3_SMI_LOCK = 0x01,
 	X86_CCR3_MAPEN = 0x10,
 
+	// Cyrix EMMI
+	X86_CCR7_EMMX = 0x01,
+
 	// Geode GX2/LX, smm_ctl
 	X86_SMI_INST = 0x0008,
 	// Geode GX2/LX, dmi_ctl
