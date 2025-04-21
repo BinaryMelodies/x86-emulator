@@ -457,6 +457,7 @@ enum
 	X86_R_SEP_RIP = 0x00000176,
 	X86_R_BNDCFGS = 0x00000D90,
 
+	X86_R_GX2_PCR = 0x00001250, // Geode LX only
 	X86_R_SMM_CTL = 0x00001301, // Geode LX only
 	X86_R_DMI_CTL = 0x00001302, // Geode LX only
 	X86_R_SMM_HDR = 0x0000132B, // Geode LX only
@@ -732,6 +733,8 @@ enum
 	X86_SMI_INST = 0x0008,
 	// Geode GX2/LX, dmi_ctl
 	X86_DMI_INST = 0x0001,
+	// Geode GX2/LX, gx2_pcr
+	X86_GX2_PCR_INV_3DNOW = 0x0002,
 
 	// x87 tag word values, 3 bit bitfields in emu->x87.tw
 	X87_TAG_VALID = 0,
@@ -2074,6 +2077,8 @@ struct x86_state_t
 	} smm, dmm;
 	uint32_t smm_ctl; // TODO: bit 0 is SMM_NMI, 2 is SMM_NEST, 3 is SMI_INST, 4 is SMI_IO for I/O generated SMI, bit 5 is SMI_EXTL
 	uint32_t dmi_ctl; // TODO: bit 0 is DMI_INST, bit 3 is DMI_DBG, bit 4 is DMI_ICEBP, TODO: other bits
+	// pipeline control register
+	uint32_t gx2_pcr;
 
 	/* ICE and SMM */
 	x86_cpu_level_t cpu_level; // the current state of the CPU (usually X86_LEVEL_USER)

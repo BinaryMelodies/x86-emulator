@@ -888,198 +888,169 @@ static inline void x86_test_register_set32(x86_state_t * emu, int number, uint32
 
 // Model specific registers
 
-static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
+static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 {
 	switch(index)
 	{
+	// Intel
 	case X86_R_TSC:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_TSC) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->tsc;
+		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_TSC) != 0;
 	case X86_R_SEP_SEL:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->sep_sel;
+		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
 	case X86_R_SEP_RSP:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->sep_rsp;
 	case X86_R_SEP_RIP:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->sep_rip;
+		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
 	case X86_R_BNDCFGS:
-		if((emu->cpu_traits.cpuid7_0.ebx & X86_CPUID7_0_EBX_MPX) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->bndcfgs;
+		return (emu->cpu_traits.cpuid7_0.ebx & X86_CPUID7_0_EBX_MPX) != 0;
 
+	// Cyrix
+	case X86_R_GX2_PCR:
 	case X86_R_SMM_CTL:
-		if(!(emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX))
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->smm_ctl;
 	case X86_R_DMI_CTL:
-		if(!(emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX))
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->dmi_ctl;
 	case X86_R_SMM_HDR:
-		if(!(emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX))
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->smm_hdr;
 	case X86_R_DMM_HDR:
-		if(!(emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX))
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->dmm_hdr;
 	case X86_R_SMM_BASE:
-		if(!(emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX))
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->smm.base | ((uint64_t)emu->smm.limit << 32);
 	case X86_R_DMM_BASE:
-		if(!(emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX))
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		return emu->dmm.base | ((uint64_t)emu->dmm.limit << 32);
+		return emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX;
 
+	// AMD
 	case X86_R_EFER:
 		if(emu->cpu_type == X86_CPU_AMD)
 		{
-			if((emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+			return (emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) != 0;
 		}
 		else
 		{
-			if((emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_NX | X86_CPUID_EXT1_EDX_LM)) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+			return (emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_NX | X86_CPUID_EXT1_EDX_LM)) != 0;
 		}
-		return emu->efer;
 	case X86_R_STAR:
-		if(emu->cpu_type == X86_CPU_AMD)
-		{
-			if((emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		}
-		else
-		{
-			if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		}
-		return emu->star;
 	case X86_R_LSTAR:
-		if(emu->cpu_type == X86_CPU_AMD)
-		{
-			if((emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		}
-		else
-		{
-			if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		}
-		return emu->lstar;
 	case X86_R_CSTAR:
-		if(emu->cpu_type == X86_CPU_AMD)
-		{
-			if((emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		}
-		else
-		{
-			if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		}
-		return emu->cstar;
 	case X86_R_FMASK:
 		if(emu->cpu_type == X86_CPU_AMD)
 		{
-			if((emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+			return (emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) != 0;
 		}
 		else
 		{
-			if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+			return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 		}
+	case X86_R_FS_BAS:
+		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
+	case X86_R_GS_BAS:
+		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
+	case X86_R_KERNEL_GS_BAS:
+		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
+	default:
+		return false;
+	}
+}
+
+static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
+{
+	if(!x86_msr_is_valid(emu, index))
+		x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+
+	switch(index)
+	{
+	case X86_R_TSC:
+		return emu->tsc;
+	case X86_R_SEP_SEL:
+		return emu->sep_sel;
+	case X86_R_SEP_RSP:
+		return emu->sep_rsp;
+	case X86_R_SEP_RIP:
+		return emu->sep_rip;
+	case X86_R_BNDCFGS:
+		return emu->bndcfgs;
+
+	case X86_R_GX2_PCR:
+		return emu->gx2_pcr;
+	case X86_R_SMM_CTL:
+		return emu->smm_ctl;
+	case X86_R_DMI_CTL:
+		return emu->dmi_ctl;
+	case X86_R_SMM_HDR:
+		return emu->smm_hdr;
+	case X86_R_DMM_HDR:
+		return emu->dmm_hdr;
+	case X86_R_SMM_BASE:
+		return emu->smm.base | ((uint64_t)emu->smm.limit << 32);
+	case X86_R_DMM_BASE:
+		return emu->dmm.base | ((uint64_t)emu->dmm.limit << 32);
+
+	case X86_R_EFER:
+		return emu->efer;
+	case X86_R_STAR:
+		return emu->star;
+	case X86_R_LSTAR:
+		return emu->lstar;
+	case X86_R_CSTAR:
+		return emu->cstar;
+	case X86_R_FMASK:
 		return emu->fmask;
 	case X86_R_FS_BAS:
-		if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		return emu->sr[X86_R_FS].base;
 	case X86_R_GS_BAS:
-		if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		return emu->sr[X86_R_GS].base;
 	case X86_R_KERNEL_GS_BAS:
-		if((emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		return emu->kernel_gs_bas;
 	default:
-		x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
-		break;
+		assert(false);
 	}
 }
 
 static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value)
 {
-	// TODO: check CPUID flags
+	if(!x86_msr_is_valid(emu, index))
+		x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+
 	switch(index)
 	{
 	case X86_R_TSC:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_TSC) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		emu->tsc = value;
 		break;
 	case X86_R_SEP_SEL:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		emu->sep_sel = value;
 		break;
 	case X86_R_SEP_RSP:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sep_rsp = value;
 		break;
 	case X86_R_SEP_RIP:
-		if((emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sep_rip = value;
 		break;
 	case X86_R_BNDCFGS:
-		if((emu->cpu_traits.cpuid7_0.ebx & X86_CPUID7_0_EBX_MPX) == 0)
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->bndcfgs = value;
 		break;
 
+	case X86_R_GX2_PCR:
+		emu->gx2_pcr = value;
+		break;
 	case X86_R_SMM_CTL:
-		// TODO Geode LX only
 		emu->smm_ctl = value;
 		break;
 	case X86_R_DMI_CTL:
-		// TODO Geode LX only
 		emu->dmi_ctl = value;
 		break;
 	case X86_R_SMM_HDR:
-		// TODO Geode LX only
 		emu->smm_hdr = value;
 		break;
 	case X86_R_DMM_HDR:
-		// TODO Geode LX only
 		emu->dmm_hdr = value;
 		break;
 	case X86_R_SMM_BASE:
-		// TODO Geode LX only
 		emu->smm.base = value;
 		emu->smm.limit = value >> 32;
 		break;
 	case X86_R_DMM_BASE:
-		// TODO Geode LX only
 		emu->dmm.base = value;
 		emu->dmm.limit = value >> 32;
 		break;
 
 	case X86_R_EFER:
-		// TODO: check presence
-
 		if((emu->cr[0] & X86_CR0_PG) != 0 && (value & X86_EFER_LME) != (emu->efer & X86_EFER_LME))
 			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 
@@ -1093,39 +1064,29 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		emu->efer = value;
 		break;
 	case X86_R_STAR:
-		// TODO: check presence
 		emu->star = value;
 		break;
 	case X86_R_LSTAR:
-		// TODO: check presence
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->lstar = value;
 		break;
 	case X86_R_CSTAR:
-		// TODO: check presence
 		emu->cstar = value;
 		break;
 	case X86_R_FMASK:
-		// TODO: check presence
 		emu->fmask = value;
 		break;
 	case X86_R_FS_BAS:
-		// TODO: check presence
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sr[X86_R_FS].base = value;
 		break;
 	case X86_R_GS_BAS:
-		// TODO: check presence
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sr[X86_R_GS].base = value;
 		break;
 	case X86_R_KERNEL_GS_BAS:
-		// TODO: check presence
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->kernel_gs_bas = value;
-		break;
-	default:
-		x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 		break;
 	}
 }

@@ -6076,6 +6076,8 @@ $0 = c.MMX_Q(0);
 
 @instruction PFRCPV
 @comment 3DNow! extension (Geode GX2)
+if((emu->gx2_pcr & X86_GX2_PCR_INV_3DNOW) == 0)
+	UNDEFINED();
 _mmx();
 x86_mmx_t a, c;
 a.MMX_Q(0) = $0;
@@ -6086,6 +6088,8 @@ $0 = c.MMX_Q(0);
 @instruction PFRSQRTV
 @comment 3DNow! extension (Geode GX2)
 @comment Low precision instruction
+if((emu->gx2_pcr & X86_GX2_PCR_INV_3DNOW) == 0)
+	UNDEFINED();
 _mmx();
 x86_mmx_t a, c;
 a.MMX_Q(0) = $0;
