@@ -805,6 +805,16 @@ static inline uint16_t _satuluw(uint32_t value)
 		return value;
 }
 
+/*
+	Parses an x87 instructions
+	prs - The parser state, should reference emu->parser if emu is not NULL
+	emu - The emulator state, only needed if execute == true
+	sync - true if called from x86_parse, false if called separately
+	fop, fcs, fip, fds, fdp - Values for the exception pointers, if those need to be set
+	segment_number, segment_offset - Parsed operand
+	disassemble - true to fill debug output buffer with the disassembled instruction
+	execute - true to execute instruction, false to only disassemble
+*/
 static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
 
 #include "x86.gen.c"
