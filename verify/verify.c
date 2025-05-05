@@ -193,7 +193,7 @@ int main()
 {
 	x86_state_t emu[1];
 	memset(&emu, 0, sizeof(emu));
-	emu->cpu_type = X86_CPU_8086;
+	emu->cpu_type = CPU_TYPE;
 	emu->memory_read = memory_read;
 	emu->memory_write = memory_write;
 	emu->port_read = port_read;

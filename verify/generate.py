@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import sys
 import json
 import zipfile
 import gzip
@@ -39,8 +40,17 @@ def print_test(entry, info, file):
 
 	print(f"{{ .iregs = {{ {', '.join(iregs)} }}, .oregs = {{ {', '.join(oregs)} }}, .flags_mask = 0x{flags_mask:04X}, .imem = &testcase_memory_changes[{imem}], .omem = &testcase_memory_changes[{omem}] }},", file = file)
 
-ZIPPATH = '../external/8088-main.zip'
-INTPATH = '8088-main/v2/'
+if len(sys.argv) == 1 or sys.argv[1] == '8088':
+	ZIPPATH = '../external/8088-main.zip'
+	INTPATH = '8088-main/v2/'
+	OUTPATH = '8088/'
+elif sys.argv[1] == 'v20':
+	ZIPPATH = '../external/v20-main.zip'
+	INTPATH = 'v20-main/v1_native/'
+	OUTPATH = 'v20/'
+else:
+	print(f"Undefined single step instruction suite {sys.argv[1]}", file = sys.stderr)
+	exit()
 
 zfp = zipfile.ZipFile(ZIPPATH, 'r')
 opcodes = json.load(zfp.open(INTPATH + 'metadata.json', 'r'))['opcodes']
@@ -61,7 +71,7 @@ for name in zfp.namelist():
 		info = opcodes[key]['reg'][reg]
 	else:
 		info = opcodes[testname]
-	with open('8088/' + testname + '.gen.c', 'w') as file:
+	with open(OUTPATH + testname + '.gen.c', 'w') as file:
 		print("struct mem testcase_memory_changes[];", file = file)
 		print("struct testcase testcases[] =\n{", file = file)
 		for entry in obj:

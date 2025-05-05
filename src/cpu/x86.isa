@@ -385,6 +385,7 @@ X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 62	64,586+	MVEX:	-	feature:	MVEX,!AVX512_F
 62	64,586+	EVEX:	-	feature:	AVX512_F
 63	86	JNB	Jb
+63	v20	NOP	Ew
 63	v25	BRKN	Ib	feature:	V25S
 63	v55	DS2:
 63	v60	exit_v20_emulation
@@ -1774,8 +1775,7 @@ $sf = _sign8(al);
 $pf = _parity(al);
 
 @instruction AAM
-if(x86_is_nec(emu))
-	$0 = 10; // set the immediate to 10
+$0 = 10; // set the immediate to 10
 _uint8 al = $al;
 if($0 == 0)
 {
@@ -1843,31 +1843,43 @@ $pf = _parity(z);
 
 @instruction ADD4S
 @comment NEC specific
-$cf = 0;
-for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
+int cf = 0;
+int zf = X86_FL_ZF;
+for(_uint16 i = 0; i < (($cl + 1) >> 1); i++)
 {
 	_uint8 x = _read8(_dst_seg, ($di + i) & 0xFFFF);
 	_uint8 y = _read8(_src_seg, ($si + i) & 0xFFFF);
-	_uint8 z = x + y + $cf;
-	$cf = _add_carry8(x, y, z);
-	$of = _add_overflow8(x, y, z);
-	$af = _add_auxiliary(x, y, z);
-	$zf = _zero8(z);
-	$sf = _sign8(z);
-	$pf = _parity(z);
-	if(z > 0x99 || $cf)
+	_uint8 z = x + y + cf;
+	cf = _add_carry8(x, y, z);
+	int af = _add_auxiliary(x, y, z);
+	if((z & 0x0F) > 0x09 || af)
 	{
-		z -= 0x60;
-		$cf = X86_FL_CF;
+		// guessing 186 behavior
+		// 8086 had a different behavior to later CPUs
+		if((af ? z > 0x9F : z > 0x99) || cf)
+		{
+			z += 0x66;
+			cf = X86_FL_CF;
+		}
+		else
+		{
+			z += 0x06;
+		}
+		af = X86_FL_AF;
 	}
-	if((z & 0x0F) > 0x09 || $af)
+	else
 	{
-		if((z & 0x0F) > 0x09)
-			$cf = X86_FL_CF;
-		$af = X86_FL_AF;
+		if(z > 0x99 || cf)
+		{
+			z += 0x60;
+			cf = X86_FL_CF;
+		}
 	}
-	_write8(_src_seg, ($si + i) & 0xFFFF, z); /* TODO: double check */
+	zf &= _zero8(z);
+	_write8(_dst_seg, ($di + i) & 0xFFFF, z);
 }
+$cf = cf;
+$zf = zf;
 
 @instruction AND
 _uint$O x = $0.$O, y = $1.$O;
@@ -2180,34 +2192,40 @@ $pf = _parity(z);
 
 @instruction CMP4S
 @comment NEC specific
-$cf = 0;
-for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
+int cf = 0;
+int zf = X86_FL_ZF;
+for(_uint16 i = 0; i < (($cl + 1) >> 1); i++)
 {
 	_uint8 x = _read8(_dst_seg, ($di + i) & 0xFFFF);
 	_uint8 y = _read8(_src_seg, ($si + i) & 0xFFFF);
-	_uint8 z = x - y - $cf;
-	$cf = _sub_carry8(x, y, z);
-	$of = _sub_overflow8(x, y, z);
-	$af = _sub_auxiliary(x, y, z);
-	$zf = _zero8(z);
-	$sf = _sign8(z);
-	$pf = _parity(z);
-	if(z > 0x99 || $cf)
+	_uint8 z = x - y - cf;
+	cf = _sub_carry8(x, y, z);
+	int af = _sub_auxiliary(x, y, z);
+	if((z & 0x0F) > 0x09 || af)
 	{
-		z -= 0x60;
-		$cf = X86_FL_CF;
-	}
-	if((z & 0x0F) > 0x09 || $af)
-	{
-		if($al < 0x06)
-			$cf = X86_FL_CF;
-		$af = X86_FL_AF;
+		if((af ? z > 0x9F : z > 0x99) || cf)
+		{
+			cf = X86_FL_CF;
+			z -= 0x66;
+		}
+		else
+		{
+			z -= 0x06;
+		}
+		af = X86_FL_AF;
 	}
 	else
 	{
-		$af = 0;
+		if(z > 0x99 || cf)
+		{
+			cf = X86_FL_CF;
+			z -= 0x60;
+		}
 	}
+	zf &= _zero8(z);
 }
+$cf = cf;
+$zf = zf;
 
 @instruction CMPS
 if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
@@ -2454,7 +2472,10 @@ x87_set_sw_top(emu, 0);
 emu->x87.tw = 0xFFFF;
 
 @instruction ENTER
-$1 &= 0x1F;
+if(emu->cpu_type == X86_CPU_186 || emu->cpu_type >= X86_CPU_286)
+{
+	$1 &= 0x1F;
+}
 _push$O($bp.$O);
 _uint$O sp = $sp.$O;
 if($1 > 1)
@@ -4117,36 +4138,41 @@ $pf = _parity(z);
 
 @instruction SUB4S
 @comment NEC specific
-$cf = 0;
-for(_uint16 i = 0; i < (($cl + 1) & 0xFE); i++)
+int cf = 0;
+int zf = X86_FL_ZF;
+for(_uint16 i = 0; i < (($cl + 1) >> 1); i++)
 {
 	_uint8 x = _read8(_dst_seg, ($di + i) & 0xFFFF);
 	_uint8 y = _read8(_src_seg, ($si + i) & 0xFFFF);
-	_uint8 z = x - y - $cf;
-	$cf = _sub_carry8(x, y, z);
-	$of = _sub_overflow8(x, y, z);
-	$af = _sub_auxiliary(x, y, z);
-	$zf = _zero8(z);
-	$sf = _sign8(z);
-	$pf = _parity(z);
-	if(z > 0x99 || $cf)
+	_uint8 z = x - y - cf;
+	cf = _sub_carry8(x, y, z);
+	int af = _sub_auxiliary(x, y, z);
+	if((z & 0x0F) > 0x09 || af)
 	{
-		z -= 0x60;
-		$cf = X86_FL_CF;
-	}
-	if((z & 0x0F) > 0x09 || $af)
-	{
-		if(z < 0x06)
-			$cf = X86_FL_CF;
-		z -= 0x06;
-		$af = X86_FL_AF;
+		if((af ? z > 0x9F : z > 0x99) || cf)
+		{
+			cf = X86_FL_CF;
+			z -= 0x66;
+		}
+		else
+		{
+			z -= 0x06;
+		}
+		af = X86_FL_AF;
 	}
 	else
 	{
-		$af = 0;
+		if(z > 0x99 || cf)
+		{
+			cf = X86_FL_CF;
+			z -= 0x60;
+		}
 	}
-	_write8(_src_seg, ($si + i) & 0xFFFF, z);
+	zf &= _zero8(z);
+	_write8(_dst_seg, ($di + i) & 0xFFFF, z);
 }
+$cf = cf;
+$zf = zf;
 
 @instruction SVDC
 @comment Cyrix specific
@@ -4326,7 +4352,9 @@ $pf = _parity(z);
 
 @instruction TEST1
 @comment NEC specific
+$cf = 0;
 $zf = ($0.$O & (1 << ($1.b & ($O - 1)))) == 0;
+$of = 0;
 
 @instruction TSKSW
 @comment NEC specific
