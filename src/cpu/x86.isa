@@ -3687,13 +3687,15 @@ if(y != 0)
 @comment NEC specific
 _uint8 b = $0.b;
 $0.b = (b << 4) | ($al & 0xF);
-$al = ($al & 0xF0) | (b >> 4);
+// Note: only low 4 bits are guaranteed
+$al = ($al << 4) | (b >> 4); // TODO: check precise behavior
 
 @instruction ROR4
 @comment NEC specific
 _uint8 b = $0.b;
 $0.b = (b >> 4) | ($al & 0xF) << 4;
-$al = ($al & 0xF0) | (b & 0x0F);
+// Note: only low 4 bits are guaranteed
+$al = b; // TODO: check precise behavior
 
 @instruction RSDC
 @comment Cyrix specific
