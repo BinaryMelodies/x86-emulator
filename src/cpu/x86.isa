@@ -2503,7 +2503,7 @@ x86_v60_exception(emu, V60_EXC_RI);
 _uint8 length = ($1.b & 0xF) + 1;
 _uint8 offset = $0.b & 0xF;
 _uint16 si = $si;
-$ax.$O = x86_bitfield_extract16(emu, _src_seg2, si, offset, length);
+$ax.$O = x86_bitfield_extract16(emu, _src_seg2, si + (offset >> 3), offset & 7, length);
 $0.b = (offset + length) & 0xF;
 if((offset + length) >= 16)
 	$si = si + 2;
@@ -2698,7 +2698,7 @@ $pf = _parity(z);
 _uint8 length = ($1.b & 0xF) + 1;
 _uint8 offset = $0.b & 0xF;
 _uint16 di = $di;
-x86_bitfield_insert16(emu, X86_R_ES, di, offset, length, $ax.$O);
+x86_bitfield_insert16(emu, X86_R_ES, di + (offset >> 3), offset & 7, length, $ax);
 $0.b = (offset + length) & 0xF;
 if((offset + length) >= 16)
 	$di = di + 2;

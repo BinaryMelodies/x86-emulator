@@ -483,13 +483,13 @@ static inline void x86_bitfield_insert16(x86_state_t * emu, x86_segnum_t segment
 	x86_memory_segmented_read(emu, segment_number, address, (offset + length + 7) >> 3, buffer);
 	uint16_t mask = (1 << length) - 1;
 	value &= mask;
-	buffer[0] = (buffer[0] & (mask << offset)) | (value << offset);
+	buffer[0] = (buffer[0] & ~(mask << offset)) | (value << offset);
 	if(offset + length > 8)
 	{
-		buffer[1] = (buffer[1] & (mask >> (8 - offset))) | (value >> (8 - offset));
+		buffer[1] = (buffer[1] & ~(mask >> (8 - offset))) | (value >> (8 - offset));
 		if(offset + length > 16)
 		{
-			buffer[2] = (buffer[2] & (mask >> (16 - offset))) | (value >> (16 - offset));
+			buffer[2] = (buffer[2] & ~(mask >> (16 - offset))) | (value >> (16 - offset));
 		}
 	}
 	// TODO: check rights
@@ -502,12 +502,12 @@ static inline void x86_bitfield_insert32(x86_state_t * emu, x86_segnum_t segment
 	uint8_t buffer[5];
 	// TODO: check rights
 	x86_memory_segmented_read(emu, segment_number, address, (offset + length + 7) >> 3, buffer);
-	uint16_t mask = (1 << length) - 1;
+	uint32_t mask = ((uint32_t)1 << length) - 1;
 	value &= mask;
-	buffer[0] = (buffer[0] & (mask << offset)) | (value << offset);
+	buffer[0] = (buffer[0] & ~(mask << offset)) | (value << offset);
 	for(unsigned i = 1; i <= 2 && offset + length > 8 * i; i++)
 	{
-		buffer[i] = (buffer[i] & (mask >> (8 * i - offset))) | (value >> (8 * i - offset));
+		buffer[i] = (buffer[i] & ~(mask >> (8 * i - offset))) | (value >> (8 * i - offset));
 	}
 	// TODO: check rights
 	x86_memory_segmented_write(emu, segment_number, address, (offset + length + 7) >> 3, buffer);
@@ -538,8 +538,8 @@ static inline uint32_t x86_bitfield_extract32(x86_state_t * emu, x86_segnum_t se
 	uint8_t buffer[3];
 	// TODO: check rights
 	x86_memory_segmented_read(emu, segment_number, address, (offset + length + 7) >> 3, buffer);
-	uint16_t mask = (1 << length) - 1;
-	uint16_t value = buffer[0] >> offset;
+	uint32_t mask = ((uint32_t)1 << length) - 1;
+	uint32_t value = buffer[0] >> offset;
 	for(unsigned i = 1; i <= 2 && offset + length > 8 * i; i++)
 	{
 		value |= buffer[i] << (8 * i - offset);
