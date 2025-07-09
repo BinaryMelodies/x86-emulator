@@ -89,6 +89,14 @@ static inline void x86_segment_load_real_mode(x86_state_t * emu, x86_segnum_t se
 	{
 		emu->sr[segment].base = (uint32_t)value << 4;
 	}
+
+	if(segment == X86_R_CS)
+	{
+		// according to Robert Collins
+		emu->sr[segment].limit = 0xFFFF;
+		emu->sr[segment].access &= ~0x00400000; /* preserve default width size */
+		emu->sr[segment].access |= 0x00009300; /* read/write cpl=0 data */
+	}
 }
 
 // Forces the segment register to real mode access, useful for virtual 8086 mode
