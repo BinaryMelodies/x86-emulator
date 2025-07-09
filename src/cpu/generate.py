@@ -3222,6 +3222,12 @@ with open(outfile, 'w') as file:
 					fpu_list.append(f"(1 << X87_FPU_{fpu.upper()})")
 				feature_sequence += f"""\n\t\t\t.supported_fpu_types = {' | '.join(fpu_list)},"""
 
+			if 'prefetch-queue' in architecture:
+				feature_sequence += f"""\n\t\t\t.prefetch_queue_size = {architecture['prefetch-queue']},"""
+
+			if 'smmformat' in architecture:
+				feature_sequence += f"""\n\t\t\t.smm_format = X86_SMM_{architecture['smmformat'].upper()},"""
+
 			if 'cpuid' in featureset:
 				if 'highest_function' in architecture:
 					highest_function_number = int(architecture['highest_function'], 16)

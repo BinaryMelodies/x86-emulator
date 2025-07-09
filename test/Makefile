@@ -60,7 +60,7 @@ testact.img: testact.asm
 testpc88.img: testpc88.asm
 	nasm -fbin $< -o $@
 
-testrel.img: testrel.asm
+testrel.bin: testrel.asm
 	nasm -fbin $< -o $@
 
 .PHONY: all clean distclean

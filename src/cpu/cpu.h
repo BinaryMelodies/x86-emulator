@@ -1124,6 +1124,8 @@ struct x86_cpu_traits_t
 	x87_fpu_type_t default_fpu;
 	uint32_t supported_fpu_types;
 
+	uint8_t prefetch_queue_size; // set to 0 if CPU can detect self modifying code
+
 	x86_smm_format_t smm_format;
 
 	// CPUID
