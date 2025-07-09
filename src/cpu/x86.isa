@@ -1775,7 +1775,6 @@ $sf = _sign8(al);
 $pf = _parity(al);
 
 @instruction AAM
-$0 = 10; // set the immediate to 10
 _uint8 al = $al;
 if($0 == 0)
 {

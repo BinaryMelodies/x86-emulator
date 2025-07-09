@@ -33,9 +33,9 @@ start:
 	jne	.is_8018x_or_nec
 
 .is_808x_or_nec:
-	mov	al, 10
-	aam	8
-	cmp	al, 2
+	mov	ax, 0x0100
+	aad	8
+	cmp	al, 8
 	jne	.is_nec
 
 	mov	si, text_8086
