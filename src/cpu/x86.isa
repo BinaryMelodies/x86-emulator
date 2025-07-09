@@ -2254,7 +2254,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0 && _rep())
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -2730,7 +2730,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0)
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -2997,7 +2997,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0)
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -3150,7 +3150,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0)
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -3286,7 +3286,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0)
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -3833,7 +3833,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0 && _rep())
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -4115,7 +4115,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 		$cx.$A = cx;
 		if(cx != 0)
 		{
-			$rip = $old_rip;
+			_restart();
 			emu->emulation_result = X86_RESULT(X86_RESULT_STRING, 0);
 		}
 	}
@@ -4441,7 +4441,7 @@ if(emu->x87.fpu_type != X87_FPU_NONE)
 	_x87_int();
 	if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
 	{
-		$rip = $old_rip;
+		_restart();
 	}
 }
 

@@ -817,6 +817,9 @@ static inline uint16_t _satuluw(uint32_t value)
 */
 static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
 
+// do instruction again (for REP prefix and WAIT)
+#define _restart() do { emu->xip = emu->old_xip; emu->prefetch_queue_data_size += emu->prefetch_queue_data_offset; emu->prefetch_queue_data_offset = 0; } while(0)
+
 #include "x86.gen.c"
 
 #undef DEBUG
