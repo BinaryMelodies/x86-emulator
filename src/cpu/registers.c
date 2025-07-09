@@ -1,6 +1,12 @@
 
 //// Accessing registers
 
+static inline void x86_set_xip(x86_state_t * emu, uoff_t value)
+{
+	emu->xip = value;
+	x86_prefetch_queue_flush(emu);
+}
+
 // General purpose registers
 
 static inline uint8_t x86_register_get8_low(x86_state_t * emu, int number)
@@ -452,7 +458,7 @@ static inline uint16_t x86_flags_fix_image16(x86_state_t * emu, uint16_t flags)
 	{
 		if((flags & X86_FL_IF) != emu->_if)
 		{
-			emu->xip = emu->old_xip + 1;
+			x86_set_xip(emu, emu->old_xip + 1);
 			x86_v60_exception(emu, V60_EXC_PI);
 		}
 		if((flags & X86_FL_TF) != emu->tf)
@@ -1698,7 +1704,7 @@ static inline void x86_store_x80_registers(x86_state_t * emu)
 		x86_register_set16(emu, X86_R_CX, emu->x80.bank[emu->x80.main_bank].bc);
 		x86_register_set16(emu, X86_R_DX, emu->x80.bank[emu->x80.main_bank].de);
 		x86_register_set16(emu, X86_R_BX, emu->x80.bank[emu->x80.main_bank].hl);
-		emu->xip = emu->x80.pc;
+		x86_set_xip(emu, emu->x80.pc);
 		x86_register_set16(emu, X86_R_BP, emu->x80.sp);
 		if(x86_is_z80(emu))
 		{

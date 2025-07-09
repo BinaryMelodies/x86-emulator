@@ -1084,7 +1084,7 @@ static inline int x86_switch_task(x86_state_t * emu, uint16_t tss_selector, uint
 	{
 	case X86_DESC_TYPE_TSS16_A:
 	case X86_DESC_TYPE_TSS16_B:
-		emu->xip = x86_memory_segmented_read16(emu, X86_R_TR, 0x0E);
+		x86_set_xip(emu, x86_memory_segmented_read16(emu, X86_R_TR, 0x0E));
 		x86_flags_set16(emu, x86_memory_segmented_read16(emu, X86_R_TR, 0x10));
 		for(int register_number = 0; register_number < 8; register_number++)
 		{
@@ -1101,7 +1101,7 @@ static inline int x86_switch_task(x86_state_t * emu, uint16_t tss_selector, uint
 		break;
 	case X86_DESC_TYPE_TSS32_A:
 	case X86_DESC_TYPE_TSS32_B:
-		emu->xip = x86_memory_segmented_read32(emu, X86_R_TR, 0x20);
+		x86_set_xip(emu, x86_memory_segmented_read32(emu, X86_R_TR, 0x20));
 		x86_flags_set32(emu, x86_memory_segmented_read32(emu, X86_R_TR, 0x24));
 		for(int register_number = 0; register_number < 8; register_number++)
 		{
@@ -1271,7 +1271,7 @@ static inline void x86_jump_via_call_gate(x86_state_t * emu, uint16_t gate_selec
 	x86_check_canonical_address(emu, X86_R_CS, offset, 0);
 
 	x86_segment_load_protected_mode(emu, X86_R_CS, (segment_selector & X86_SEL_INDEX_MASK) | x86_get_cpl(emu), segment_descriptor);
-	emu->xip = offset;
+	x86_set_xip(emu, offset);
 }
 
 static inline void x86_jump_via_task_gate(x86_state_t * emu, uint16_t gate_selector, uint8_t * gate_descriptor)
@@ -1400,7 +1400,7 @@ static inline void x86_jump_far(x86_state_t * emu, uint16_t selector, uoff_t off
 	{
 		x86_segment_check_limit(emu, X86_R_CS, offset, 1, 0);
 		x86_segment_load_real_mode(emu, X86_R_CS, selector);
-		emu->xip = offset;
+		x86_set_xip(emu, offset);
 	}
 	else
 	{
@@ -1438,7 +1438,7 @@ static inline void x86_jump_far(x86_state_t * emu, uint16_t selector, uoff_t off
 				x86_descriptor_check_limit_64bit_mode(emu, X86_R_CS, descriptor, offset, 1, 0);
 
 			x86_segment_load_protected_mode(emu, X86_R_CS, (selector & X86_SEL_INDEX_MASK) | cpl, descriptor);
-			emu->xip = offset;
+			x86_set_xip(emu, offset);
 		}
 		else
 		{
@@ -1637,7 +1637,7 @@ static inline void x86_call_via_call_gate##__size(x86_state_t * emu, uint16_t ga
 	x86_push##__size(emu, emu->sr[X86_R_CS].selector); \
 	x86_push##__size(emu, emu->xip); \
 	x86_segment_load_protected_mode(emu, X86_R_CS, (segment_selector & X86_SEL_INDEX_MASK) | cpl, segment_descriptor); \
-	emu->xip = new_ip; \
+	x86_set_xip(emu, new_ip); \
 }
 
 _DEFINE_x86_call_via_call_gate(16)
@@ -1783,7 +1783,7 @@ static inline void x86_call_far##__size(x86_state_t * emu, uint16_t selector, uo
 			x86_push##__size(emu, emu->sr[X86_R_CS].selector); \
 			x86_push##__size(emu, emu->xip); \
 			x86_segment_load_real_mode(emu, X86_R_CS, selector); \
-			emu->xip = offset; \
+			x86_set_xip(emu, offset); \
 		} \
 		else \
 	)) \
@@ -1839,7 +1839,7 @@ static inline void x86_call_far##__size(x86_state_t * emu, uint16_t selector, uo
 			x86_push##__size(emu, emu->sr[X86_R_CS].selector); \
 			x86_push##__size(emu, emu->xip); \
 			x86_segment_load_protected_mode(emu, X86_R_CS, (selector & X86_SEL_INDEX_MASK) | cpl, descriptor); \
-			emu->xip = offset; \
+			x86_set_xip(emu, offset); \
 		} \
 		else \
 		{ \
@@ -2059,7 +2059,7 @@ static inline void x86_interrupt_via_gate##__size(x86_state_t * emu, int excepti
 	if(is_interrupt_gate) \
 		emu->_if = 0; \
 	x86_segment_load_protected_mode(emu, X86_R_CS, (segment_selector & X86_SEL_INDEX_MASK) | cpl, segment_descriptor); \
-	emu->xip = offset; \
+	x86_set_xip(emu, offset); \
 }
 
 _DEFINE_x86_interrupt_via_gate(16)
@@ -2117,7 +2117,7 @@ static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t 
 	x86_store_x80_registers(emu);
 	if((exception & X86_EXC_FAULT) != 0)
 	{
-		emu->xip = emu->old_xip;
+		x86_set_xip(emu, emu->old_xip);
 	}
 	if(x86_is_real_mode(emu))
 	{
@@ -2131,7 +2131,7 @@ static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t 
 		x86_push16(emu, emu->sr[X86_R_CS].selector);
 		x86_push16(emu, emu->xip);
 		x86_segment_load_real_mode(emu, X86_R_CS, x86_memory_segmented_read16(emu, X86_R_IDTR, (exception & 0xFF) * 4 + 2));
-		emu->xip = x86_memory_segmented_read16(emu, X86_R_IDTR, (exception & 0xFF) * 4);
+		x86_set_xip(emu, x86_memory_segmented_read16(emu, X86_R_IDTR, (exception & 0xFF) * 4));
 	}
 	else
 	{
@@ -2267,6 +2267,9 @@ static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t 
 
 static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int exception, uoff_t error_code)
 {
+	if(emu->prefetch_in_progress)
+		longjmp(emu->exc, 1); // simply return to the prefetch start
+
 	if(emu->cpu_type == X86_CPU_V60)
 	{
 		switch(exception & 0xFF)
@@ -2281,7 +2284,7 @@ static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int except
 			x86_v60_exception(emu, V60_EXC_I);
 			break;
 		case X86_EXC_UD:
-			emu->xip = emu->old_xip + 1;
+			x86_set_xip(emu, emu->old_xip + 1);
 			x86_v60_exception(emu, V60_EXC_RI);
 			break;
 		default:
@@ -2423,7 +2426,7 @@ static inline void x86_return_interrupt##__size(x86_state_t * emu) \
 	_IF_NOT64(__size, ( \
 		if(x86_is_real_mode(emu)) \
 		{ \
-			emu->xip = x86_pop##__size(emu); \
+			x86_set_xip(emu, x86_pop##__size(emu)); \
 			x86_segment_load_real_mode(emu, X86_R_CS, x86_pop##__size(emu)); \
  \
 			uint64_t old_flags; \
@@ -2444,7 +2447,7 @@ static inline void x86_return_interrupt##__size(x86_state_t * emu) \
 		{ \
 			if(emu->iopl == 3) \
 			{ \
-				emu->xip = x86_pop##__size(emu); \
+				x86_set_xip(emu, x86_pop##__size(emu)); \
 				x86_segment_load_real_mode(emu, X86_R_CS, x86_pop##__size(emu)); \
  \
 				uint64_t old_flags; \
@@ -2505,7 +2508,7 @@ static inline void x86_return_interrupt##__size(x86_state_t * emu) \
 					x86_segment_check_limit(emu, X86_R_SS, x86_get_stack_pointer(emu), (__size >> 3) * 9, 0); \
 					x86_segment_check_limit(emu, X86_R_CS, rip, 1, 0); \
 				)) \
-				emu->xip = rip; \
+				x86_set_xip(emu, rip); \
 				x86_segment_load_real_mode_full(emu, X86_R_CS, cs); \
 				x86_flags_set##__size(emu, flags); \
 				uoff_t esp = x86_pop##__size(emu); \
@@ -2643,7 +2646,7 @@ static inline void x86_return_interrupt##__size(x86_state_t * emu) \
 			} \
  \
 			x86_flags_set##__size(emu, flags); \
-			emu->xip = rip; \
+			x86_set_xip(emu, rip); \
 			x86_segment_load_protected_mode(emu, X86_R_CS, cs, descriptor); \
  \
 			x86_set_cpl(emu, cs); \
@@ -2689,7 +2692,7 @@ static inline void x86_return_far##__size(x86_state_t * emu, unsigned bytes) \
 		if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu)) \
 		{ \
 			x86_segment_check_limit(emu, X86_R_SS, emu->gpr[X86_R_SP] & ((1L << __size) - 1), (__size >> 3) * 2, 0); \
-			emu->xip = x86_pop##__size(emu); \
+			x86_set_xip(emu, x86_pop##__size(emu)); \
 			x86_segment_load_real_mode(emu, X86_R_CS, x86_pop##__size(emu)); \
 			_IF_16(__size, ( /* TODO: why not for 32-bit returns? */ \
 				x86_segment_check_limit(emu, X86_R_CS, emu->xip, 1, 0); \
@@ -2803,7 +2806,7 @@ static inline void x86_return_far##__size(x86_state_t * emu, unsigned bytes) \
 			)) \
 				x86_check_canonical_address(emu, X86_R_CS, rip, 0); \
  \
-			emu->xip = rip; \
+			x86_set_xip(emu, rip); \
 			x86_segment_load_protected_mode(emu, X86_R_CS, cs, descriptor); \
 			x86_set_cpl(emu, cs & X86_SEL_RPL_MASK); \
  \
@@ -2828,7 +2831,7 @@ static inline void x86_return_far##__size(x86_state_t * emu, unsigned bytes) \
 				x86_check_canonical_address(emu, X86_R_CS, rip, 0); \
  \
 			x86_stack_adjust(emu, (__size >> 3) * 2); \
-			emu->xip = rip; \
+			x86_set_xip(emu, rip); \
 			x86_segment_load_protected_mode(emu, X86_R_CS, cs, descriptor); \
 		} \
 	} \

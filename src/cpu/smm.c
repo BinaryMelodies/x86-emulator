@@ -297,7 +297,7 @@ static inline void x86_ice_storeall_286(x86_state_t * emu)
 		emu->sr[i].access = 0x9300;
 	}
 
-	emu->xip = 0xFFF0;
+	x86_set_xip(emu, 0xFFF0);
 	emu->sr[X86_R_CS].selector = 0xF000;
 	emu->sr[X86_R_CS].base = 0xFFFFF000;
 	//emu->code_writable = true;
@@ -335,7 +335,7 @@ static inline void x86_ice_loadall_286(x86_state_t * emu)
 	emu->cr[0] = (emu->cr[0] & ~0xFFFE) | x86_memory_read16(emu, 0x00804); // MSW
 	emu->sr[X86_R_TR].selector = x86_memory_read16(emu, 0x00816);
 	x86_flags_set16(emu, (x86_memory_read16(emu, 0x00818) & 0x7FD5) | 0x0002);
-	emu->xip = x86_memory_read16(emu, 0x0081A);
+	x86_set_xip(emu, x86_memory_read16(emu, 0x0081A));
 	emu->sr[X86_R_LDTR].selector = x86_memory_read16(emu, 0x0081C);
 	emu->sr[X86_R_DS].selector = x86_memory_read16(emu, 0x0081E);
 	emu->sr[X86_R_SS].selector = x86_memory_read16(emu, 0x00820);
@@ -408,7 +408,7 @@ static inline void x86_ice_storeall_386(x86_state_t * emu, uaddr_t offset)
 		emu->sr[i].access = 0x00409300;
 	}
 
-	emu->xip = 0xFFF0;
+	x86_set_xip(emu, 0xFFF0);
 	emu->sr[X86_R_CS].selector = 0xF000;
 	emu->sr[X86_R_CS].base = 0xFFFFF000;
 	//emu->code_writable = true;
@@ -469,7 +469,7 @@ static inline void x86_ice_loadall_386(x86_state_t * emu, uaddr_t offset)
 {
 	emu->cr[0] = x86_memory_read32(emu, offset + 0x00);
 	x86_flags_set32(emu, x86_memory_read32(emu, offset + 0x04));
-	emu->xip = x86_memory_read32(emu, offset + 0x08);
+	x86_set_xip(emu, x86_memory_read32(emu, offset + 0x08));
 	emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset + 0x0C);
 	emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset + 0x10);
 	emu->gpr[X86_R_BP] = x86_memory_read32(emu, offset + 0x14);
@@ -1008,7 +1008,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 		emu->sr[X86_R_CS].selector = 0x3000;
 		emu->sr[X86_R_CS].base = 0x30000;
 		emu->sr[X86_R_CS].access = X86_DESC_R | X86_DESC_X | X86_DESC_S | X86_DESC_P | X86_DESC_G;
-		emu->xip = 0x8000;
+		x86_set_xip(emu, 0x8000);
 		break;
 	case X86_SMM_P5:
 		emu->cpu_level = X86_LEVEL_SMM;
@@ -1030,7 +1030,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 		emu->sr[X86_R_CS].selector = 0x3000;
 		emu->sr[X86_R_CS].base = emu->smbase;
 		emu->sr[X86_R_CS].access = X86_DESC_R | X86_DESC_X | X86_DESC_S | X86_DESC_P | X86_DESC_G;
-		emu->xip = 0x8000;
+		x86_set_xip(emu, 0x8000);
 		break;
 	case X86_SMM_P6:
 	case X86_SMM_P4:
@@ -1054,7 +1054,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 		emu->sr[X86_R_CS].selector = emu->smbase >> 4;
 		emu->sr[X86_R_CS].base = emu->smbase;
 		emu->sr[X86_R_CS].access = X86_DESC_R | X86_DESC_X | X86_DESC_S | X86_DESC_P | X86_DESC_G;
-		emu->xip = 0x8000;
+		x86_set_xip(emu, 0x8000);
 		break;
 	case X86_SMM_K5:
 		emu->cpu_level = X86_LEVEL_SMM;
@@ -1077,7 +1077,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 		emu->sr[X86_R_CS].selector = 0x3000;
 		emu->sr[X86_R_CS].base = emu->smbase;
-		emu->xip = 0x8000;
+		x86_set_xip(emu, 0x8000);
 		break;
 	case X86_SMM_K6:
 		// TODO: check
@@ -1101,7 +1101,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 		emu->sr[X86_R_CS].selector = emu->smbase >> 4;
 		emu->sr[X86_R_CS].base = emu->smbase;
-		emu->xip = 0x8000;
+		x86_set_xip(emu, 0x8000);
 		break;
 
 	// Intel and AMD CPUs (64-bit)
@@ -1127,7 +1127,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 		emu->sr[X86_R_CS].selector = emu->smbase >> 4;
 		emu->sr[X86_R_CS].base = emu->smbase;
-		emu->xip = 0x8000;
+		x86_set_xip(emu, 0x8000);
 		break;
 
 	// Cyrix CPUs and derivatives (32-bit)
@@ -1140,7 +1140,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 		// Note: documentation refers to arr[3] as ARR4, but the I/O addresses are in the same location as in later CPUs
 		emu->sr[X86_R_CS].selector = emu->arr[3] & 0xFFF0;
 		emu->sr[X86_R_CS].base = (emu->arr[3] & 0xFFF0) << 12;
-		emu->xip = 0;
+		x86_set_xip(emu, 0);
 		break;
 	case X86_SMM_5X86:
 		emu->cpu_level = X86_LEVEL_SMM;
@@ -1150,7 +1150,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 		emu->sr[X86_R_CS].selector = emu->arr[3] & 0xFFF0;
 		emu->sr[X86_R_CS].base = (emu->arr[3] & 0xFFFFF0) << 12;
-		emu->xip = 0;
+		x86_set_xip(emu, 0);
 		break;
 	case X86_SMM_M2:
 		attributes.nested_smi = emu->cpu_level == X86_LEVEL_SMM;
@@ -1161,7 +1161,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 		emu->sr[X86_R_CS].selector = emu->arr[3] & 0xFFF0;
 		emu->sr[X86_R_CS].base = (emu->arr[3] & 0xFFFFF0) << 12;
-		emu->xip = 0;
+		x86_set_xip(emu, 0);
 		break;
 	case X86_SMM_MEDIAGX:
 		attributes.nested_smi = emu->cpu_level == X86_LEVEL_SMM;
@@ -1172,7 +1172,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 		emu->sr[X86_R_CS].selector = emu->arr[3] & 0xFFF0;
 		emu->sr[X86_R_CS].base = (emu->arr[3] & 0xFFFFF0) << 12;
-		emu->xip = 0;
+		x86_set_xip(emu, 0);
 		break;
 	case X86_SMM_GX2:
 		attributes.nested_smi = emu->cpu_level == X86_LEVEL_SMM;
@@ -1191,7 +1191,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 			emu->sr[X86_R_CS].limit = emu->smm.limit | 0xFFF;
 			emu->sr[X86_R_CS].access |= X86_DESC_G;
 		}
-		emu->xip = 0;
+		x86_set_xip(emu, 0);
 		break;
 	}
 }
@@ -1224,7 +1224,7 @@ static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 		emu->cr[4] = x86_memory_read32(emu, offset - 0x8000 + 0x7F28);
 		if((emu->smm_revision_identifier & SMM_REVID_IO_RESTART) != 0 && x86_memory_read8(emu, offset - 0x8000 + 0x7F00, 0) == 0xFF)
 		{
-			emu->xip = x86_memory_read32(emu, offset - 0x8000 + 0x7F10);
+			x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7F10));
 			emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F1C);
 			emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7F18);
 			emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F14);

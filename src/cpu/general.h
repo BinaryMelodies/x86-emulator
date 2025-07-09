@@ -1,6 +1,8 @@
 
 // registers
 
+static inline void x86_set_xip(x86_state_t * emu, uoff_t value);
+
 static inline uint16_t x86_register_get16(x86_state_t * emu, int number);
 static inline uint32_t x86_register_get32(x86_state_t * emu, int number);
 static inline uint64_t x86_register_get64(x86_state_t * emu, int number);
@@ -88,6 +90,9 @@ static inline uint32_t x86_memory_segmented_read32_exec(x86_state_t * emu, x86_s
 
 static inline void x86_input(x86_state_t * emu, uint16_t port, uint16_t count, void * buffer);
 static inline void x86_output(x86_state_t * emu, uint16_t port, uint16_t count, const void * buffer);
+
+static inline void x86_prefetch_queue_flush(x86_state_t * emu);
+static inline void x86_prefetch_queue_fill(x86_state_t * emu);
 
 // smm
 
@@ -181,7 +186,7 @@ static inline noreturn void x86_v60_exception(x86_state_t * emu, int exception)
 static inline noreturn void x86_ia64_intercept(x86_state_t * emu, int exception)
 {
 	// TODO
-	emu->xip = emu->old_xip;
+	x86_set_xip(emu, emu->old_xip);
 	emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception);
 	longjmp(emu->exc, 1);
 	for(;;);

@@ -242,12 +242,12 @@ void x86_reset(x86_state_t * emu, bool reset)
 
 	if(emu->cpu_type < X86_CPU_286)
 	{
-		emu->xip = 0x0000;
+		x86_set_xip(emu, 0x0000);
 		emu->sr[X86_R_CS].selector = 0xFFFF;
 	}
 	else
 	{
-		emu->xip = 0xFFF0;
+		x86_set_xip(emu, 0xFFF0);
 		emu->sr[X86_R_CS].selector = 0xF000;
 	}
 
@@ -621,6 +621,9 @@ void x86_reset(x86_state_t * emu, bool reset)
 		emu->bnd[i].lower_bound = emu->bnd[i].upper_bound = 0;
 	}
 	emu->bndcfgs = emu->bndcfgu = emu->bndstatus = 0;
+
+	emu->prefetch_in_progress = false;
+	x86_prefetch_queue_flush(emu);
 
 	emu->state = X86_STATE_RUNNING;
 }
@@ -1145,6 +1148,8 @@ x86_result_t x80_step(x80_state_t * emu, x86_state_t * emu86)
 
 x86_result_t x86_step(x86_state_t * emu)
 {
+	x86_prefetch_queue_fill(emu);
+
 	emu->emulation_result = X86_RESULT(X86_RESULT_SUCCESS, 0);
 
 	switch(emu->state)
@@ -1262,6 +1267,8 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 		prs->ip_relative = false;
 		x86_parse(prs, NULL, true, false);
 		prs->current_position = old_xip; // TODO
+
+		emu->prefetch_queue_data_offset = 0; // reset the prefetch queue to the starting position
 	}
 }
 

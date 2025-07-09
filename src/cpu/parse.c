@@ -669,7 +669,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 		x86_push8(emu, emu->sr[X86_R_CS].selector); \
 		x86_push8(emu, emu->xip); \
 		x86_segment_load_real_mode(emu, X86_R_CS, seg); \
-		emu->xip = off; \
+		x86_set_xip(emu, off); \
 	} while(0)
 #define _callf16(seg, off) x86_call_far16(emu, seg, off)
 #define _callf32(seg, off) x86_call_far32(emu, seg, off)
@@ -713,7 +713,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 			{ \
 				if((emu->x87.sw & X87_SW_B) != 0) \
 				{ \
-					emu->xip = emu->old_xip; \
+					x86_set_xip(emu, emu->old_xip); \
 					return; \
 				} \
 			} \

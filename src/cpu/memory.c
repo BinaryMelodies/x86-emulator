@@ -579,10 +579,8 @@ static inline void x86_memory_read_system(x86_state_t * emu, uaddr_t address, ua
 }
 
 // Used for instruction fetches, this is needed for V25 that does not use its internal memory for instruction fetches
-static inline void x86_memory_read_exec(x86_state_t * emu, uaddr_t address, uaddr_t count, void * buffer)
+static inline void x86_memory_read_prefetch(x86_state_t * emu, uaddr_t address, uaddr_t count, void * buffer)
 {
-	x86_check_breakpoints(emu, X86_ACCESS_EXECUTE, address, count);
-
 	while(count > 0)
 	{
 		uoff_t actual_length;
@@ -594,6 +592,27 @@ static inline void x86_memory_read_exec(x86_state_t * emu, uaddr_t address, uadd
 		buffer += actual_length;
 		count -= actual_length;
 	}
+}
+
+// Used for instruction fetches, this is needed for V25 that does not use its internal memory for instruction fetches
+static inline void x86_memory_read_exec(x86_state_t * emu, uaddr_t address, uaddr_t count, void * buffer)
+{
+	x86_check_breakpoints(emu, X86_ACCESS_EXECUTE, address, count);
+
+	if(emu->prefetch_queue_data_size > 0)
+	{
+		uaddr_t queue_count = count;
+		if(queue_count > emu->prefetch_queue_data_size)
+			queue_count = emu->prefetch_queue_data_size;
+		memcpy(buffer, &emu->prefetch_queue[emu->prefetch_queue_data_offset], queue_count);
+		emu->prefetch_queue_data_offset += queue_count;
+		emu->prefetch_queue_data_size -= queue_count;
+		address += queue_count;
+		buffer += queue_count;
+		count -= queue_count;
+	}
+
+	x86_memory_read_prefetch(emu, address, count, buffer);
 }
 
 void x86_memory_write(x86_state_t * emu, uaddr_t address, uaddr_t count, const void * buffer)
@@ -629,6 +648,50 @@ static inline void x86_memory_write_system(x86_state_t * emu, uaddr_t address, u
 		buffer += actual_length;
 		count -= actual_length;
 	}
+}
+
+// prefetch queue handling
+
+static inline void x86_prefetch_queue_flush(x86_state_t * emu)
+{
+	emu->prefetch_queue_data_size = 0;
+	emu->prefetch_queue_data_offset = 0;
+	emu->prefetch_pointer = emu->xip;
+}
+
+// Note: this must be called before processing any other instruction
+static inline void x86_prefetch_queue_fill(x86_state_t * emu)
+{
+	if(emu->xip + emu->prefetch_queue_data_size != emu->prefetch_pointer)
+	{
+		// invalid prefetch data, start from scratch
+		x86_prefetch_queue_flush(emu);
+	}
+
+	if(emu->prefetch_queue_data_offset != 0 && emu->prefetch_queue_data_size != 0)
+	{
+		memcpy(&emu->prefetch_queue[0], &emu->prefetch_queue[emu->prefetch_queue_data_offset], emu->prefetch_queue_data_size);
+		emu->prefetch_queue_data_offset = 0;
+	}
+
+	emu->prefetch_in_progress = true;
+
+	if(setjmp(emu->exc) == 0)
+	{
+		while(emu->prefetch_queue_data_size < emu->cpu_traits.prefetch_queue_size)
+		{
+			// TODO: memory wrapping
+			x86_memory_read_prefetch(emu,
+				x86_memory_segmented_to_linear(emu, X86_R_CS, emu->prefetch_pointer),
+				1,
+				&emu->prefetch_queue[emu->prefetch_queue_data_offset + emu->prefetch_queue_data_size]);
+
+			emu->prefetch_queue_data_size++;
+			emu->prefetch_pointer++;
+		}
+	}
+
+	emu->prefetch_in_progress = false;
 }
 
 static inline void x86_memory_segmented_read_exec(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uaddr_t count, void * buffer)

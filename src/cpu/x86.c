@@ -5,7 +5,7 @@ static inline void x86_jump(x86_state_t * emu, uaddr_t value)
 {
 	x86_segment_check_limit(emu, X86_R_CS, value, 1, 0);
 	x86_check_canonical_address(emu, X86_R_CS, value, 0);
-	emu->xip = value;
+	x86_set_xip(emu, value);
 }
 
 static inline void x86_advance_ip(x86_state_t * emu, size_t count)

@@ -3443,6 +3443,14 @@ break;
 			x86_debug(stderr, emu);
 			if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 				x80_debug(stderr, &emu->x80);
+			if(emu->cpu_traits.prefetch_queue_size > 0)
+			{
+				fprintf(stderr, "Bytes left in queue: %d, IP=%08lX, prefetch: %08lX",
+					emu->prefetch_queue_data_size, emu->xip, emu->prefetch_pointer);
+				for(uint8_t pointer = 0; pointer < emu->prefetch_queue_data_size; pointer++)
+					fprintf(stderr, " %02X", emu->prefetch_queue[emu->prefetch_queue_data_offset + pointer]);
+				fprintf(stderr, "\n");
+			}
 //			printf("%X\n", x86_memory_segmented_read16(emu, X86_R_CS, emu->xip));
 			if(option_debug && !continuous)
 			{

@@ -2146,7 +2146,7 @@ $df = 0;
 @instruction CLI
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 if((emu->cr[0] & X86_CR0_PE) == 0 || emu->iopl >= $cpl)
@@ -2494,7 +2494,7 @@ $sp.$S = $sp.$S - $0;
 
 @instruction exit_v20_emulation
 @comment NEC specific
-emu->xip = emu->old_xip + 1;
+x86_set_xip(emu, emu->old_xip + 1);
 x86_v60_exception(emu, V60_EXC_RI);
 
 @instruction EXT
@@ -2531,7 +2531,7 @@ default:
 @instruction HLT
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 if(x86_is_ia64(emu))
@@ -2666,7 +2666,7 @@ $0.$O = _low$Odup(result);
 @instruction IN|op1=ub
 if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
@@ -2676,7 +2676,7 @@ $0.$O = _input$O($1.w);
 @instruction IN|op1=dx
 if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
@@ -2705,7 +2705,7 @@ if((offset + length) >= 16)
 @instruction INS|cnt=0
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
@@ -2739,7 +2739,7 @@ if(emu->parser->rep_prefix == X86_PREF_NOREP || $cx.$A != 0)
 @instruction INT
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 if(x86_is_ia64(emu))
@@ -2752,7 +2752,7 @@ x86_trigger_interrupt(emu, X86_EXC_DB | X86_EXC_INT1, 0);
 @instruction INT3
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 x86_trigger_interrupt(emu, X86_EXC_BP | X86_EXC_INT_SW, 0); /* note: fixed */
@@ -2784,7 +2784,7 @@ PRIVILEGED();
 @instruction IRET
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 if(x86_is_ia64(emu))
@@ -3241,7 +3241,7 @@ $pf = _parity(z);
 @instruction OUT|op0=ub
 if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
@@ -3251,7 +3251,7 @@ _output$O($0.w, $1.$O);
 @instruction OUT|op0=dx
 if(emu->cpu_type == X86_CPU_V60 && emu->v60_ctl == 0)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
@@ -3261,7 +3261,7 @@ _output$O($0.w, $1.$O);
 @instruction OUTS
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 IO_PRIVILEGED();
@@ -4070,7 +4070,7 @@ $df = X86_FL_DF;
 @instruction STI
 if(emu->cpu_type == X86_CPU_V60)
 {
-	emu->xip = emu->old_xip + 1;
+	x86_set_xip(emu, emu->old_xip + 1);
 	x86_v60_exception(emu, V60_EXC_PI);
 }
 if(x86_is_ia64(emu))
