@@ -3445,6 +3445,8 @@ break;
 				x80_debug(stderr, &emu->x80);
 			if(emu->cpu_traits.prefetch_queue_size > 0)
 			{
+				// TODO: prefetch queue should be filled after the instruction has been parsed, but before it is executed
+				// unfortunately, this cannot be done together with the way string instructions are implemented (by resetting IP to the start each time)
 				fprintf(stderr, "Bytes left in queue: %d, IP=%08lX, prefetch: %08lX",
 					emu->prefetch_queue_data_size, emu->xip, emu->prefetch_pointer);
 				for(uint8_t pointer = 0; pointer < emu->prefetch_queue_data_size; pointer++)
