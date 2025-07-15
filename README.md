@@ -49,6 +49,7 @@ The file testv20.asm requires the [i8080.inc macro package](https://github.com/B
 Very little of the code has been tested.
 The tests included show that some very basic tasks are possible:
 
+* Intel 8088 single step test suite passes for documented flags
 * Switching into protected mode and long mode
 * NEC specific instructions
     * V20: 8080 emulation
@@ -57,6 +58,7 @@ The tests included show that some very basic tasks are possible:
     * V55: register banks and extended segments
 * Having a separate or integrated x87 coprocessor
 * Testing for early CPU types (8086/80286, etc.)
+* Simplistic instruction cache, sufficient to distinguish between an 8086 and an 8088
 * Simple CPUID instructions
 * Simplistic text mode and keyboard interrupt emulation for several 8086 based computers
 * Several computer types:
@@ -78,6 +80,8 @@ The ICE and SMM modes have not been tested yet.
 Much of SMM is still missing.
 There are many machine specific registers, instructions and behavior (for example, CPUID) that is missing.
 Some information is lacking (for example, segment descriptor cache formats, VIA 64-bit implementation details).
+Very little is known about the NEC µPD9002, the emulator attempts to simulate a full Z80 instruction set.
+Some preliminary code is available for handling the Intel 8086/8088 internal registers, but most of it is not yet implemented.
 
 # Acknowledgements
 

@@ -1149,8 +1149,6 @@ x86_result_t x80_step(x80_state_t * emu, x86_state_t * emu86)
 
 x86_result_t x86_step(x86_state_t * emu)
 {
-	//x86_prefetch_queue_fill(emu); // TODO: move into the parsing
-
 	emu->emulation_result = X86_RESULT(X86_RESULT_SUCCESS, 0);
 
 	switch(emu->state)
