@@ -818,7 +818,36 @@ static inline uint16_t _satuluw(uint32_t value)
 static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
 
 // do instruction again (for REP prefix and WAIT)
-#define _restart() do { emu->xip = emu->old_xip; emu->prefetch_queue_data_size += emu->prefetch_queue_data_offset; emu->prefetch_queue_data_offset = 0; } while(0)
+#define _restart() \
+	do { \
+		emu->restarted_instruction.xip_afterwards = emu->xip; \
+		emu->restarted_instruction.opcode = opcode; \
+		emu->restarted_instruction.operation_size = emu->parser->operation_size; \
+		emu->restarted_instruction.address_size = emu->parser->address_size; \
+		emu->restarted_instruction.source_segment = emu->parser->source_segment; \
+		emu->restarted_instruction.destination_segment = emu->parser->destination_segment; \
+		emu->restarted_instruction.rep_prefix = emu->parser->rep_prefix; \
+		emu->xip = emu->old_xip; \
+		emu->prefetch_queue_data_size += emu->prefetch_queue_data_offset; \
+		emu->prefetch_queue_data_offset = 0; \
+	} while(0)
+
+// reload instruction data before running (for REP prefix and WAIT)
+#define _resume() \
+	do { \
+		if(execute && emu->restarted_instruction.opcode != 0) \
+		{ \
+			opcode = emu->restarted_instruction.opcode; \
+			emu->xip = emu->restarted_instruction.xip_afterwards; \
+			emu->parser->operation_size = emu->restarted_instruction.operation_size; \
+			emu->parser->address_size = emu->restarted_instruction.address_size; \
+			emu->parser->source_segment = emu->restarted_instruction.source_segment; \
+			emu->parser->destination_segment = emu->restarted_instruction.destination_segment; \
+			emu->parser->rep_prefix = emu->restarted_instruction.rep_prefix; \
+			emu->restarted_instruction.opcode = 0; \
+			goto resume; \
+		} \
+	} while(0)
 
 #include "x86.gen.c"
 

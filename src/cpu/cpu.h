@@ -2117,6 +2117,20 @@ struct x86_state_t
 	bool prefetch_in_progress; // set to true to avoid generating interrupts for prefetch
 	uoff_t prefetch_pointer; // offset (within CS) of next byte to fetch
 
+	// structure to restart a REP or WAIT instruction
+	struct
+	{
+		// must be 0 or one of 6C-6F, 9B, A4-A7, AA-AF
+		uint8_t opcode;
+		uoff_t xip_afterwards;
+		x86_operation_size_t operation_size;
+		x86_operation_size_t address_size;
+		x86_segnum_t source_segment;
+		x86_segnum_t source_segment3;
+		x86_segnum_t destination_segment;
+		x86_rep_prefix_t rep_prefix;
+	} restarted_instruction;
+
 	bool option_disassemble; // set to true to fill parser->debug_output with a disassembled instruction
 };
 

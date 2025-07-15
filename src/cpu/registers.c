@@ -3,6 +3,7 @@
 
 static inline void x86_set_xip(x86_state_t * emu, uoff_t value)
 {
+	emu->restarted_instruction.opcode = 0;
 	emu->xip = value;
 	x86_prefetch_queue_flush(emu);
 }

@@ -6,6 +6,8 @@
 start:
 	std
 
+	push	ds
+	pop	es
 	mov	dx, 1
 	mov	di, end_label
 	mov	al, 0x90 ; NOP instruction
@@ -22,7 +24,7 @@ end_label:
 	nop
 
 	test	dx, dx
-	jz	.is_8088
+	jnz	.is_8088
 
 .is_8086:
 	mov	si, text_8086

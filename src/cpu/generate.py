@@ -2423,6 +2423,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 			if entry.kwds['mnem'] != 'ESC':
 				print_file(f"{indent1}if(!execute)", file = file)
 				print_file(f"{indent1}\treturn;", file = file)
+				print_file(f"{indent1}x86_prefetch_queue_fill(emu);", file = file)
 
 			if modrm == 'mem':
 				# Needed to fix IP-relative addresses
@@ -2956,7 +2957,9 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 
 		if mode == '32':
 			if len(path) == 0:
-				print_file(indent + f"switch((opcode = x86_translate_opcode(prs, x86_fetch8(prs, emu))))", file = file)
+				print_file(indent + f"opcode = x86_translate_opcode(prs, x86_fetch8(prs, emu));", file = file)
+				print_file(f"resume:", file = file)
+				print_file(indent + f"switch(opcode)", file = file)
 			else:
 				print_file(indent + f"switch((opcode = x86_fetch8(prs, emu)))", file = file)
 		elif mode == '8':
@@ -3049,6 +3052,7 @@ with open(outfile, 'w') as fp:
 	print_file("\tuint8_t opcode;", file = fp)
 	print_file("\tuoff_t opcode_offset;", file = fp)
 	print_file("restart:", file = fp)
+	print_file("\t_resume();", file = fp)
 	print_file("\topcode_offset = prs->current_position;", file = fp)
 	print_switch('32', Path(), '\t', file = fp)
 	print_file("}", file = fp)
