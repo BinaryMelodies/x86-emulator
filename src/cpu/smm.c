@@ -300,7 +300,6 @@ static inline void x86_ice_storeall_286(x86_state_t * emu)
 	x86_set_xip(emu, 0xFFF0);
 	emu->sr[X86_R_CS].selector = 0xF000;
 	emu->sr[X86_R_CS].base = 0xFFFFF000;
-	//emu->code_writable = true;
 
 //	emu->sr[X86_R_GDTR].base = 0;
 //	emu->sr[X86_R_GDTR].limit = 0xFFFF;
@@ -411,7 +410,6 @@ static inline void x86_ice_storeall_386(x86_state_t * emu, uaddr_t offset)
 	x86_set_xip(emu, 0xFFF0);
 	emu->sr[X86_R_CS].selector = 0xF000;
 	emu->sr[X86_R_CS].base = 0xFFFFF000;
-	//emu->code_writable = true;
 
 	emu->sr[X86_R_GDTR].base = 0;
 	emu->sr[X86_R_GDTR].limit = 0xFFFF;

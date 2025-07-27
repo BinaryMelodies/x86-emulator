@@ -1873,8 +1873,6 @@ struct x86_state_t
 	x86_execution_state_t state;
 	/* Current privilege level, stored separately because different CPU types store it in different places */
 	int cpl;
-	/* Whether code segment is writable */
-	//bool code_writable;
 
 	union
 	{
