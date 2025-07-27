@@ -910,8 +910,16 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	// Intel
 	case X86_R_TR1:
 		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5; // TODO: or WinChip
+	//case X86_R_MSR_TEST_DATA: // Cyrix
+		// TODO
 	case X86_R_TR2:
+	//case X86_R_MSR_TEST_ADDRESS:
 	case X86_R_TR3:
+	//case X86_R_MSR_COMMAND_STATUS:
+		if(emu->cpu_type == X86_CPU_CYRIX)
+			return false; // TODO
+		else
+			return x86_cpuid_get_family_id(&emu->cpu_traits) == 5;
 	case X86_R_TR4:
 	case X86_R_TR5:
 	case X86_R_TR6:
@@ -920,18 +928,77 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	case X86_R_TR9:
 	case X86_R_TR10:
 	case X86_R_TR11:
+		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5;
 	case X86_R_TR12:
 		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5; // TODO: or AMD k6 only or WinChip
-
-	case X86_R_TSC:
-		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_TSC) != 0;
+	//case X86_R_CESR:
+		// TODO
+	//case X86_R_CTR0:
+		// TODO
+	//case X86_R_CTR1:
+		// TODO
+	//case X86_R_APIC_BASE:
+		// TODO
+	//case X86_R_EBL_CR_POWERON:
+		// TODO
+	//case X86_R_K5_AAR:
+		// TODO
+	//case X86_R_K5_HWCR:
+		// TODO
+	//case X86_R_SMBASE:
+		// TODO
+	//case X86_R_PERFCTR0:
+		// TODO
+	//case X86_R_PERFCTR1:
+		// TODO
+	//case X86_R_FCR_WINCHIP:
+		// TODO
+	//case X86_R_FCR1_WINCHIP:
+		// TODO
+	//case X86_R_FCR2_WINCHIP:
+		// TODO
+	//case X86_R_FCR3_WINCHIP:
+		// TODO
+	//case X86_R_BBL_CR_CTL3:
+		// TODO
+	//case X86_R_TSC:
+		// TODO
 	case X86_R_SYSENTER_CS:
-		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
 	case X86_R_SYSENTER_ESP:
 	case X86_R_SYSENTER_EIP:
 		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
+	//case X86_R_MCG_CAP:
+		// TODO
+	//case X86_R_MCG_STATUS:
+		// TODO
+	//case X86_R_MCG_CTL:
+		// TODO
+	//case X86_R_PERFEVTSEL0:
+		// TODO
+	//case X86_R_PERFEVTSEL1:
+		// TODO
+	//case X86_R_DEBUGCTL:
+		// TODO
+	//case X86_R_LASTBRANCH_TOS:
+		// TODO
+	//case X86_R_LASTBRANCHFROMIP:
+		// TODO
+	//case X86_R_LASTBRANCHTOIP:
+		// TODO
+	//case X86_R_LER_FROM_IP:
+		// TODO
+	//case X86_R_LER_TO_IP:
+		// TODO
+	//case X86_R_LER_INFO:
+		// TODO
 	case X86_R_BNDCFGS:
 		return (emu->cpu_traits.cpuid7_0.ebx & X86_CPUID7_0_EBX_MPX) != 0;
+	//case X86_R_FCR:
+		// TODO
+	//case X86_R_FCR1:
+		// TODO
+	//case X86_R_FCR2:
+		// TODO
 
 	// Cyrix
 	case X86_R_GX2_PCR:
@@ -965,12 +1032,22 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 		{
 			return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 		}
+	//case X86_R_UWCCR:
+		// TODO
+	//case X86_R_PSOR:
+		// TODO
+	//case X86_R_PFIR:
+		// TODO
+	//case X86_R_L2AAR:
+		// TODO
 	case X86_R_FS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 	case X86_R_GS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 	case X86_R_KERNEL_GS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
+	//case X86_R_TSC_AUX:
+		// TODO
 	default:
 		return false;
 	}
@@ -986,10 +1063,20 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 	// Intel
 	case X86_R_TR1:
 		return emu->tr386[0]; // to accomodate hole between TR1 and TR2
+	case X86_R_MSR_TEST_DATA: // Cyrix
+		return emu->cyrix_test_data;
 	case X86_R_TR2:
-		return emu->tr386[2];
+	//case X86_R_MSR_TEST_ADDRESS:
+		if(emu->cpu_type == X86_CPU_CYRIX)
+			return emu->cyrix_test_address;
+		else
+			return emu->tr386[2];
 	case X86_R_TR3:
-		return emu->tr386[3];
+	//case X86_R_MSR_COMMAND_STATUS:
+		if(emu->cpu_type == X86_CPU_CYRIX)
+			return emu->cyrix_command_status;
+		else
+			return emu->tr386[3];
 	case X86_R_TR4:
 		return emu->tr386[4];
 	case X86_R_TR5:
@@ -1008,17 +1095,76 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->tr386[11];
 	case X86_R_TR12:
 		return emu->tr386[12];
-
 	case X86_R_TSC:
 		return emu->tsc;
+	case X86_R_CESR:
+		return emu->msr_cesr;
+	case X86_R_CTR0:
+		return emu->msr_ctr0;
+	case X86_R_CTR1:
+		return emu->msr_ctr1;
+	case X86_R_APIC_BASE:
+		return emu->apic_base;
+	case X86_R_EBL_CR_POWERON:
+		return emu->msr_ebl_cr_poweron;
+	case X86_R_K5_AAR:
+		return emu->msr_k5_aar;
+	case X86_R_K5_HWCR:
+		return emu->msr_k5_hwcr;
+	case X86_R_SMBASE:
+		return emu->smbase;
+	case X86_R_PERFCTR0:
+		return emu->msr_perfctr0;
+	case X86_R_PERFCTR1:
+		return emu->msr_perfctr1;
+	case X86_R_FCR_WINCHIP:
+		return emu->msr_fcr;
+	case X86_R_FCR1_WINCHIP:
+		return emu->msr_fcr1;
+	case X86_R_FCR2_WINCHIP:
+		return emu->msr_fcr2;
+	case X86_R_FCR3_WINCHIP:
+		return emu->msr_fcr3;
+	case X86_R_BBL_CR_CTL3:
+		return emu->msr_bbl_cr_ctl3;
 	case X86_R_SYSENTER_CS:
 		return emu->sysenter_cs;
 	case X86_R_SYSENTER_ESP:
 		return emu->sysenter_esp;
 	case X86_R_SYSENTER_EIP:
 		return emu->sysenter_eip;
+	case X86_R_MCG_CAP:
+		return emu->mcg_cap;
+	case X86_R_MCG_STATUS:
+		return emu->mcg_status;
+	case X86_R_MCG_CTL:
+		return emu->mcg_ctl;
+	case X86_R_PERFEVTSEL0:
+		return emu->perfevtsel0;
+	case X86_R_PERFEVTSEL1:
+		return emu->perfevtsel1;
+	case X86_R_DEBUGCTL:
+		return emu->debugctl;
+	case X86_R_LASTBRANCH_TOS:
+		return emu->msr_lastbranch_tos;
+	case X86_R_LASTBRANCHFROMIP:
+		return emu->msr_lastbranchfromip;
+	case X86_R_LASTBRANCHTOIP:
+		return emu->msr_lastbranchtoip;
+	case X86_R_LER_FROM_IP:
+		return emu->ler_from_ip;
+	case X86_R_LER_TO_IP:
+		return emu->ler_to_ip;
+	case X86_R_LER_INFO:
+		return emu->ler_info;
 	case X86_R_BNDCFGS:
 		return emu->bndcfgs;
+	case X86_R_FCR:
+		return emu->msr_fcr;
+	case X86_R_FCR1:
+		return emu->msr_fcr1;
+	case X86_R_FCR2:
+		return emu->msr_fcr2;
 
 	// Cyrix
 	case X86_R_GX2_PCR:
@@ -1047,12 +1193,23 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->cstar;
 	case X86_R_SF_MASK:
 		return emu->sf_mask;
+	case X86_R_UWCCR:
+		return emu->msr_uwccr;
+	case X86_R_PSOR:
+		return emu->msr_psor;
+	case X86_R_PFIR:
+		return emu->msr_pfir;
+	case X86_R_L2AAR:
+		return emu->msr_l2aar;
 	case X86_R_FS_BASE:
 		return emu->sr[X86_R_FS].base;
 	case X86_R_GS_BASE:
 		return emu->sr[X86_R_GS].base;
 	case X86_R_KERNEL_GS_BASE:
 		return emu->kernel_gs_base;
+	case X86_R_TSC_AUX:
+		return emu->tsc_aux;
+
 	default:
 		assert(false);
 	}
@@ -1069,11 +1226,22 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_TR1:
 		emu->tr386[0] = value; // to accomodate hole between TR1 and TR2
 		break;
+	case X86_R_MSR_TEST_DATA: // Cyrix
+		emu->cyrix_test_data = value;
+		break;
 	case X86_R_TR2:
-		emu->tr386[2] = value;
+	//case X86_R_MSR_TEST_ADDRESS:
+		if(emu->cpu_type == X86_CPU_CYRIX)
+			emu->cyrix_test_address = value;
+		else
+			emu->tr386[2] = value;
 		break;
 	case X86_R_TR3:
-		emu->tr386[3] = value;
+	//case X86_R_MSR_COMMAND_STATUS:
+		if(emu->cpu_type == X86_CPU_CYRIX)
+			emu->cyrix_command_status = value;
+		else
+			emu->tr386[3] = value;
 		break;
 	case X86_R_TR4:
 		emu->tr386[4] = value;
@@ -1102,12 +1270,72 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_TR12:
 		emu->tr386[12] = value;
 		break;
-
 	case X86_R_TSC:
 		emu->tsc = value;
 		break;
+
+	case X86_R_CESR:
+		// TODO
+		emu->msr_cesr = value;
+		break;
+	case X86_R_CTR0:
+		// TODO
+		emu->msr_ctr0 = value;
+		break;
+	case X86_R_CTR1:
+		// TODO
+		emu->msr_ctr1 = value;
+		break;
+	case X86_R_APIC_BASE:
+		// TODO
+		emu->apic_base = value;
+		break;
+	case X86_R_EBL_CR_POWERON:
+		// TODO
+		emu->msr_ebl_cr_poweron = value;
+		break;
+	case X86_R_K5_AAR:
+		// TODO
+		emu->msr_k5_aar = value;
+		break;
+	case X86_R_K5_HWCR:
+		// TODO
+		emu->msr_k5_hwcr = value;
+		break;
+	case X86_R_SMBASE:
+		// TODO
+		emu->smbase = value;
+		break;
+	case X86_R_PERFCTR0:
+		// TODO
+		emu->msr_perfctr0 = value;
+		break;
+	case X86_R_PERFCTR1:
+		// TODO
+		emu->msr_perfctr1 = value;
+		break;
+	case X86_R_FCR_WINCHIP:
+		// TODO
+		emu->msr_fcr = value;
+		break;
+	case X86_R_FCR1_WINCHIP:
+		// TODO
+		emu->msr_fcr1 = value;
+		break;
+	case X86_R_FCR2_WINCHIP:
+		// TODO
+		emu->msr_fcr2 = value;
+		break;
+	case X86_R_FCR3_WINCHIP:
+		// TODO
+		emu->msr_fcr3 = value;
+		break;
+	case X86_R_BBL_CR_CTL3:
+		// TODO
+		emu->msr_bbl_cr_ctl3 = value;
+		break;
 	case X86_R_SYSENTER_CS:
-		emu->sysenter_cs = value;
+		emu->sysenter_cs = value = value;
 		break;
 	case X86_R_SYSENTER_ESP:
 		x86_check_canonical_address(emu, NONE, value, 0);
@@ -1117,12 +1345,73 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sysenter_eip = value;
 		break;
+	case X86_R_MCG_CAP:
+		// TODO
+		emu->mcg_cap = value;
+		break;
+	case X86_R_MCG_STATUS:
+		// TODO
+		emu->mcg_status = value;
+		break;
+	case X86_R_MCG_CTL:
+		// TODO
+		emu->mcg_ctl = value;
+		break;
+	case X86_R_PERFEVTSEL0:
+		// TODO
+		emu->perfevtsel0 = value;
+		break;
+	case X86_R_PERFEVTSEL1:
+		// TODO
+		emu->perfevtsel1 = value;
+		break;
+	case X86_R_DEBUGCTL:
+		// TODO
+		emu->debugctl = value;
+		break;
+	case X86_R_LASTBRANCH_TOS:
+		// TODO
+		emu->msr_lastbranch_tos = value;
+		break;
+	case X86_R_LASTBRANCHFROMIP:
+		// TODO
+		emu->msr_lastbranchfromip = value;
+		break;
+	case X86_R_LASTBRANCHTOIP:
+		// TODO
+		emu->msr_lastbranchtoip = value;
+		break;
+	case X86_R_LER_FROM_IP:
+		// TODO
+		emu->ler_from_ip = value;
+		break;
+	case X86_R_LER_TO_IP:
+		// TODO
+		emu->ler_to_ip = value;
+		break;
+	case X86_R_LER_INFO:
+		// TODO
+		emu->ler_info = value;
+		break;
 	case X86_R_BNDCFGS:
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->bndcfgs = value;
 		break;
+	case X86_R_FCR:
+		// TODO
+		emu->msr_fcr = value;
+		break;
+	case X86_R_FCR1:
+		// TODO
+		emu->msr_fcr1 = value;
+		break;
+	case X86_R_FCR2:
+		// TODO
+		emu->msr_fcr2 = value;
+		break;
 
 	// Cyrix
+		break;
 	case X86_R_GX2_PCR:
 		emu->gx2_pcr = value;
 		break;
@@ -1148,6 +1437,7 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		break;
 
 	// AMD
+		break;
 	case X86_R_EFER:
 		if((emu->cr[0] & X86_CR0_PG) != 0 && (value & X86_EFER_LME) != (emu->efer & X86_EFER_LME))
 			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
@@ -1174,6 +1464,22 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_SF_MASK:
 		emu->sf_mask = value;
 		break;
+	case X86_R_UWCCR:
+		// TODO
+		emu->msr_uwccr = value;
+		break;
+	case X86_R_PSOR:
+		// TODO
+		emu->msr_psor = value;
+		break;
+	case X86_R_PFIR:
+		// TODO
+		emu->msr_pfir = value;
+		break;
+	case X86_R_L2AAR:
+		// TODO
+		emu->msr_l2aar = value;
+		break;
 	case X86_R_FS_BASE:
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sr[X86_R_FS].base = value;
@@ -1185,6 +1491,10 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_KERNEL_GS_BASE:
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->kernel_gs_base = value;
+		break;
+	case X86_R_TSC_AUX:
+		// TODO
+		emu->tsc_aux = value;
 		break;
 	}
 }

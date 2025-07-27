@@ -453,40 +453,78 @@ typedef enum x86_descriptor_type_t x86_descriptor_type_t;
 enum
 {
 	// MSR registers, accessed in emu->msr[]
-	X86_R_TR1 = 0x00000002,
-	X86_R_TR2 = 0x00000004,
-	X86_R_TR3 = 0x00000005,
-	X86_R_TR4 = 0x00000006,
-	X86_R_TR5 = 0x00000007,
-	X86_R_TR6 = 0x00000008,
-	X86_R_TR7 = 0x00000009,
-	X86_R_TR8 = 0x0000000A,
-	X86_R_TR9 = 0x0000000B,
-	X86_R_TR10 = 0x0000000C,
-	X86_R_TR11 = 0x0000000D,
-	X86_R_TR12 = 0x0000000E,
+	X86_R_MC_ADDR = 0x00000000,
+	X86_R_MC_TYPE = 0x00000001,
+	X86_R_TR1 = 0x00000002, // Pentium, WinChip
+	X86_R_MSR_TEST_DATA = 0x00000003, // Cyrix 6x86MX+
+	X86_R_TR2 = 0x00000004, // Pentium
+	X86_R_MSR_TEST_ADDRESS = 0x00000004, // Cyrix 6x86MX+
+	X86_R_TR3 = 0x00000005, // Pentium
+	X86_R_MSR_COMMAND_STATUS = 0x00000005, // Cyrix 6x86MX+
+	X86_R_TR4 = 0x00000006, // Pentium
+	X86_R_TR5 = 0x00000007, // Pentium
+	X86_R_TR6 = 0x00000008, // Pentium
+	X86_R_TR7 = 0x00000009, // Pentium
+	X86_R_TR8 = 0x0000000A, // Pentium
+	X86_R_TR9 = 0x0000000B, // Pentium
+	X86_R_TR10 = 0x0000000C, // Pentium
+	X86_R_TR11 = 0x0000000D, // Pentium
+	X86_R_TR12 = 0x0000000E, // Pentium, K6, WinChip
 	X86_R_TSC = 0x00000010,
+	X86_R_CESR = 0x00000011, // Pentium, Cyrix 6x86MX+, WinChip
+	X86_R_CTR0 = 0x00000012, // Pentium, Cyrix 6x86MX+, WinChip
+	X86_R_CTR1 = 0x00000013, // Pentium, Cyrix 6x86MX+, WinChip
+	X86_R_APIC_BASE = 0x0000001B,
+	X86_R_EBL_CR_POWERON = 0x0000002A, // Pentium Pro/II/III/4, VIA C3+
+	X86_R_K5_AAR = 0x00000082, // K5
+	X86_R_K5_HWCR = 0x00000083, // K5
+	X86_R_SMBASE = 0x0000009E,
+	X86_R_PERFCTR0 = 0x000000C1, // Pentium Pro/II/III, Geode GX+, VIA C3+
+	X86_R_PERFCTR1 = 0x000000C2, // Pentium Pro/II/III, Geode GX+, VIA C3+
+	X86_R_FCR_WINCHIP = 0x00000107, // WinChip, VIA moved it to 0x00001107
+	X86_R_FCR1_WINCHIP = 0x00000108, // WinChip, VIA moved it to 0x00001108
+	X86_R_FCR2_WINCHIP = 0x00000109, // WinChip, VIA moved it to 0x00001109
+	X86_R_FCR3_WINCHIP = 0x0000010A, // WinChip C2+
+	X86_R_BBL_CR_CTL3 = 0x0000011E, // Pentium II/III, VIA C3+
 	X86_R_SYSENTER_CS = 0x00000174,
 	X86_R_SYSENTER_ESP = 0x00000175,
 	X86_R_SYSENTER_EIP = 0x00000176,
+	X86_R_MCG_CAP = 0x00000179,
+	X86_R_MCG_STATUS = 0x0000017A,
+	X86_R_MCG_CTL = 0x0000017B,
+	X86_R_PERFEVTSEL0 = 0x00000186,
+	X86_R_PERFEVTSEL1 = 0x00000187,
+	X86_R_DEBUGCTL = 0x000001D9,
+	X86_R_LASTBRANCH_TOS = 0x000001DA, // Pentium 4
+	X86_R_LASTBRANCHFROMIP = 0x000001DB, // Pentium Pro/II/III/4
+	X86_R_LASTBRANCHTOIP = 0x000001DC, // Pentium Pro/II/III/4
+	X86_R_LER_FROM_IP = 0x000001DD,
+	X86_R_LER_TO_IP = 0x000001DE,
+	X86_R_LER_INFO = 0x000001E0,
 	X86_R_BNDCFGS = 0x00000D90,
-
-	X86_R_GX2_PCR = 0x00001250, // Geode LX only
-	X86_R_SMM_CTL = 0x00001301, // Geode LX only
-	X86_R_DMI_CTL = 0x00001302, // Geode LX only
-	X86_R_SMM_HDR = 0x0000132B, // Geode LX only
-	X86_R_DMM_HDR = 0x0000132C, // Geode LX only
-	X86_R_SMM_BASE = 0x0000133B, // Geode LX only
-	X86_R_DMM_BASE = 0x0000133C, // Geode LX only
-
+	X86_R_FCR = 0x00001107, // VIA C3+
+	X86_R_FCR1 = 0x00001108, // VIA C3+
+	X86_R_FCR2 = 0x00001109, // VIA C3+
+	X86_R_GX2_PCR = 0x00001250, // Geode GX2+
+	X86_R_SMM_CTL = 0x00001301, // Geode GX2+
+	X86_R_DMI_CTL = 0x00001302, // Geode GX2+
+	X86_R_SMM_HDR = 0x0000132B, // Geode GX2+
+	X86_R_DMM_HDR = 0x0000132C, // Geode GX2+
+	X86_R_SMM_BASE = 0x0000133B, // Geode GX2+
+	X86_R_DMM_BASE = 0x0000133C, // Geode GX2+
 	X86_R_EFER = 0xC0000080,
 	X86_R_STAR = 0xC0000081,
 	X86_R_LSTAR = 0xC0000082,
 	X86_R_CSTAR = 0xC0000083,
 	X86_R_SF_MASK = 0xC0000084,
+	X86_R_UWCCR = 0xC0000085, // K6-III
+	X86_R_PSOR = 0xC0000087, // K6-III
+	X86_R_PFIR = 0xC0000088, // K6-III
+	X86_R_L2AAR = 0xC0000089, // K6-III
 	X86_R_FS_BASE = 0xC0000100,
 	X86_R_GS_BASE = 0xC0000101,
 	X86_R_KERNEL_GS_BASE = 0xC0000102,
+	X86_R_TSC_AUX = 0xC0000103,
 
 	// FLAGS bits
 	X86_FL_CF   = 0x0001,
@@ -2018,23 +2056,87 @@ struct x86_state_t
 	uoff_t tr386[X86_TR386_COUNT];
 
 	// p5
+	/* Pentium machine check address */
+	uint64_t mc_addr;
+	/* Pentium machine check type */
+	uint64_t mc_type;
+	/* Control and even select register */
+	uint64_t msr_cesr;
+	/* Counter 0 */
+	uint64_t msr_ctr0;
+	/* Counter 1 */
+	uint64_t msr_ctr1;
 	/* Time stamp counter MSRs */
 	uint64_t tsc;
 
+	// p6
+	uint64_t apic_base;
+	/* Processor hard power-on configuration */
+	uint64_t msr_ebl_cr_poweron;
+	/* Performance counter register 0 */
+	uint64_t msr_perfctr0;
+	/* Performance counter register 1 */
+	uint64_t msr_perfctr1;
+	/* Global machine check capability */
+	uint64_t mcg_cap;
+	/* Global machine check status */
+	uint64_t mcg_status;
+	/* Global machine check control */
+	uint64_t mcg_ctl;
+	/* Performance event select register 0 */
+	uint64_t perfevtsel0;
+	/* Performance event select register 1 */
+	uint64_t perfevtsel1;
+	/* Trace/profile resource control */
+	uint64_t debugctl;
+	uint64_t msr_lastbranch_tos; // p4
+	uint64_t msr_lastbranchfromip;
+	uint64_t msr_lastbranchtoip;
+	uint64_t ler_from_ip;
+	uint64_t ler_to_ip;
+	uint64_t ler_info;
 
 	// p6-2
+	/* Control register 3 */
+	uint64_t msr_bbl_cr_ctl3;
 	/* SYSENTER/SYSEXIT MSRs */
 	uint64_t sysenter_cs, sysenter_esp, sysenter_eip;
+
+	// k5
+	/* Array access register */
+	uint64_t msr_k5_aar;
+	/* k5 Hardware configuration register */
+	uint64_t msr_k5_hwcr;
 
 	// k6-2, x86-64
 	/* Extended feature enable register MSRs */
 	uint64_t efer;
 	/* SYSCALL/SYSRET MSRs */
-	uint64_t star, lstar, cstar, fmask;
+	uint64_t star, lstar, cstar, sf_mask;
+	// k6-3
+	/* UC/WC cacheability control register */
+	uint64_t msr_uwccr;
+	/* Processor state observability register */
+	uint64_t msr_psor;
+	/* Page flush/invalidate register */
+	uint64_t msr_pfir;
+	/* Level-2 cache array */
+	uint64_t msr_l2aar;
+
+	// Cyrix 6x86MX
+	uint64_t cyrix_test_data;
+	uint64_t cyrix_test_address;
+	uint64_t cyrix_command_status;
+
+	// winchip
+	/* Feature control registers */
+	uint64_t msr_fcr, msr_fcr1, msr_fcr2, msr_fcr3;
 
 	// x86-64
 	/* Kernel GS base MSR */
-	uint64_t kernel_gs_bas;
+	uint64_t kernel_gs_base;
+	/* Auxiliary TSC */
+	uint64_t tsc_aux;
 
 	// sse
 	/* XMM/YMM/ZMM registers */
