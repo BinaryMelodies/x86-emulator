@@ -4584,20 +4584,24 @@ if(prs->fpu_type != X87_FPU_NONE)
 	{
 		// TODO
 	}
-	else if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
-	{
-		fcs = 0;
-		if(emu->x87.fpu_type == X87_FPU_8087)
-			fip = emu->sr[X86_R_CS].base + opcode_offset; // without any prefixes
-		else
-			fip = emu->sr[X86_R_CS].base + $old_rip;
-		fds = 0;
-		fdp = emu->sr[_seg].base + _off;
-	}
+//	else if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
+//	{
+//		fcs = 0;
+//		if(emu->x87.fpu_type == X87_FPU_8087)
+//			fip = emu->sr[X86_R_CS].base + opcode_offset; // without any prefixes
+//		else
+//			fip = emu->sr[X86_R_CS].base + $old_rip;
+//		fds = 0;
+//		fdp = emu->sr[_seg].base + _off;
+//	}
 	else
 	{
+		// testing on real hardware shows that this is how the values are actually stored
 		fcs = $cs;
-		fip = $old_rip;
+		if(emu->x87.fpu_type == X87_FPU_8087)
+			fip = + opcode_offset; // without any prefixes
+		else
+			fip = $old_rip;
 		fds = emu->sr[_seg].selector;
 		fdp = _off;
 	}
@@ -4647,20 +4651,24 @@ if(prs->fpu_type != X87_FPU_NONE)
 	{
 		// TODO
 	}
-	else if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
-	{
-		fcs = 0;
-		if(emu->x87.fpu_type == X87_FPU_8087)
-			fip = emu->sr[X86_R_CS].base + opcode_offset; // without any prefixes
-		else
-			fip = emu->sr[X86_R_CS].base + $old_rip;
-		//fds = 0;
-		//fdp = emu->sr[_seg].base + _off;
-	}
+//	else if(x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu))
+//	{
+//		fcs = 0;
+//		if(emu->x87.fpu_type == X87_FPU_8087)
+//			fip = emu->sr[X86_R_CS].base + opcode_offset; // without any prefixes
+//		else
+//			fip = emu->sr[X86_R_CS].base + $old_rip;
+//		//fds = 0;
+//		//fdp = emu->sr[_seg].base + _off;
+//	}
 	else
 	{
+		// testing on real hardware shows that this is how the values are actually stored
 		fcs = $cs;
-		fip = $old_rip;
+		if(emu->x87.fpu_type == X87_FPU_8087)
+			fip = + opcode_offset; // without any prefixes
+		else
+			fip = $old_rip;
 		//fds = emu->sr[_seg].selector;
 		//fdp = _off;
 	}

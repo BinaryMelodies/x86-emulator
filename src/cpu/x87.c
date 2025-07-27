@@ -626,13 +626,16 @@ static inline void x87_state_restore_registers(x86_state_t * emu, x86_segnum_t s
 
 static inline void x87_environment_save_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
 {
+	// testing on real hardware shows that this is the behavior, even in unreal mode
+	uint32_t fip = emu->x87.fip + (emu->x87.fcs << 4);
+	uint32_t fdp = emu->x87.fdp + (emu->x87.fds << 4);
 	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0000, emu->x87.cw);
 	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0002, emu->x87.sw);
 	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0004, emu->x87.tw);
-	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0006, emu->x87.fip);
-	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0008, ((emu->x87.fip >> 4) & 0xF000) | (emu->x87.fop & 0x07FF));
-	x87_memory_segmented_write16(emu, segment, offset, offset + 0x000A, emu->x87.fdp);
-	x87_memory_segmented_write16(emu, segment, offset, offset + 0x000C, (emu->x87.fdp >> 4) & 0xF000);
+	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0006, fip);
+	x87_memory_segmented_write16(emu, segment, offset, offset + 0x0008, ((fip >> 4) & 0xF000) | (emu->x87.fop & 0x07FF));
+	x87_memory_segmented_write16(emu, segment, offset, offset + 0x000A, fdp);
+	x87_memory_segmented_write16(emu, segment, offset, offset + 0x000C, (fdp >> 4) & 0xF000);
 }
 
 static inline void x87_environment_restore_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
@@ -664,13 +667,16 @@ static inline void x87_state_restore_real_mode16(x86_state_t * emu, x86_segnum_t
 
 static inline void x87_environment_save_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
 {
+	// testing on real hardware shows that this is the behavior, even in unreal mode
+	uint32_t fip = emu->x87.fip + (emu->x87.fcs << 4);
+	uint32_t fdp = emu->x87.fdp + (emu->x87.fds << 4);
 	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0000, emu->x87.cw);
 	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0004, emu->x87.sw);
 	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0008, emu->x87.tw);
-	x87_memory_segmented_write32(emu, segment, offset, offset + 0x000C, emu->x87.fip & 0xFFFF);
-	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0010, ((emu->x87.fip >> 4) & ~0xFFF) | (emu->x87.fop & 0x07FF));
-	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0014, emu->x87.fdp & 0xFFFF);
-	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0018, (emu->x87.fdp >> 4) & ~0x0FFF);
+	x87_memory_segmented_write32(emu, segment, offset, offset + 0x000C, fip & 0xFFFF);
+	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0010, ((fip >> 4) & ~0xFFF) | (emu->x87.fop & 0x07FF));
+	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0014, fdp & 0xFFFF);
+	x87_memory_segmented_write32(emu, segment, offset, offset + 0x0018, (fdp >> 4) & ~0x0FFF);
 }
 
 static inline void x87_environment_restore_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
