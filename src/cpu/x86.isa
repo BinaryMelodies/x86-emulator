@@ -2502,7 +2502,7 @@ x86_v60_exception(emu, V60_EXC_RI);
 _uint8 length = ($1.b & 0xF) + 1;
 _uint8 offset = $0.b & 0xF;
 _uint16 si = $si;
-$ax.$O = x86_bitfield_extract16(emu, _src_seg2, si + (offset >> 3), offset & 7, length);
+$ax.$O = x86_bitfield_extract16(emu, emu->cpu_type == X86_CPU_V55 ? _src_seg2 : _src_seg, si + (offset >> 3), offset & 7, length);
 $0.b = (offset + length) & 0xF;
 if((offset + length) >= 16)
 	$si = si + 2;
