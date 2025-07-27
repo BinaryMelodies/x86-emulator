@@ -941,7 +941,7 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	case X86_R_DMM_HDR:
 	case X86_R_SMM_BASE:
 	case X86_R_DMM_BASE:
-		return emu->cpu_type == X86_CPU_CYRIX && emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX;
+		return emu->cpu_type == X86_CPU_CYRIX && X86_CPU_CYRIX_GX2 <= emu->cpu_traits.cpu_subtype && emu->cpu_traits.cpu_subtype <= X86_CPU_CYRIX_LX;
 
 	// AMD
 	case X86_R_EFER:

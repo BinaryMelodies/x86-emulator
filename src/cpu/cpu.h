@@ -2084,7 +2084,7 @@ struct x86_state_t
 	uint8_t lcr1;
 	uint8_t bcr[2];
 
-	/* AMD Geode LX specific registers */
+	/* AMD Geode GX2+ specific registers */
 	uint32_t dmm_hdr;
 	struct
 	{
@@ -2097,7 +2097,7 @@ struct x86_state_t
 
 	/* ICE and SMM */
 	x86_cpu_level_t cpu_level; // the current state of the CPU (usually X86_LEVEL_USER)
-	// Intel, AMD Geode LX
+	// Intel, AMD Geode GX2+
 	uint32_t smbase;
 	// Intel, AMD
 	uint32_t smm_revision_identifier;
