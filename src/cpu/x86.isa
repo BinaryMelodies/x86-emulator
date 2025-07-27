@@ -4202,8 +4202,8 @@ x86_save_descriptor(emu, _seg, _off, X86_R_TR);
 @instruction SWAPGS
 PRIVILEGED();
 _uint64 gs = emu->sr[X86_R_GS].base;
-emu->sr[X86_R_GS].base = emu->kernel_gs_bas;
-emu->kernel_gs_bas = gs;
+emu->sr[X86_R_GS].base = emu->kernel_gs_base;
+emu->kernel_gs_base = gs;
 
 @instruction SYSCALL
 if(x86_is_long_mode(emu))
@@ -4211,7 +4211,7 @@ if(x86_is_long_mode(emu))
 	$rcx = $rip;
 	emu->rf = /*emu->via_ace =*/ 0;
 	emu->gpr[11] = x86_flags_get64(emu);
-	x86_flags_set32(emu, x86_flags_get32(emu) & ~emu->fmask);
+	x86_flags_set32(emu, x86_flags_get32(emu) & ~emu->sf_mask);
 	$rip = (emu->sr[X86_R_CS].access & X86_DESC_L) != 0 ? emu->lstar : emu->cstar;
 	emu->sr[X86_R_CS].selector = (emu->star >> 32) & 0xFFFC;
 	emu->sr[X86_R_CS].access   = 0x00E09B00; /* 64-bit code */

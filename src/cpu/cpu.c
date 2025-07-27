@@ -331,7 +331,7 @@ void x86_reset(x86_state_t * emu, bool reset)
 			emu->dr[7] = 0x00000000;
 	}
 
-	emu->kernel_gs_bas = 0;
+	emu->kernel_gs_base = 0;
 
 	if(reset)
 	{
@@ -351,7 +351,7 @@ void x86_reset(x86_state_t * emu, bool reset)
 		emu->star = 0;
 		emu->lstar = 0;
 		emu->cstar = 0;
-		emu->fmask = 0;
+		emu->sf_mask = 0;
 	}
 
 	/* FLAGS register */

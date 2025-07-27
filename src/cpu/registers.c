@@ -956,7 +956,7 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	case X86_R_STAR:
 	case X86_R_LSTAR:
 	case X86_R_CSTAR:
-	case X86_R_FMASK:
+	case X86_R_SF_MASK:
 		if(emu->cpu_type == X86_CPU_AMD)
 		{
 			return (emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) != 0;
@@ -965,11 +965,11 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 		{
 			return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 		}
-	case X86_R_FS_BAS:
+	case X86_R_FS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
-	case X86_R_GS_BAS:
+	case X86_R_GS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
-	case X86_R_KERNEL_GS_BAS:
+	case X86_R_KERNEL_GS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 	default:
 		return false;
@@ -1045,14 +1045,14 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->lstar;
 	case X86_R_CSTAR:
 		return emu->cstar;
-	case X86_R_FMASK:
-		return emu->fmask;
-	case X86_R_FS_BAS:
+	case X86_R_SF_MASK:
+		return emu->sf_mask;
+	case X86_R_FS_BASE:
 		return emu->sr[X86_R_FS].base;
-	case X86_R_GS_BAS:
+	case X86_R_GS_BASE:
 		return emu->sr[X86_R_GS].base;
-	case X86_R_KERNEL_GS_BAS:
-		return emu->kernel_gs_bas;
+	case X86_R_KERNEL_GS_BASE:
+		return emu->kernel_gs_base;
 	default:
 		assert(false);
 	}
@@ -1171,20 +1171,20 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_CSTAR:
 		emu->cstar = value;
 		break;
-	case X86_R_FMASK:
-		emu->fmask = value;
+	case X86_R_SF_MASK:
+		emu->sf_mask = value;
 		break;
-	case X86_R_FS_BAS:
+	case X86_R_FS_BASE:
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sr[X86_R_FS].base = value;
 		break;
-	case X86_R_GS_BAS:
+	case X86_R_GS_BASE:
 		x86_check_canonical_address(emu, NONE, value, 0);
 		emu->sr[X86_R_GS].base = value;
 		break;
-	case X86_R_KERNEL_GS_BAS:
+	case X86_R_KERNEL_GS_BASE:
 		x86_check_canonical_address(emu, NONE, value, 0);
-		emu->kernel_gs_bas = value;
+		emu->kernel_gs_base = value;
 		break;
 	}
 }
