@@ -186,7 +186,9 @@ typedef enum x86_operation_size_t x86_operation_size_t;
 //#define X86_DR_COUNT 32
 
 /* for 80386, 80486 and extensions */
-#define X86_TR386_COUNT 8
+//#define X86_TR386_COUNT 8
+/* Pentium */
+#define X86_TR386_COUNT 16
 /* normally */
 //#define X86_TR386_COUNT 0
 
@@ -451,6 +453,18 @@ typedef enum x86_descriptor_type_t x86_descriptor_type_t;
 enum
 {
 	// MSR registers, accessed in emu->msr[]
+	X86_R_TR1 = 0x00000002,
+	X86_R_TR2 = 0x00000004,
+	X86_R_TR3 = 0x00000005,
+	X86_R_TR4 = 0x00000006,
+	X86_R_TR5 = 0x00000007,
+	X86_R_TR6 = 0x00000008,
+	X86_R_TR7 = 0x00000009,
+	X86_R_TR8 = 0x0000000A,
+	X86_R_TR9 = 0x0000000B,
+	X86_R_TR10 = 0x0000000C,
+	X86_R_TR11 = 0x0000000D,
+	X86_R_TR12 = 0x0000000E,
 	X86_R_TSC = 0x00000010,
 	X86_R_SYSENTER_CS = 0x00000174,
 	X86_R_SYSENTER_ESP = 0x00000175,
@@ -2001,9 +2015,9 @@ struct x86_state_t
 	};
 	/* Debug registers */
 	uoff_t dr[X86_DR_COUNT];
-	// 386 and 486
-	/* Test registers */
-	uint32_t tr386[X86_TR386_COUNT];
+	// 386, 486 and p5
+	/* Test registers, accessed as MSRs on p5 */
+	uoff_t tr386[X86_TR386_COUNT];
 
 	// p5
 	/* Time stamp counter MSRs */

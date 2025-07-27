@@ -175,6 +175,14 @@ static inline bool x86_stay_in_protected_mode(x86_state_t * emu)
 	return emu->cpu_type == X86_CPU_286 || (emu->cpu_type == X86_CPU_386 && emu->cpu_traits.cpu_subtype == X86_CPU_386_376);
 }
 
+static inline uint8_t x86_cpuid_get_family_id(x86_cpu_traits_t * traits)
+{
+	uint8_t id = (traits->cpuid1.eax >> 8) & 0x0F;
+	if(id == 0x0F)
+		id += (traits->cpuid1.eax >> 20) & 0xFF;
+	return id;
+}
+
 static inline noreturn void x86_v60_exception(x86_state_t * emu, int exception)
 {
 	// TODO

@@ -679,7 +679,7 @@ static void x86_debug64(FILE * file, x86_state_t * emu)
 	fprintf(file, "CR8=%016"PRIX64",XCR0=%016"PRIX64",EFER=%016"PRIX64"\n", emu->cr[8], emu->xcr0, emu->efer);
 	fprintf(file, "DR0=%016"PRIX64",DR1=%016"PRIX64",DR2=%016"PRIX64",DR3=%016"PRIX64"\n", emu->dr[0], emu->dr[1], emu->dr[2], emu->dr[3]);
 	fprintf(file, "DR6=%016"PRIX64",DR7=%016"PRIX64"\n", emu->dr[6], emu->dr[7]);
-	fprintf(file, "TR3=%08"PRIX32",TR4=%08"PRIX32",TR5=%08"PRIX32",TR6=%08"PRIX32",TR7=%08"PRIX32"\n", emu->tr386[3], emu->tr386[4], emu->tr386[5], emu->tr386[6], emu->tr386[7]);
+	fprintf(file, "TR3=%016"PRIX64",TR4=%016"PRIX64",TR5=%016"PRIX64",TR6=%016"PRIX64",TR7=%016"PRIX64"\n", emu->tr386[3], emu->tr386[4], emu->tr386[5], emu->tr386[6], emu->tr386[7]);
 	/* TODO: SSE registers */
 	/* TODO: model specific registers */
 	/* TODO: mask, bound, shadow registers */
@@ -720,7 +720,7 @@ static void x86_debug32(FILE * file, x86_state_t * emu)
 	fprintf(file, "CR8=%08"PRIX64",XCR0=%08"PRIX64"\n", emu->cr[8], emu->xcr0);
 	fprintf(file, "DR0=%08"PRIX64",DR1=%08"PRIX64",DR2=%08"PRIX64",DR3=%08"PRIX64"\n", emu->dr[0], emu->dr[1], emu->dr[2], emu->dr[3]);
 	fprintf(file, "DR6=%08"PRIX64",DR7=%08"PRIX64"\n", emu->dr[6], emu->dr[7]);
-	fprintf(file, "TR3=%08"PRIX32",TR4=%08"PRIX32",TR5=%08"PRIX32",TR6=%08"PRIX32",TR7=%08"PRIX32"\n", emu->tr386[3], emu->tr386[4], emu->tr386[5], emu->tr386[6], emu->tr386[7]);
+	fprintf(file, "TR3=%08"PRIX64",TR4=%08"PRIX64",TR5=%08"PRIX64",TR6=%08"PRIX64",TR7=%08"PRIX64"\n", emu->tr386[3], emu->tr386[4], emu->tr386[5], emu->tr386[6], emu->tr386[7]);
 	/* TODO: SSE registers */
 	/* TODO: model specific registers */
 	/* TODO: mask, bound, shadow registers */

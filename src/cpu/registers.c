@@ -908,6 +908,21 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	switch(index)
 	{
 	// Intel
+	case X86_R_TR1:
+		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5; // TODO: or WinChip
+	case X86_R_TR2:
+	case X86_R_TR3:
+	case X86_R_TR4:
+	case X86_R_TR5:
+	case X86_R_TR6:
+	case X86_R_TR7:
+	case X86_R_TR8:
+	case X86_R_TR9:
+	case X86_R_TR10:
+	case X86_R_TR11:
+	case X86_R_TR12:
+		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5; // TODO: or AMD k6 only or WinChip
+
 	case X86_R_TSC:
 		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_TSC) != 0;
 	case X86_R_SYSENTER_CS:
@@ -968,6 +983,32 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 
 	switch(index)
 	{
+	// Intel
+	case X86_R_TR1:
+		return emu->tr386[0]; // to accomodate hole between TR1 and TR2
+	case X86_R_TR2:
+		return emu->tr386[2];
+	case X86_R_TR3:
+		return emu->tr386[3];
+	case X86_R_TR4:
+		return emu->tr386[4];
+	case X86_R_TR5:
+		return emu->tr386[5];
+	case X86_R_TR6:
+		return emu->tr386[6];
+	case X86_R_TR7:
+		return emu->tr386[7];
+	case X86_R_TR8:
+		return emu->tr386[8];
+	case X86_R_TR9:
+		return emu->tr386[9];
+	case X86_R_TR10:
+		return emu->tr386[10];
+	case X86_R_TR11:
+		return emu->tr386[11];
+	case X86_R_TR12:
+		return emu->tr386[12];
+
 	case X86_R_TSC:
 		return emu->tsc;
 	case X86_R_SYSENTER_CS:
@@ -979,6 +1020,7 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 	case X86_R_BNDCFGS:
 		return emu->bndcfgs;
 
+	// Cyrix
 	case X86_R_GX2_PCR:
 		return emu->gx2_pcr;
 	case X86_R_SMM_CTL:
@@ -994,6 +1036,7 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 	case X86_R_DMM_BASE:
 		return emu->dmm.base | ((uint64_t)emu->dmm.limit << 32);
 
+	// AMD
 	case X86_R_EFER:
 		return emu->efer;
 	case X86_R_STAR:
@@ -1022,6 +1065,44 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 
 	switch(index)
 	{
+	// Intel
+	case X86_R_TR1:
+		emu->tr386[0] = value; // to accomodate hole between TR1 and TR2
+		break;
+	case X86_R_TR2:
+		emu->tr386[2] = value;
+		break;
+	case X86_R_TR3:
+		emu->tr386[3] = value;
+		break;
+	case X86_R_TR4:
+		emu->tr386[4] = value;
+		break;
+	case X86_R_TR5:
+		emu->tr386[5] = value;
+		break;
+	case X86_R_TR6:
+		emu->tr386[6] = value;
+		break;
+	case X86_R_TR7:
+		emu->tr386[7] = value;
+		break;
+	case X86_R_TR8:
+		emu->tr386[8] = value;
+		break;
+	case X86_R_TR9:
+		emu->tr386[9] = value;
+		break;
+	case X86_R_TR10:
+		emu->tr386[10] = value;
+		break;
+	case X86_R_TR11:
+		emu->tr386[11] = value;
+		break;
+	case X86_R_TR12:
+		emu->tr386[12] = value;
+		break;
+
 	case X86_R_TSC:
 		emu->tsc = value;
 		break;
@@ -1041,6 +1122,7 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		emu->bndcfgs = value;
 		break;
 
+	// Cyrix
 	case X86_R_GX2_PCR:
 		emu->gx2_pcr = value;
 		break;
@@ -1065,6 +1147,7 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		emu->dmm.limit = value >> 32;
 		break;
 
+	// AMD
 	case X86_R_EFER:
 		if((emu->cr[0] & X86_CR0_PG) != 0 && (value & X86_EFER_LME) != (emu->efer & X86_EFER_LME))
 			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
