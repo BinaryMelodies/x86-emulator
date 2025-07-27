@@ -4244,7 +4244,7 @@ else
 }
 
 @instruction SYSENTER
-if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sep_sel & ~7) == 0)
+if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sysenter_cs & ~7) == 0)
 {
 	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 }
@@ -4253,16 +4253,16 @@ if(x86_is_long_mode(emu))
 	if(emu->cpu_type == X86_CPU_AMD)
 		UNDEFINED();
 
-	$rsp = emu->sep_rsp;
-	$rip = emu->sep_rip;
+	$rsp = emu->sysenter_esp;
+	$rip = emu->sysenter_eip;
 }
 else
 {
-	$esp = emu->sep_rsp;
-	$eip = emu->sep_rip;
+	$esp = emu->sysenter_esp;
+	$eip = emu->sysenter_eip;
 }
 emu->_if = emu->vm = 0;
-emu->sr[X86_R_CS].selector = emu->sep_sel & 0xFFFC;
+emu->sr[X86_R_CS].selector = emu->sysenter_cs & 0xFFFC;
 emu->sr[X86_R_CS].access   = x86_is_long_mode(emu) ? 0x00E09B00 : 0x00C09B00; /* 64/32-bit code */
 emu->sr[X86_R_CS].base     = 0;
 emu->sr[X86_R_CS].limit    = 0xFFFFFFFF;
@@ -4275,7 +4275,7 @@ x86_set_cpl(emu, 0);
 
 @instruction SYSEXIT
 PRIVILEGED();
-if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sep_sel & ~7) == 0)
+if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sysenter_cs & ~7) == 0)
 	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
 if(x86_is_long_mode(emu) && emu->cpu_type == X86_CPU_AMD)
 	UNDEFINED();
@@ -4283,14 +4283,14 @@ if(emu->parser->operation_size == SIZE_64BIT)
 {
 	$rsp = $rcx;
 	$rip = $rdx;
-	emu->sr[X86_R_CS].selector = (emu->sep_sel + 32) | 3;
+	emu->sr[X86_R_CS].selector = (emu->sysenter_cs + 32) | 3;
 	emu->sr[X86_R_CS].access   = 0x00E0FB00; /* 64-bit code */
 }
 else
 {
 	$esp = $ecx;
 	$eip = $edx;
-	emu->sr[X86_R_CS].selector = (emu->sep_sel + 16) | 3;
+	emu->sr[X86_R_CS].selector = (emu->sysenter_cs + 16) | 3;
 	emu->sr[X86_R_CS].access   = 0x00C0FB00; /* 32-bit code */
 }
 //emu->_if = emu->vm = 0;

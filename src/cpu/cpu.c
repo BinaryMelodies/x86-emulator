@@ -344,9 +344,9 @@ void x86_reset(x86_state_t * emu, bool reset)
 
 		emu->tsc = 0;
 
-		emu->sep_sel = 0;
-		emu->sep_rsp = 0;
-		emu->sep_rip = 0;
+		emu->sysenter_cs = 0;
+		emu->sysenter_esp = 0;
+		emu->sysenter_eip = 0;
 
 		emu->star = 0;
 		emu->lstar = 0;

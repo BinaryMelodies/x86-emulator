@@ -910,10 +910,10 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	// Intel
 	case X86_R_TSC:
 		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_TSC) != 0;
-	case X86_R_SEP_SEL:
+	case X86_R_SYSENTER_CS:
 		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
-	case X86_R_SEP_RSP:
-	case X86_R_SEP_RIP:
+	case X86_R_SYSENTER_ESP:
+	case X86_R_SYSENTER_EIP:
 		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
 	case X86_R_BNDCFGS:
 		return (emu->cpu_traits.cpuid7_0.ebx & X86_CPUID7_0_EBX_MPX) != 0;
@@ -970,12 +970,12 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 	{
 	case X86_R_TSC:
 		return emu->tsc;
-	case X86_R_SEP_SEL:
-		return emu->sep_sel;
-	case X86_R_SEP_RSP:
-		return emu->sep_rsp;
-	case X86_R_SEP_RIP:
-		return emu->sep_rip;
+	case X86_R_SYSENTER_CS:
+		return emu->sysenter_cs;
+	case X86_R_SYSENTER_ESP:
+		return emu->sysenter_esp;
+	case X86_R_SYSENTER_EIP:
+		return emu->sysenter_eip;
 	case X86_R_BNDCFGS:
 		return emu->bndcfgs;
 
@@ -1025,16 +1025,16 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_TSC:
 		emu->tsc = value;
 		break;
-	case X86_R_SEP_SEL:
-		emu->sep_sel = value;
+	case X86_R_SYSENTER_CS:
+		emu->sysenter_cs = value;
 		break;
-	case X86_R_SEP_RSP:
+	case X86_R_SYSENTER_ESP:
 		x86_check_canonical_address(emu, NONE, value, 0);
-		emu->sep_rsp = value;
+		emu->sysenter_esp = value;
 		break;
-	case X86_R_SEP_RIP:
+	case X86_R_SYSENTER_EIP:
 		x86_check_canonical_address(emu, NONE, value, 0);
-		emu->sep_rip = value;
+		emu->sysenter_eip = value;
 		break;
 	case X86_R_BNDCFGS:
 		x86_check_canonical_address(emu, NONE, value, 0);

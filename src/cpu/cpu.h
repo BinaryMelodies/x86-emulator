@@ -452,9 +452,9 @@ enum
 {
 	// MSR registers, accessed in emu->msr[]
 	X86_R_TSC = 0x00000010,
-	X86_R_SEP_SEL = 0x00000174,
-	X86_R_SEP_RSP = 0x00000175,
-	X86_R_SEP_RIP = 0x00000176,
+	X86_R_SYSENTER_CS = 0x00000174,
+	X86_R_SYSENTER_ESP = 0x00000175,
+	X86_R_SYSENTER_EIP = 0x00000176,
 	X86_R_BNDCFGS = 0x00000D90,
 
 	X86_R_GX2_PCR = 0x00001250, // Geode LX only
@@ -2009,15 +2009,16 @@ struct x86_state_t
 	/* Time stamp counter MSRs */
 	uint64_t tsc;
 
-	// k6, x86-64
+
+	// p6-2
+	/* SYSENTER/SYSEXIT MSRs */
+	uint64_t sysenter_cs, sysenter_esp, sysenter_eip;
+
+	// k6-2, x86-64
 	/* Extended feature enable register MSRs */
 	uint64_t efer;
 	/* SYSCALL/SYSRET MSRs */
 	uint64_t star, lstar, cstar, fmask;
-
-	// p6-2
-	/* SYSENTER/SYSEXIT MSRs */
-	uint64_t sep_sel, sep_rsp, sep_rip;
 
 	// x86-64
 	/* Kernel GS base MSR */
