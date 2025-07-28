@@ -89,7 +89,9 @@ The V30 SP register is reserved for handling (V30 mode) interrupts.
 In V30 mode, bits 1, 3, 5 are still 1, 0, 0, as for V30.
 Only an IRET (RETI) instruction can restore them outside Z80 emulation.
 * The IFF2, I, R and IM are supported, as well as interrupt modes 0, 1 and 2.
-* As per NEC documentation, I/O instructions, LD A, R invoke an interrupt handler, except when in full Z80 emulation (BRKEM2).
+* As per NEC documentation, I/O instructions, LD A, R invoke an interrupt handler.
+The exception is when the CPU is in full Z80 emulation (BRKEM2).
+It is unknown whether this is the actual behavior of a µPD9002 in this mode.
 
 # What needs testing?
 
