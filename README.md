@@ -69,6 +69,28 @@ The tests included show that some very basic tasks are possible:
     * Apricot PC
 * Code should compile on big endian targets as well
 
+## Notes on NEC V30 and µPD9002 emulation
+
+These CPUs support an 8-bit emulation mode when bit 15 (MD) of the FLAGS register (referred to as PSW in NEC documents) is cleared.
+The current implementation fully follows the Intel 8080 (for V30) and Zilog Z80 (for µPD9002) execution, except for two additional instructions: RETEM and CALLN.
+In particular, all flag affection behaves according to the original chips.
+Whether this is the exact behavior of the NEC CPUs in emulation mode is not currently known.
+
+Very little information is available on the NEC µPD9002.
+The current implementation attempts to combine a full V30 and Z80 component.
+This means:
+
+* A, F, BC, DE, HL, SP, PC are mapped to AL, low byte of FLAGS (PSW), CX (CW), DX (DW), BX (BW), BP, IP (PC), as for the V30.
+The V30 SP register is reserved for handling (V30 mode) interrupts.
+* The IFF1 flag maps to the IF (IE) flag.
+* IX and IY are mapped to SI (IX) and DI (IY) as has been confirmed by other users.
+* A second set of AF', BC', DE', HL' registers are provided, only the currently selected ones are visible in V30 mode. (This means that it is possible to hide the current values of the AW/BW/CW/DW registers by switching to Z80 mode, issuing the appropriate instructions and returning to V30 mode.)
+* The FLAGS register is extended with Z80 specific flags, but these are only available in Z80 mode, as well as the FLAGS register image pushed onto the stack during an interrupt.
+In V30 mode, bits 1, 3, 5 are still 1, 0, 0, as for V30.
+Only an IRET (RETI) instruction can restore them outside Z80 emulation.
+* The IFF2, I, R and IM are supported, as well as interrupt modes 0, 1 and 2.
+* As per NEC documentation, I/O instructions, LD A, R invoke an interrupt handler, except when in full Z80 emulation (BRKEM2).
+
 # What needs testing?
 
 Much of the code has not been tested yet, too much to list here.
