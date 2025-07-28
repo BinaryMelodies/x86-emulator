@@ -12,6 +12,15 @@ start:
 	jmp	.test_80286
 
 ; using the code in https://drdobbs.com/embedded-systems/processor-detection-schemes/184409011
+
+	; Tests the instruction prefetch queue size
+	; For the Intel 8088/80188/V20, the prefetch queue is 4 bytes
+	; For the Intel 8086/80186/V30, the prefetch queue is 6 bytes
+	; To check the queue, we execute a string instruction that overwrites the instruction stream appearing after the string instruction
+	; If the prefetch queue is long enough, this will not impact the execution flow
+	; If the prefetch quque is not long enough, the newly written instruction will be executed
+	; In this implementation, a NOP instruction is used to overwrite the DEC DX instruction, permitting checking the DX register value
+	; afterwards to distinguish between CPUs with shorter and longer prefetch queues
 .test_cache:
 	std
 
@@ -43,6 +52,10 @@ start:
 	mov	al, 1
 	ret
 
+	; On the 8086/8088/80186/80188 and NEC V33, the highest 4 bits of the FLAGS register are hardwired to 1
+	; On the NEC V20/V30, the highest bit (mode bit) cannot be changed outside of an interrupt (occuring from 8080 emulation mode)
+	; On the NEC V25 and V55, the highest 4 bits (register bank, and a 1 bit or mode bit for the V25) cannot be changed by a PUSHF instruction
+	; So in this test we attempt to clear the highest 4 bits of FLAGS using POPF/PUSHF and if they are all 1, it is one of the above mentioned CPUs
 .test_80286:
 	pushf
 	pop	ax
@@ -56,6 +69,11 @@ start:
 	cmp	ax, 0xF000
 	jne	.test_80386
 
+	; We need to check the pre-80186 CPUs first, since those do not have long range conditional jumps
+	; On the 8086/8088 and V20/V30, writing a word to offset 0xFFFF within a segment overflows and accesses the byte at 0x10000 from the base
+	; On a 80186/80188 and V25/V55, the write overflows to the byte at offset 0 of the segment
+	; By writing a word at offset 0xFFFF and checking if the byte at offset 0 has changed, we can distinguish between these CPUs
+	; (Note that on a 80286 or higher, writing at word offset 0xFFFF will result in a fault, since it crosses the segment limit)
 .is_808x_or_8018x:
 	cli
 	mov	bx, [0xFFFF]
@@ -67,12 +85,15 @@ start:
 	sti
 	jne	.is_8018x_or_nec
 
+	; On Intel CPUs, the AAD instruction can be used for arbitrary number bases, but on NEC CPUs, the base defaults to 10
 .is_808x_or_nec:
 	mov	ax, 0x0100
 	aad	8
 	cmp	al, 8
 	jne	.is_nec
 
+	; Check the prefetch queue size to distinguish between the 8088 and 8086
+.is_808x:
 	call	.test_cache
 	cmp	al, 2
 	je	.is_8086
@@ -85,6 +106,7 @@ start:
 	mov	si, text_8086
 	jmp	.print
 
+	; Check the prefetch queue size to distinguish between the V20 and V30
 .is_nec:
 	call	.test_cache
 	cmp	al, 2
@@ -98,6 +120,9 @@ start:
 	mov	si, text_v30
 	jmp	.print
 
+	; On all Intel CPUs, bit 1 of the FLAGS register is hardwired to be 1
+	; The NEC V25 and V55 redefine bit 1 to be the complement of the trap-on-I/O-instruction bit
+	; We can use this to distinguish between Intel and NEC CPUs
 .is_8018x_or_nec:
 	xor	ax, ax
 	push	ax
@@ -107,6 +132,8 @@ start:
 	test	al, 2
 	jnz	.is_8018x
 
+	; Like all Intel CPUs, the V55 CPU hardwires bits 3 and 5 of the FLAGS register to 0
+	; On the V25, these bits can be altered arbitrarily by code
 .is_nec_v25_v55:
 	or	al, 0x28
 	push	ax
@@ -124,6 +151,7 @@ start:
 	mov	si, text_v25
 	jmp	.print
 
+	; Check the prefetch queue size to distinguish between the 80188 and 80186
 .is_8018x:
 	call	.test_cache
 	cmp	al, 2
@@ -137,6 +165,9 @@ start:
 	mov	si, text_80186
 	jmp	.print
 
+	; On the 80286, the highest 4 bits of the FLAGS register (IOPL, NT and hardwired 1) cannot be changed to 1 in real mode
+	; The 80386 and later, all of these but the highest bit can be set
+	; By attempting to set them all, we can distinguish between the 80286 and later CPUs
 .test_80386:
 	or	cx, 0xF000
 	push	cx
@@ -150,6 +181,9 @@ start:
 	mov	si, text_80286
 	jmp	.print
 
+	; If this is a 80386 or later, we have access to 32-bit registers, including EFLAGS
+	; Bit 18 of the EFLAGS register is the AC flag, introduced on the 80486, hardwired to 0 on CPUs where it is not supported
+	; By attempting to flip it, we can distinguish between the 80386 and later CPUs
 .test_80486:
 	pushfd
 	pop	eax
@@ -168,6 +202,9 @@ start:
 	mov	si, text_80386
 	jmp	.print
 
+	; Bit 21 of the EFLAGS register is the ID flag, first introduced on the Intel Pentium
+	; Its presence permits using the CPUID instruction for finer differentiation between CPUs
+	; Again, we will attempt to flip this bit and check if it changes
 .test_80586:
 	mov	eax, ecx
 	xor	eax, 0x200000
@@ -182,6 +219,7 @@ start:
 	mov	si, text_80486
 	jmp	.print
 
+	; If the CPUID instruction exists, we can check the vendor ID and family
 .test_vendor:
 	mov	eax, 0
 	cpuid
@@ -209,6 +247,7 @@ start:
 	mov	eax, 1
 	cpuid
 	shr	eax, 8
+	; Convert family value into an ASCII character
 	and	al, 0xF
 	cmp	al, 10
 	jc	.3
