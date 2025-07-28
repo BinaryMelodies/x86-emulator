@@ -775,6 +775,113 @@ static inline void x87_state_restore_protected_mode32(x86_state_t * emu, x86_seg
 	x87_state_restore_registers(emu, segment, offset, offset + 0x000E);
 }
 
+static inline uint8_t x87_abridge_tw(uint16_t tw)
+{
+	uint8_t abridged_tw = 0;
+	for(int i = 0; i < 8; i++)
+	{
+		if(((tw >> (i * 2)) & 3) != 3)
+			abridged_tw = 1 << i;
+	}
+	return abridged_tw;
+}
+
+static inline void x87_state_save_extended_common(x86_state_t * emu, x86_segnum_t segment, uoff_t offset, int xmm_count)
+{
+	x86_memory_segmented_write16(emu, segment, offset + 0x0000, emu->x87.cw);
+	x86_memory_segmented_write16(emu, segment, offset + 0x0002, emu->x87.sw);
+	x86_memory_segmented_write8(emu, segment, offset + 0x0004, x87_abridge_tw(emu->x87.tw));
+	x86_memory_segmented_write16(emu, segment, offset + 0x0006, emu->x87.fop & 0x07FF);
+	x86_memory_segmented_write32(emu, segment, offset + 0x0018, emu->mxcsr);
+	x86_memory_segmented_write32(emu, segment, offset + 0x0018, 0); // TODO: MXCSR_MASK
+	for(int i = 0; i < 8; i++)
+	{
+		float80_t fpr = x87_register_get80(emu, i);
+		x86_memory_segmented_write80fp(emu, segment, offset + 0x0020 + 16 * i, fpr);
+	}
+	for(int i = 0; i < xmm_count; i++)
+	{
+		x86_memory_segmented_write128(emu, segment, offset + 0x00A0 + 16 * i, &emu->xmm[i]);
+	}
+}
+
+static inline void x87_state_restore_extended_common(x86_state_t * emu, x86_segnum_t segment, uoff_t offset, int xmm_count)
+{
+	emu->x87.cw = x86_memory_segmented_read16(emu, segment, offset + 0x0000);
+	emu->x87.sw = x86_memory_segmented_read16(emu, segment, offset + 0x0002);
+	uint8_t abridged_tw = x86_memory_segmented_read8(emu, segment, offset + 0x0004);
+	emu->x87.fop = 0xD800 | x86_memory_segmented_read16(emu, segment, offset + 0x0006);
+	emu->mxcsr = x86_memory_segmented_read32(emu, segment, offset + 0x0018);
+	for(int i = 0; i < 8; i++)
+	{
+		float80_t fpr = x86_memory_segmented_read80fp(emu, segment, offset + 10 * i);
+
+		int number = x87_register_number(emu, i);
+#if _SUPPORT_FLOAT80
+		emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
+#endif
+		emu->x87.bank[emu->x87.current_bank].fpr[number].f = fpr;
+		if((abridged_tw & (1 << number)) != 0)
+			x87_tag_set(emu, i, X87_TAG_EMPTY);
+		else
+			x87_register_tag(emu, i);
+	}
+	for(int i = 0; i < xmm_count; i++)
+	{
+		x86_memory_segmented_read128(emu, segment, offset + 0x00A0 + 16 * i, &emu->xmm[i]);
+	}
+}
+
+static inline void x87_state_save_extended32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
+{
+	x87_state_save_extended_common(emu, segment, offset, 8);
+	x86_memory_segmented_write32(emu, segment, offset + 0x0008, emu->x87.fip);
+	x86_memory_segmented_write16(emu, segment, offset + 0x000C, emu->x87.fcs);
+	x86_memory_segmented_write32(emu, segment, offset + 0x0010, emu->x87.fdp);
+	x86_memory_segmented_write16(emu, segment, offset + 0x0014, emu->x87.fds);
+}
+
+static inline void x87_state_restore_extended32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
+{
+	x87_state_restore_extended_common(emu, segment, offset, 8);
+	emu->x87.fip = x86_memory_segmented_read32(emu, segment, offset + 0x0008);
+	emu->x87.fcs = x86_memory_segmented_read16(emu, segment, offset + 0x000C);
+	emu->x87.fdp = x86_memory_segmented_read32(emu, segment, offset + 0x0010);
+	emu->x87.fds = x86_memory_segmented_read16(emu, segment, offset + 0x0014);
+}
+
+static inline void x87_state_save_extended32_64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
+{
+	x87_state_save_extended_common(emu, segment, offset, 16);
+	x86_memory_segmented_write32(emu, segment, offset + 0x0008, emu->x87.fip);
+	x86_memory_segmented_write16(emu, segment, offset + 0x000C, emu->x87.fcs);
+	x86_memory_segmented_write32(emu, segment, offset + 0x0010, emu->x87.fdp);
+	x86_memory_segmented_write16(emu, segment, offset + 0x0014, emu->x87.fds);
+}
+
+static inline void x87_state_restore_extended32_64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
+{
+	x87_state_restore_extended_common(emu, segment, offset, 16);
+	emu->x87.fip = x86_memory_segmented_read32(emu, segment, offset + 0x0008);
+	emu->x87.fcs = x86_memory_segmented_read16(emu, segment, offset + 0x000C);
+	emu->x87.fdp = x86_memory_segmented_read32(emu, segment, offset + 0x0010);
+	emu->x87.fds = x86_memory_segmented_read16(emu, segment, offset + 0x0014);
+}
+
+static inline void x87_state_save_extended64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
+{
+	x87_state_save_extended_common(emu, segment, offset, 16);
+	x86_memory_segmented_write64(emu, segment, offset + 0x0008, emu->x87.fip);
+	x86_memory_segmented_write64(emu, segment, offset + 0x0010, emu->x87.fdp);
+}
+
+static inline void x87_state_restore_extended64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
+{
+	x87_state_restore_extended_common(emu, segment, offset, 16);
+	emu->x87.fip = x86_memory_segmented_read64(emu, segment, offset + 0x0008);
+	emu->x87.fdp = x86_memory_segmented_read64(emu, segment, offset + 0x0010);
+}
+
 static inline void x87_store_exception_pointers(x86_state_t * emu)
 {
 	emu->x87.fop = emu->x87.next_fop;

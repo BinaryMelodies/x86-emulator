@@ -916,6 +916,24 @@ static inline uint64_t x86_memory_segmented_read64(x86_state_t * emu, x86_segnum
 	return le64toh(result);
 }
 
+static inline float80_t x86_memory_segmented_read80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset)
+{
+	uint64_t fraction;
+	uint16_t exponent;
+	bool sign;
+	fraction = x86_memory_segmented_read64(emu, segment_number, offset);
+	exponent = x86_memory_segmented_read16(emu, segment_number, offset + 8);
+	sign = (exponent & 0x8000) != 0;
+	exponent &= 0x7FFF;
+	return x87_convert_to_float80(fraction, exponent, sign);
+}
+
+static inline void x86_memory_segmented_read128(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, x86_sse_register_t * value)
+{
+	value->XMM_Q(0) = x86_memory_segmented_read64(emu, segment_number, offset);
+	value->XMM_Q(1) = x86_memory_segmented_read64(emu, segment_number, offset + 8);
+}
+
 static inline uint16_t x87_memory_segmented_read16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset)
 {
 	uint16_t result = 0;
@@ -1097,6 +1115,22 @@ static inline void x86_memory_segmented_write64(x86_state_t * emu, x86_segnum_t 
 {
 	value = htole64(value);
 	x86_memory_segmented_write(emu, segment_number, offset, 8, &value);
+}
+
+static inline void x86_memory_segmented_write80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, float80_t value)
+{
+	uint64_t fraction;
+	uint16_t exponent;
+	bool sign;
+	x87_convert_from_float80(value, &fraction, &exponent, &sign);
+	x86_memory_segmented_write64(emu, segment_number, offset,     fraction);
+	x86_memory_segmented_write16(emu, segment_number, offset + 8, exponent | (sign ? 0x8000 : 0));
+}
+
+static inline void x86_memory_segmented_write128(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, x86_sse_register_t * value)
+{
+	x86_memory_segmented_write64(emu, segment_number, offset,     value->XMM_Q(0));
+	x86_memory_segmented_write64(emu, segment_number, offset + 8, value->XMM_Q(1));
 }
 
 static inline void x87_memory_segmented_write16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset, uint16_t value)

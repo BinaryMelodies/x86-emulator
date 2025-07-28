@@ -241,6 +241,7 @@ TSC	CPUID.EAX=00000001:EDX.4
 TSCP	CPUID.EAX=80000001:EDX.27
 V25S	CPU:V25/V25S
 VME	CPUID.EAX=00000001:EDX.1
+XSAVE	CPUID.EAX=00000001:ECX.26
 X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 
 @instructionset
@@ -1017,13 +1018,18 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0FAB	386+	BTS	Ev, Gv
 0FAC	386+	SHRD	Ev, Gv, Ib
 0FAD	386+	SHRD	Ev, Gv, CL
-NP0FAE/0	586+	FXSAVE/FXSAVE64	M	feature:	FXSR
+NP0FAE/0	586+	FXSAVE	M	feature:	FXSR
 F30FAE/0	64,586+	RDFSBASE	Ry	feature:	FSGSBASE
-NP0FAE/1	586+	FXRSTOR/FXRSTOR64	M	feature:	FXSR
+NP0FAE/1	586+	FXRSTOR	M	feature:	FXSR
 F30FAE/1	64,586+	RDGSBASE	Ry	feature:	FSGSBASE
+# TODO: is it SIMD?
+NP0FAE/2	64,586+	LDMXCSR	Md	feature:	SSE_NON_SIMD
 F30FAE/2	64,586+	WRFSBASE	Ry	feature:	FSGSBASE
+# TODO: is it SIMD?
+NP0FAE/3	64,586+	STMXCSR	Md	feature:	SSE_NON_SIMD
 F30FAE/3	64,586+	WRGSBASE	Ry	feature:	FSGSBASE
-#0FAE/4
+NP0FAE/4	586+	XSAVE/XSAVE64	M	feature:	XSAVE
+NP0FAE/5	586+	XRSTOR/XRSTOR64	M	feature:	XSAVE
 #0FAE/5
 #0FAE/6
 #0FAE/7
@@ -2902,6 +2908,10 @@ else
 		$0.$O = x86_load_access_rights$O(descriptor);
 }
 
+@instruction LDMXCSR
+// TODO: check bits
+emu->mxcsr = $0;
+
 @instruction LEA|mod=m
 $0.$O = $1.off;
 
@@ -4088,6 +4098,9 @@ else
 if(!had_if)
 	emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
 
+@instruction STMXCSR
+$0 = emu->mxcsr;
+
 @instruction STOP
 @comment NEC specific
 emu->state = X86_STATE_STOPPED;
@@ -5226,6 +5239,36 @@ float80_t tmp = $0;
 $0 = $st;
 $st = tmp;
 /* TODO */
+
+@instruction FXSAVE
+// TODO: check for exceptions
+if(emu->parser->operation_size == SIZE_64BIT)
+{
+	x87_state_save_extended64(emu, _seg, _off);
+}
+else if(emu->parser->code_size == SIZE_64BIT)
+{
+	x87_state_save_extended32_64(emu, _seg, _off);
+}
+else
+{
+	x87_state_save_extended32(emu, _seg, _off);
+}
+
+@instruction FXRSTOR
+// TODO: check for exceptions
+if(emu->parser->operation_size == SIZE_64BIT)
+{
+	x87_state_restore_extended64(emu, _seg, _off);
+}
+else if(emu->parser->code_size == SIZE_64BIT)
+{
+	x87_state_restore_extended32_64(emu, _seg, _off);
+}
+else
+{
+	x87_state_restore_extended32(emu, _seg, _off);
+}
 
 @instruction FXTRACT
 float80_t st, st1;
@@ -7176,7 +7219,7 @@ if(($a & 0x08) != 0)
   description: Intel Core 2 "Penryn"
   vendor: Intel
   class: intel
-  features: $merom, sse4.1, vtx, vtd
+  features: $merom, sse4.1, vtx, vtd, xsave
   family: 6
   model: 23
   highest_function: 0x0A
@@ -7289,7 +7332,7 @@ if(($a & 0x08) != 0)
   description: Intel Atom "Goldmont"
   vendor: Intel
   class: intel
-  features: $silvermont, sha, pclmul, rdseed, mpx, vtd
+  features: $silvermont, sha, pclmul, rdseed, mpx, vtd, xsave
   family: 6
   model: 92
   highest_function: 0x15
@@ -7559,7 +7602,7 @@ if(($a & 0x08) != 0)
   description: AMD "Bulldozer"
   vendor: amd
   class: amd
-  features: $k10, -sse4a, ssse3, sse4.1, sse4.2, avx, aes, clmul, xop, fma4, f16c, -3dnow, -3dnowext
+  features: $k10, -sse4a, ssse3, sse4.1, sse4.2, avx, aes, clmul, xop, fma4, f16c, xsave, -3dnow, -3dnowext
   family: 21
   # Vishera
   model: 2

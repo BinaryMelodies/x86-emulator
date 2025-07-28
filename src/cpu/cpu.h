@@ -1068,6 +1068,20 @@ union x86_sse_register_t
 };
 typedef union x86_sse_register_t x86_sse_register_t;
 
+#if BYTE_ORDER == LITTLE_ENDIAN
+# define XMM_B(i) b[(i)]
+# define XMM_W(i) w[(i)]
+# define XMM_L(i) l[(i)]
+# define XMM_S(i) s[(i)]
+#elif BYTE_ORDER == BIT_ENDIAN
+# define XMM_B(i) b[(i) ^ 7]
+# define XMM_W(i) w[(i) ^ 3]
+# define XMM_L(i) l[(i) ^ 1]
+# define XMM_S(i) s[(i) ^ 1]
+#endif
+#define XMM_Q(i) q[(i)]
+#define XMM_D(i) d[(i)]
+
 /* Current execution state of the CPU, typically running or halted */
 enum x86_execution_state_t
 {
@@ -1294,6 +1308,17 @@ struct x87_register_t
 	};
 };
 typedef struct x87_register_t x87_register_t;
+
+struct x86_tile_register_t
+{
+	// TODO
+	struct
+	{
+		uint8_t byte[64];
+	} row[16];
+};
+
+typedef struct x86_tile_register_t x86_tile_register_t;
 
 /* Intel 8089 represents addresses as 20 bits with a tag to switch between memory and I/O space (or local space) */
 typedef struct x89_address_t x89_address_t;
@@ -2165,6 +2190,10 @@ struct x86_state_t
 	} bnd[4];
 
 	uint64_t bndcfgs, bndcfgu, bndstatus;
+
+	/* AMX */
+	x86_tile_register_t tmm[8];
+	uint64_t tilecfg;
 
 	/* Cyrix configuration control registers */
 	bool port22_accessed; // whether a configuration control register is available at the next I/O instruction on port 0x23

@@ -1,3 +1,5 @@
+#ifndef __GENERAL_H
+#define __GENERAL_H
 
 // registers
 
@@ -73,6 +75,8 @@ static inline uint8_t x86_memory_segmented_read8(x86_state_t * emu, x86_segnum_t
 static inline uint16_t x86_memory_segmented_read16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset);
 static inline uint32_t x86_memory_segmented_read32(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset);
 static inline uint64_t x86_memory_segmented_read64(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset);
+static inline float80_t x86_memory_segmented_read80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset);
+static inline void x86_memory_segmented_read128(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, x86_sse_register_t * value);
 
 static inline uint16_t x87_memory_segmented_read16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset);
 static inline uint32_t x87_memory_segmented_read32(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset);
@@ -82,6 +86,8 @@ static inline void x86_memory_segmented_write8(x86_state_t * emu, x86_segnum_t s
 static inline void x86_memory_segmented_write16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uint16_t value);
 static inline void x86_memory_segmented_write32(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uint32_t value);
 static inline void x86_memory_segmented_write64(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uint64_t value);
+static inline void x86_memory_segmented_write80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, float80_t value);
+static inline void x86_memory_segmented_write128(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, x86_sse_register_t * value);
 
 static inline void x87_memory_segmented_write16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset, uint16_t value);
 static inline void x87_memory_segmented_write32(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset, uint32_t value);
@@ -106,6 +112,33 @@ static inline void x86_ice_storeall_386(x86_state_t * emu, uaddr_t offset);
 static inline void x87_convert_from_float80(float80_t value, uint64_t * fraction, uint16_t * exponent, bool * sign);
 static inline float80_t x87_convert_to_float80(uint64_t fraction, uint16_t exponent, bool sign);
 static inline float80_t x87_convert64_to_float(uint64_t value);
+
+static inline float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number);
+static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, int bank_number, float80_t value);
+
+static inline void x87_environment_save_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_restore_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+
+static inline void x87_state_save_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_save_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_restore_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_save_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_save_protected_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_restore_protected_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_save_protected_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_protected_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_save_protected_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_environment_restore_protected_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_save_protected_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_protected_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_save_extended32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_extended32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_save_extended32_64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_extended32_64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_save_extended64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
+static inline void x87_state_restore_extended64(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
 
 // x86
 
@@ -214,3 +247,4 @@ static const char * _x86_register_name64[];
 static const char * _x86_segment_name[]; // NEC names come first, followed by Intel names
 #define x86_segment_name(prs, number) (_x86_segment_name[(number) + ((prs)->use_nec_syntax ? 0 : 8)])
 
+#endif // __GENERAL_H
