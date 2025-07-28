@@ -659,7 +659,6 @@ static inline void x86_prefetch_queue_flush(x86_state_t * emu)
 	emu->prefetch_pointer = emu->xip;
 }
 
-// Note: this must be called before processing any other instruction
 static inline void x86_prefetch_queue_fill(x86_state_t * emu)
 {
 	if(emu->xip + emu->prefetch_queue_data_size != emu->prefetch_pointer)
@@ -676,7 +675,7 @@ static inline void x86_prefetch_queue_fill(x86_state_t * emu)
 
 	emu->prefetch_in_progress = true;
 
-	if(setjmp(emu->exc) == 0)
+	if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_PREFETCH]) == 0)
 	{
 		while(emu->prefetch_queue_data_size < emu->cpu_traits.prefetch_queue_size)
 		{
@@ -690,6 +689,7 @@ static inline void x86_prefetch_queue_fill(x86_state_t * emu)
 			emu->prefetch_pointer++;
 		}
 	}
+	emu->exec_mode = EXEC_MODE_NORMAL;
 
 	emu->prefetch_in_progress = false;
 }

@@ -80,7 +80,7 @@ static inline void x87_trigger_interrupt(x86_state_t * emu)
 		if((emu->x87.cw & X87_CW_IEM) == 0)
 		{
 			emu->emulation_result = X86_RESULT(X86_RESULT_IRQ, emu->x87.irq_number);
-			longjmp(emu->exc, 1);
+			longjmp(emu->exc[emu->exec_mode], 1);
 		}
 	}
 	else
@@ -88,7 +88,7 @@ static inline void x87_trigger_interrupt(x86_state_t * emu)
 		if(emu->x87.fpu_type == X87_FPU_INTEGRATED && (emu->cr[0] & X86_CR0_NE) == 0)
 		{
 			emu->emulation_result = X86_RESULT(X86_RESULT_IRQ, emu->x87.irq_number);
-			longjmp(emu->exc, 1);
+			longjmp(emu->exc[emu->exec_mode], 1);
 		}
 		else
 		{

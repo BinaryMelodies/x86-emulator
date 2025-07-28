@@ -1169,7 +1169,7 @@ x86_result_t x86_step(x86_state_t * emu)
 
 	if(x86_is_emulation_mode(emu))
 	{
-		if(setjmp(emu->exc) == 0)
+		if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_NORMAL]) == 0)
 		{
 			emu->x80.parser->debug_output[0] = '\0';
 			emu->x80.parser->index_prefix = NONE;
@@ -1180,7 +1180,7 @@ x86_result_t x86_step(x86_state_t * emu)
 	}
 	else
 	{
-		if(setjmp(emu->exc) == 0)
+		if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_NORMAL]) == 0)
 		{
 			emu->old_xip = emu->xip;
 
@@ -1212,7 +1212,7 @@ x86_result_t x86_step(x86_state_t * emu)
 	if(emu->tf)
 	{
 		emu->dr[6] |= X86_DR6_BS;
-		if(setjmp(emu->exc) == 0)
+		if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_NORMAL]) == 0)
 		{
 			x86_trigger_interrupt(emu, X86_EXC_DB | X86_EXC_TRAP, 0);
 			// TODO: what happens to the emulation result?
@@ -1278,7 +1278,7 @@ void x87_step(x86_state_t * emu)
 
 	if((emu->x87.sw & X87_SW_B) == 0)
 		return;
-	if(setjmp(emu->exc) != 0)
+	if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_NORMAL]) != 0)
 		return; /* exception occured */
 
 	bool disassemble = emu->option_disassemble;
@@ -1428,7 +1428,7 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 		{
 			if(emu->state == X86_STATE_STOPPED)
 				return false;
-			if(setjmp(emu->exc) != 0)
+			if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_NORMAL]) != 0)
 				return true;
 			x86_enter_interrupt(emu, exception_number, 0);
 			return true;

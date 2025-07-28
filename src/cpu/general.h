@@ -190,7 +190,7 @@ static inline noreturn void x86_v60_exception(x86_state_t * emu, int exception)
 {
 	// TODO
 	emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception);
-	longjmp(emu->exc, 1);
+	longjmp(emu->exc[emu->exec_mode], 1);
 	for(;;);
 }
 
@@ -199,7 +199,7 @@ static inline noreturn void x86_ia64_intercept(x86_state_t * emu, int exception)
 	// TODO
 	x86_set_xip(emu, emu->old_xip);
 	emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception);
-	longjmp(emu->exc, 1);
+	longjmp(emu->exc[emu->exec_mode], 1);
 	for(;;);
 }
 

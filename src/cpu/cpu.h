@@ -2220,7 +2220,12 @@ struct x86_state_t
 
 	// CPU execution state
 	x86_result_t emulation_result; // result to return from emulation function
-	jmp_buf exc; // target to jump to on exceptions
+	jmp_buf exc[2]; // target to jump to on exceptions
+	enum
+	{
+		EXEC_MODE_NORMAL = 0,
+		EXEC_MODE_PREFETCH = 1,
+	} exec_mode;
 	uoff_t old_xip; // IP/EIP/RIP on instruction start, used for faults
 	x86_exception_class_t current_exception; // the class of the latest exception (benign if none occured), required to escalate to double/triple fault
 
