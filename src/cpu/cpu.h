@@ -760,7 +760,7 @@ enum
 	X86_EFER_MCOM = 0x00020000,
 	/* TODO: other fields */
 
-	// Flags, accessed via emu->cr0
+	// Flags, accessed via emu->xcr0
 	X86_XCR0_X87 = 0x00000001,
 	X86_XCR0_XMM = 0x00000002,
 	/* TODO: other fields */
