@@ -2,11 +2,46 @@
 ; Launch using:
 ; - x86emu -c <CPU architecture name> test/cpu.com
 
+; based on https://www.rcollins.org/ddj/Sep96/Sep96.html
+
 	org	0x100
 
 	bits	16
 
 start:
+	jmp	.test_80286
+
+; using the code in https://drdobbs.com/embedded-systems/processor-detection-schemes/184409011
+.test_cache:
+	std
+
+	push	ds
+	pop	es
+	mov	dx, 1
+	mov	di, .end_label
+	mov	al, 0x90 ; NOP instruction
+	mov	cx, 3
+	rep	stosb
+
+	cld
+	nop
+	nop
+	nop
+	dec	dx
+	nop
+.end_label:
+	nop
+
+	test	dx, dx
+	jnz	.is_4_byte
+
+.is_6_byte:
+	mov	al, 2
+	ret
+
+.is_4_byte:
+	mov	al, 1
+	ret
 
 .test_80286:
 	pushf
@@ -38,11 +73,29 @@ start:
 	cmp	al, 8
 	jne	.is_nec
 
+	call	.test_cache
+	cmp	al, 2
+	je	.is_8086
+
+.is_8088:
+	mov	si, text_8088
+	jmp	.print
+
+.is_8086:
 	mov	si, text_8086
 	jmp	.print
 
 .is_nec:
-	mov	si, text_nec
+	call	.test_cache
+	cmp	al, 2
+	je	.is_v30
+
+.is_v20:
+	mov	si, text_v20
+	jmp	.print
+
+.is_v30:
+	mov	si, text_v30
 	jmp	.print
 
 .is_8018x_or_nec:
@@ -52,10 +105,19 @@ start:
 	pushf
 	pop	ax
 	test	al, 2
-	jnz	.is_80186
+	jnz	.is_8018x
 
 .is_nec_v25_v55:
 	mov	si, text_nec_v25
+	jmp	.print
+
+.is_8018x:
+	call	.test_cache
+	cmp	al, 2
+	je	.is_80186
+
+.is_80188:
+	mov	si, text_80188
 	jmp	.print
 
 .is_80186:
@@ -169,16 +231,25 @@ end:
 	jmp	end
 
 text_8086:
-	db	"Intel 8086/8088", 0
+	db	"Intel 8086", 0
 
-text_nec:
-	db	"NEC V20/V30 or later NEC", 0
+text_8088:
+	db	"Intel 8088", 0
+
+text_v30:
+	db	"NEC V30", 0
+
+text_v20:
+	db	"NEC V20", 0
 
 text_nec_v25:
 	db	"NEC V25/V35 or NEC V55", 0
 
 text_80186:
-	db	"Intel 80186/80188", 0
+	db	"Intel 80186", 0
+
+text_80188:
+	db	"Intel 80188", 0
 
 text_80286:
 	db	"Intel 80286", 0
