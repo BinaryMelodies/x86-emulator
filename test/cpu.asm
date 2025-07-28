@@ -108,7 +108,20 @@ start:
 	jnz	.is_8018x
 
 .is_nec_v25_v55:
-	mov	si, text_nec_v25
+	or	al, 0x28
+	push	ax
+	popf
+	pushf
+	pop	ax
+	test	al, 0x28
+	jnz	.is_v25
+
+.is_v55:
+	mov	si, text_v55
+	jmp	.print
+
+.is_v25:
+	mov	si, text_v25
 	jmp	.print
 
 .is_8018x:
@@ -242,8 +255,11 @@ text_v30:
 text_v20:
 	db	"NEC V20", 0
 
-text_nec_v25:
-	db	"NEC V25/V35 or NEC V55", 0
+text_v25:
+	db	"NEC V25/V35", 0
+
+text_v55:
+	db	"NEC V55", 0
 
 text_80186:
 	db	"Intel 80186", 0
