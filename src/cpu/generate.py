@@ -2425,9 +2425,9 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				print_file(f"{indent1}\treturn;", file = file)
 				print_file(f"{indent1}x86_prefetch_queue_fill(emu);", file = file)
 
-			if modrm == 'mem':
-				# Needed to fix IP-relative addresses
-				print_file(f"{indent1}x86_calculate_operand_address(emu);", file = file)
+				if modrm == 'mem':
+					# Needed to fix IP-relative addresses
+					print_file(f"{indent1}x86_calculate_operand_address(emu);", file = file)
 
 				if not (entry.kwds['mnem'] in {'ADC', 'ADD', 'AND', 'BTC', 'BTR', 'BTS', 'DEC', 'INC', 'NEG', 'NOT', 'OR', 'SBB', 'SUB', 'XCHG', 'XOR'} and any('address' in opd for opd in opds) and modrm == 'mem') \
 			and not (entry.kwds['mnem'] == 'MOV' and ('Cy' in entry.kwds['opds'] or 'Dy' in entry.kwds['opds'])):

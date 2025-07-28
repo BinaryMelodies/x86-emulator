@@ -4577,6 +4577,8 @@ if(prs->fpu_type != X87_FPU_NONE)
 {
 	if(execute)
 	{
+		x86_calculate_operand_address(emu);
+
 		if(X86_CPU_286 <= emu->cpu_type)
 		{
 			if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)

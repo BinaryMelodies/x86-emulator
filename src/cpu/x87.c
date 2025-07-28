@@ -696,13 +696,13 @@ static inline void x87_environment_restore_real_mode32(x86_state_t * emu, x86_se
 static inline void x87_state_save_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
 {
 	x87_environment_save_real_mode32(emu, segment, offset);
-	x87_state_save_registers(emu, segment, offset, offset + 0x000E);
+	x87_state_save_registers(emu, segment, offset, offset + 0x001C);
 }
 
 static inline void x87_state_restore_real_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
 {
 	x87_environment_restore_real_mode32(emu, segment, offset);
-	x87_state_restore_registers(emu, segment, offset, offset + 0x000E);
+	x87_state_restore_registers(emu, segment, offset, offset + 0x001C);
 }
 
 static inline void x87_environment_save_protected_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
@@ -766,13 +766,13 @@ static inline void x87_environment_restore_protected_mode32(x86_state_t * emu, x
 static inline void x87_state_save_protected_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
 {
 	x87_environment_save_protected_mode32(emu, segment, offset);
-	x87_state_save_registers(emu, segment, offset, offset + 0x000E);
+	x87_state_save_registers(emu, segment, offset, offset + 0x001C);
 }
 
 static inline void x87_state_restore_protected_mode32(x86_state_t * emu, x86_segnum_t segment, uoff_t offset)
 {
 	x87_environment_restore_protected_mode32(emu, segment, offset);
-	x87_state_restore_registers(emu, segment, offset, offset + 0x000E);
+	x87_state_restore_registers(emu, segment, offset, offset + 0x001C);
 }
 
 static inline uint8_t x87_abridge_tw(uint16_t tw)
@@ -793,7 +793,7 @@ static inline void x87_state_save_extended_common(x86_state_t * emu, x86_segnum_
 	x86_memory_segmented_write8(emu, segment, offset + 0x0004, x87_abridge_tw(emu->x87.tw));
 	x86_memory_segmented_write16(emu, segment, offset + 0x0006, emu->x87.fop & 0x07FF);
 	x86_memory_segmented_write32(emu, segment, offset + 0x0018, emu->mxcsr);
-	x86_memory_segmented_write32(emu, segment, offset + 0x0018, 0); // TODO: MXCSR_MASK
+	x86_memory_segmented_write32(emu, segment, offset + 0x001C, 0); // TODO: MXCSR_MASK
 	for(int i = 0; i < 8; i++)
 	{
 		float80_t fpr = x87_register_get80(emu, i);
