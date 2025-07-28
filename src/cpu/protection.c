@@ -2267,8 +2267,8 @@ static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t 
 
 static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int exception, uoff_t error_code)
 {
-	if(emu->prefetch_in_progress)
-		longjmp(emu->exc[emu->exec_mode], 1); // simply return to the prefetch start
+	if(emu->fetch_mode == FETCH_MODE_PREFETCH)
+		longjmp(emu->exc[emu->fetch_mode], 1); // simply return to the prefetch start
 
 	if(emu->cpu_type == X86_CPU_V60)
 	{
@@ -2352,7 +2352,7 @@ static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int except
 			break;
 		case X86_EXC_CLASS_DOUBLE_FAULT:
 			emu->emulation_result = X86_RESULT(X86_RESULT_TRIPLE_FAULT, 0);
-			longjmp(emu->exc[emu->exec_mode], 1);
+			longjmp(emu->exc[emu->fetch_mode], 1);
 			break;
 		}
 	}
@@ -2368,7 +2368,7 @@ static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int except
 		x86_enter_interrupt(emu, exception, error_code);
 		emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception & 0xFF);
 	}
-	longjmp(emu->exc[emu->exec_mode], 1);
+	longjmp(emu->exc[emu->fetch_mode], 1);
 	for(;;);
 }
 

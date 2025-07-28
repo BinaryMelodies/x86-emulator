@@ -673,9 +673,7 @@ static inline void x86_prefetch_queue_fill(x86_state_t * emu)
 		emu->prefetch_queue_data_offset = 0;
 	}
 
-	emu->prefetch_in_progress = true;
-
-	if(setjmp(emu->exc[emu->exec_mode = EXEC_MODE_PREFETCH]) == 0)
+	if(setjmp(emu->exc[emu->fetch_mode = FETCH_MODE_PREFETCH]) == 0)
 	{
 		while(emu->prefetch_queue_data_size < emu->cpu_traits.prefetch_queue_size)
 		{
@@ -689,9 +687,8 @@ static inline void x86_prefetch_queue_fill(x86_state_t * emu)
 			emu->prefetch_pointer++;
 		}
 	}
-	emu->exec_mode = EXEC_MODE_NORMAL;
 
-	emu->prefetch_in_progress = false;
+	emu->fetch_mode = FETCH_MODE_NORMAL;
 }
 
 static inline void x86_memory_segmented_read_exec(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uaddr_t count, void * buffer)

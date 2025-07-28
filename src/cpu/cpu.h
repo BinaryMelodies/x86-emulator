@@ -2223,9 +2223,9 @@ struct x86_state_t
 	jmp_buf exc[2]; // target to jump to on exceptions
 	enum
 	{
-		EXEC_MODE_NORMAL = 0,
-		EXEC_MODE_PREFETCH = 1,
-	} exec_mode;
+		FETCH_MODE_NORMAL = 0,
+		FETCH_MODE_PREFETCH = 1, // also avoid generating interrupts for prefetch
+	} fetch_mode; // used to index the exc[] variable
 	uoff_t old_xip; // IP/EIP/RIP on instruction start, used for faults
 	x86_exception_class_t current_exception; // the class of the latest exception (benign if none occured), required to escalate to double/triple fault
 
@@ -2234,7 +2234,6 @@ struct x86_state_t
 	uint8_t prefetch_queue[X86_PREFETCH_QUEUE_MAX_SIZE];
 	uint8_t prefetch_queue_data_size; // number of actual bytes in queue
 	uint8_t prefetch_queue_data_offset; // offset to first data byte in queue
-	bool prefetch_in_progress; // set to true to avoid generating interrupts for prefetch
 	uoff_t prefetch_pointer; // offset (within CS) of next byte to fetch
 
 	// structure to restart a REP or WAIT instruction
