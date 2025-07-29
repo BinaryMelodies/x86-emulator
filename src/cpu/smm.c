@@ -257,6 +257,22 @@ static inline void x86_descriptor_cache_write_amd64(x86_state_t * emu, uaddr_t o
 	x86_memory_write(emu, offset, 16, cache);
 }
 
+// similar functionality to x86_segment_load_protected_mode_386
+static inline void x86_descriptor_cache_read_cyrix(x86_state_t * emu, x86_segnum_t segment_number, uint8_t * descriptor)
+{
+	emu->sr[segment_number].limit = x86_descriptor_get_word(descriptor, 0);
+	emu->sr[segment_number].limit |= (uint32_t)(x86_descriptor_get_word(descriptor, 3) & 0x000F) << 16;
+	emu->sr[segment_number].base = x86_descriptor_get_word(descriptor, 1) | ((uint32_t)(x86_descriptor_get_word(descriptor, 2) & 0x00FF) << 16);
+	emu->sr[segment_number].base |= (uint32_t)(x86_descriptor_get_word(descriptor, 3) & 0xFF00) << 16;
+	emu->sr[segment_number].access = x86_descriptor_get_word(descriptor, 2) & 0xFF00;
+	emu->sr[segment_number].access |= (uint32_t)(x86_descriptor_get_word(descriptor, 3) & 0x00F0) << 16;
+	if((emu->sr[segment_number].access & X86_DESC_G) != 0)
+	{
+		emu->sr[segment_number].limit <<= 12;
+		emu->sr[segment_number].limit |= 0xFFF;
+	}
+}
+
 //// ICE (STOREALL/LOADALL) for 286/386/486
 
 static inline void x86_ice_storeall_286(x86_state_t * emu)
@@ -919,7 +935,7 @@ static inline void x86_smm_store_state_cyrix(x86_state_t * emu, uaddr_t offset, 
 	uint32_t write_address = attributes.write_address;
 	uint32_t write_data = attributes.write_data;
 	bool code_writable = x86_is_code_writable(emu);
-	bool code_readable = x86_access_is_readable(emu->sr[X86_R_CS].access);
+	bool code_readable = x86_is_code_readable(emu);
 	bool internal_smi = attributes.source != X86_SMISRC_EXTERNAL;
 	bool nested_smi = attributes.nested_smi;
 	bool vga_access = attributes.vga_access;
@@ -1461,6 +1477,8 @@ static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 
 	if((emu->smm_revision_identifier & SMM_REVID_SMBASE_RELOC) != 0)
 		emu->smbase = x86_memory_read32(emu, offset - 0x8000 + 0x7EF8);
+
+	emu->cpu_level = X86_LEVEL_USER;
 }
 
 static inline void x86_smm_restore_state_amd64(x86_state_t * emu, uaddr_t offset)
@@ -1521,6 +1539,8 @@ static inline void x86_smm_restore_state_amd64(x86_state_t * emu, uaddr_t offset
 	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE20, &emu->sr[X86_R_SS]);
 	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE10, &emu->sr[X86_R_CS]);
 	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE00, &emu->sr[X86_R_ES]);
+
+	emu->cpu_level = X86_LEVEL_USER;
 }
 
 static inline void x86_smm_restore_state_intel64(x86_state_t * emu, uaddr_t offset)
@@ -1583,13 +1603,87 @@ static inline void x86_smm_restore_state_intel64(x86_state_t * emu, uaddr_t offs
 	{
 		x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7DE8));
 	}
+
+	emu->cpu_level = X86_LEVEL_USER;
 }
 
 static inline void x86_smm_restore_state_cyrix(x86_state_t * emu, uaddr_t offset)
 {
-	(void) emu;
-	(void) offset;
-	// TODO
+	uint8_t code_descriptor[8];
+
+	bool is_nested = false;
+	bool is_halted = false;
+	uint16_t flags;
+
+	emu->dr[7] = x86_memory_read32(emu, offset - 0x04); // TODO: check DMM_CTL.DBG_AS_DMI == 0
+	x86_flags_set32(emu, x86_memory_read32(emu, offset - 0x08));
+	emu->cr[0] = x86_memory_read32(emu, offset - 0x0C);
+	x86_set_xip(emu, x86_memory_read32(emu, offset - 0x14));
+	emu->sr[X86_R_CS].selector = x86_memory_read16(emu, offset - 0x18);
+
+	flags = x86_memory_read16(emu, offset - 0x24);
+
+	switch(emu->cpu_traits.smm_format)
+	{
+	default:
+		assert(false);
+
+	case X86_SMM_CX486SLCE:
+		x86_memory_read(emu, offset - 0x20, 8, code_descriptor);
+		x86_descriptor_cache_read_cyrix(emu, X86_R_CS, code_descriptor);
+		x86_set_cpl(emu, code_descriptor[5] >> 5);
+		break;
+
+	case X86_SMM_5X86:
+		// TODO: layout unknown for 5x86, using that of 6x86
+
+		x86_memory_read(emu, offset - 0x20, 8, code_descriptor);
+		x86_descriptor_cache_read_cyrix(emu, X86_R_CS, code_descriptor);
+
+		x86_set_cpl(emu, x86_memory_read16(emu, offset - 0x16) >> 5);
+
+		is_halted = (flags & 0x0010) != 0;
+		break;
+
+	case X86_SMM_M2:
+		x86_memory_read(emu, offset - 0x20, 8, code_descriptor);
+		x86_descriptor_cache_read_cyrix(emu, X86_R_CS, code_descriptor);
+
+		x86_set_cpl(emu, x86_memory_read16(emu, offset - 0x22) >> 5);
+
+		is_halted = (flags & 0x0010) != 0;
+		is_nested = (flags & 0x8000) != 0;
+		break;
+
+	case X86_SMM_MEDIAGX:
+		x86_memory_read(emu, offset - 0x20, 8, code_descriptor);
+		x86_descriptor_cache_read_cyrix(emu, X86_R_CS, code_descriptor);
+		x86_set_cpl(emu, code_descriptor[5] >> 5);
+
+		is_halted = (flags & 0x0010) != 0;
+		is_nested = (flags & 0x0100) != 0;
+		break;
+
+	case X86_SMM_GX2:
+		emu->sr[X86_R_CS].access = (uint32_t)x86_memory_read16(emu, offset - 0x16) << 8;
+		emu->sr[X86_R_CS].base = x86_memory_read32(emu, offset - 0x1C);
+		emu->sr[X86_R_CS].limit = x86_memory_read32(emu, offset - 0x1D);
+		emu->sr[X86_R_SS].access = (uint32_t)x86_memory_read16(emu, offset - 0x22) << 8;
+		emu->smm_ctl = x86_memory_read32(emu, offset - 0x30);
+		x86_set_cpl(emu, emu->sr[X86_R_SS].access >> 13);
+
+		is_halted = (flags & 0x0010) != 0;
+		is_nested = (flags & 0x0100) != 0;
+		break;
+	}
+
+	emu->cpu_level = is_nested ? X86_LEVEL_SMM : X86_LEVEL_USER;
+
+	if(is_halted)
+	{
+		emu->state = X86_STATE_HALTED;
+		emu->emulation_result = X86_RESULT(X86_RESULT_HALT, 0);
+	}
 }
 
 static inline void x86_smm_resume(x86_state_t * emu)

@@ -45,6 +45,7 @@ static inline bool x86_access_is_readable(uint16_t access);
 
 static inline bool x86_segment_is_executable(x86_segment_t * seg);
 static inline bool x86_segment_is_writable(x86_segment_t * seg);
+static inline bool x86_segment_is_readable(x86_segment_t * seg);
 
 static inline void x86_segment_check_limit(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uoff_t size, uoff_t error_code);
 static inline void x87_segment_check_limit(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset, uoff_t size, uoff_t error_code);
@@ -188,6 +189,11 @@ static inline bool x86_is_code_writable(x86_state_t * emu)
 {
 	//return x86_is_real_mode(emu) || x86_is_virtual_8086_mode(emu);
 	return !x86_segment_is_executable(&emu->sr[X86_R_CS]) && x86_segment_is_writable(&emu->sr[X86_R_CS]);
+}
+
+static inline bool x86_is_code_readable(x86_state_t * emu)
+{
+	return !x86_segment_is_executable(&emu->sr[X86_R_CS]) || x86_segment_is_readable(&emu->sr[X86_R_CS]);
 }
 
 static inline x86_operation_size_t x86_get_stack_size(x86_state_t * emu)
