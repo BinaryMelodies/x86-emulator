@@ -2480,6 +2480,13 @@ static inline uint32_t x86_memory_read32(x86_state_t * emu, uaddr_t address)
 	return le32toh(result);
 }
 
+static inline uint64_t x86_memory_read64(x86_state_t * emu, uaddr_t address)
+{
+	uint64_t result;
+	x86_memory_read(emu, address, 8, &result);
+	return le64toh(result);
+}
+
 static inline void x86_memory_write8(x86_state_t * emu, uaddr_t address, uint8_t value)
 {
 	x86_memory_write(emu, address, 1, &value);

@@ -888,8 +888,6 @@ static inline void x86_smm_store_state_intel64(x86_state_t * emu, uaddr_t offset
 
 	x86_memory_write64(emu, offset - 0x8000 + 0x7E40, emu->cr[4]);
 
-//	x86_memory_write64(emu, offset - 0x8000 + 0x7DE8, emu->cr[4]);// TODO: IO_RIP
-
 	x86_memory_write32(emu, offset - 0x8000 + 0x7DD8, emu->sr[X86_R_IDTR].base >> 32);
 	x86_memory_write32(emu, offset - 0x8000 + 0x7DD4, emu->sr[X86_R_LDTR].base >> 32);
 	x86_memory_write32(emu, offset - 0x8000 + 0x7DD0, emu->sr[X86_R_GDTR].base >> 32);
@@ -1317,10 +1315,8 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 
 static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 {
-	(void) emu;
-	(void) offset;
-	// TODO
-#if 0
+	bool restart_io = (emu->smm_revision_identifier & SMM_REVID_IO_RESTART) != 0 && x86_memory_read8(emu, offset - 0x8000 + 0x7F00) == 0xFF;
+
 	switch(emu->cpu_traits.smm_format)
 	{
 	default:
@@ -1339,7 +1335,7 @@ static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 		x86_descriptor_cache_read_386(emu, offset - 0x8000 + 0x7F3C, &emu->sr[X86_R_CS]);
 		x86_descriptor_cache_read_386(emu, offset - 0x8000 + 0x7F30, &emu->sr[X86_R_ES]);
 		emu->cr[4] = x86_memory_read32(emu, offset - 0x8000 + 0x7F28);
-		if((emu->smm_revision_identifier & SMM_REVID_IO_RESTART) != 0 && x86_memory_read8(emu, offset - 0x8000 + 0x7F00, 0) == 0xFF)
+		if(restart_io)
 		{
 			x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7F10));
 			emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F1C);
@@ -1360,152 +1356,233 @@ static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 		x86_descriptor_cache_read_p5(emu, offset - 0x8000 + 0x7F3C, &emu->sr[X86_R_CS]);
 		x86_descriptor_cache_read_p5(emu, offset - 0x8000 + 0x7F30, &emu->sr[X86_R_ES]);
 		emu->cr[4] = x86_memory_read32(emu, offset - 0x8000 + 0x7F28);
-		//x86_memory_write16(emu, offset - 0x8000 + 0x7F26, /* RSM control */); // TODO
-		//x86_memory_write16(emu, offset - 0x8000 + 0x7F24, emu->dr[6]); // TODO: alternate DR6
-		if(is_ins_io)
+		if(restart_io)
 		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F10, emu->old_xip);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F0C, emu->io_restart_xsi);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F08, emu->io_restart_xcx);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F04, emu->io_restart_xdi); // TODO: or CR0
+			x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7F10));
+			emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F0C);
+			emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7F08);
+			emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F04);
 		}
 		break;
 	case X86_SMM_P6:
 		// sandpile.org
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F9C, &emu->sr[X86_R_SS]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F90, &emu->sr[X86_R_CS]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F84, &emu->sr[X86_R_ES]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F78, &emu->sr[X86_R_LDTR]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F6C, &emu->sr[X86_R_GDTR]);
-		// TODO: undocumented field inbetween
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F5C, &emu->sr[X86_R_TR]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F50, &emu->sr[X86_R_IDTR]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F44, &emu->sr[X86_R_GS]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F38, &emu->sr[X86_R_FS]);
-		x86_descriptor_cache_write_p6(emu, offset - 0x8000 + 0x7F2C, &emu->sr[X86_R_DS]);
-		//x86_memory_write16(emu, offset - 0x8000 + 0x7F26, /* RSM control */); // TODO
-		//x86_memory_write16(emu, offset - 0x8000 + 0x7F24, emu->dr[6]); // TODO: alternate DR6
-		// TODO: a couple of undocumented fields
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F9C, &emu->sr[X86_R_SS]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F90, &emu->sr[X86_R_CS]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F84, &emu->sr[X86_R_ES]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F78, &emu->sr[X86_R_LDTR]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F6C, &emu->sr[X86_R_GDTR]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F5C, &emu->sr[X86_R_TR]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F50, &emu->sr[X86_R_IDTR]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F44, &emu->sr[X86_R_GS]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F38, &emu->sr[X86_R_FS]);
+		x86_descriptor_cache_read_p6(emu, offset - 0x8000 + 0x7F2C, &emu->sr[X86_R_DS]);
 		emu->cr[4] = x86_memory_read32(emu, offset - 0x8000 + 0x7F14);
-		if(is_ins_io)
+		if(restart_io)
 		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F10, emu->old_xip);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F0C, emu->io_restart_xsi);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F08, emu->io_restart_xcx);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F04, emu->io_restart_xdi); // TODO: or CR0
+			x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7F10));
+			emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F0C);
+			emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7F08);
+			emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F04);
 		}
 		break;
 	case X86_SMM_P4:
 		// sandpile.org
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F6C, &emu->sr[X86_R_TR]);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F68, x86_flags_get32(emu));
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F5C, &emu->sr[X86_R_LDTR]);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F58, emu->sr[X86_R_IDTR].limit);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F54, emu->sr[X86_R_IDTR].base);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F50, emu->sr[X86_R_GDTR].limit);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F4C, emu->sr[X86_R_GDTR].base);
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F40, &emu->sr[X86_R_GS]);
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F34, &emu->sr[X86_R_FS]);
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F28, &emu->sr[X86_R_DS]);
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F1C, &emu->sr[X86_R_SS]);
-		x86_descriptor_cache_write_p4(emu, offset - 0x8000 + 0x7F10, &emu->sr[X86_R_CS]);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F8C, a20_line ? 0x0000 : 0x3000);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F6C, &emu->sr[X86_R_TR]);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F5C, &emu->sr[X86_R_LDTR]);
+		emu->sr[X86_R_IDTR].limit = x86_memory_read32(emu, offset - 0x8000 + 0x7F58);
+		emu->sr[X86_R_IDTR].base = x86_memory_read32(emu, offset - 0x8000 + 0x7F54);
+		emu->sr[X86_R_GDTR].limit = x86_memory_read32(emu, offset - 0x8000 + 0x7F50);
+		emu->sr[X86_R_GDTR].base = x86_memory_read32(emu, offset - 0x8000 + 0x7F4C);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F40, &emu->sr[X86_R_GS]);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F34, &emu->sr[X86_R_FS]);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F28, &emu->sr[X86_R_DS]);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F1C, &emu->sr[X86_R_SS]);
+		x86_descriptor_cache_read_p4(emu, offset - 0x8000 + 0x7F10, &emu->sr[X86_R_CS]);
+		//x86_memory_read32(emu, offset - 0x8000 + 0x7F8C, a20_line ? 0x0000 : 0x3000); // TODO
 
-		if(is_ins_io)
+		if(restart_io)
 		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7FA4,
-				0x0001
-				+ (ins_size << 1)
-				+ (io_type << 4)
-				+ ((uint32_t)io_port << 16));
-			x86_memory_write32(emu, offset - 0x8000 + 0x7FA0, io_address);
-
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F84, emu->io_restart_xsi);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F80, emu->io_restart_xcx);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F7C, emu->old_xip);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F78, emu->io_restart_xdi);
-		}
-		else
-		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7FA0, 0);
+			emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F84);
+			emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7F80);
+			x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7F7C));
+			emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F78);
 		}
 		break;
 	case X86_SMM_K5:
 	case X86_SMM_K6: // TODO
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FA4,
-			(is_ins_io ? 0x00000001 : 0)
-			| (is_valid_io ? 0x00000002 : 0)
-			| (is_io_string ? 0x00000004 : 0)
-			| (ins_had_rep ? 0x00000008 : 0)
-			| ((uint32_t)io_port << 16));
-		if(is_ins_io)
+		x86_descriptor_cache_read_k5_no_access(emu, offset - 0x8000 + 0x7F8C, &emu->sr[X86_R_IDTR]);
+		x86_descriptor_cache_read_k5_no_access(emu, offset - 0x8000 + 0x7F84, &emu->sr[X86_R_GDTR]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F78, &emu->sr[X86_R_TR]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F6C, &emu->sr[X86_R_LDTR]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F60, &emu->sr[X86_R_GS]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F54, &emu->sr[X86_R_FS]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F60, &emu->sr[X86_R_DS]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F3C, &emu->sr[X86_R_SS]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F30, &emu->sr[X86_R_CS]);
+		x86_descriptor_cache_read_k5(emu, offset - 0x8000 + 0x7F24, &emu->sr[X86_R_ES]);
+		emu->cr[2] = x86_memory_read32(emu, offset - 0x8000 + 0x7F14);
+		emu->cr[4] = x86_memory_read32(emu, offset - 0x8000 + 0x7F10);
+		if(restart_io)
 		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F9E, emu->old_xip);
-		}
-		x86_descriptor_cache_write_k5_no_access(emu, offset - 0x8000 + 0x7F8C, &emu->sr[X86_R_IDTR]);
-		x86_descriptor_cache_write_k5_no_access(emu, offset - 0x8000 + 0x7F84, &emu->sr[X86_R_GDTR]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F78, &emu->sr[X86_R_TR]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F6C, &emu->sr[X86_R_LDTR]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F60, &emu->sr[X86_R_GS]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F54, &emu->sr[X86_R_FS]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F60, &emu->sr[X86_R_DS]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F3C, &emu->sr[X86_R_SS]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F30, &emu->sr[X86_R_CS]);
-		x86_descriptor_cache_write_k5(emu, offset - 0x8000 + 0x7F24, &emu->sr[X86_R_ES]);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F14, emu->cr[2]);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7F10, emu->cr[4]);
-		if(is_ins_io)
-		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F0C, emu->io_restart_xsi);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F08, emu->io_restart_xcx);
-			x86_memory_write32(emu, offset - 0x8000 + 0x7F04, emu->io_restart_xdi);
+			x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7F9E));
+			emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F0C);
+			emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7F08);
+			emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7F04);
 		}
 		break;
 	}
 
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FFC, emu->cr[0]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FF8, emu->cr[3]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FF4, x86_flags_get32(emu));
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FF0, emu->xip);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FEC, emu->gpr[X86_R_DI]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FE8, emu->gpr[X86_R_SI]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FE4, emu->gpr[X86_R_BP]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FE0, emu->gpr[X86_R_SP]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FDC, emu->gpr[X86_R_BX]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FD8, emu->gpr[X86_R_DX]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FD4, emu->gpr[X86_R_CX]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FD0, emu->gpr[X86_R_AX]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FCC, emu->dr[6]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FC8, emu->dr[7]);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FC4, emu->sr[X86_R_TR].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FC0, emu->sr[X86_R_LDTR].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FBC, emu->sr[X86_R_GS].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FB8, emu->sr[X86_R_FS].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FB4, emu->sr[X86_R_DS].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FB0, emu->sr[X86_R_SS].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FAC, emu->sr[X86_R_CS].selector);
-	x86_memory_write32(emu, offset - 0x8000 + 0x7FA8, emu->sr[X86_R_ES].selector);
+	emu->cr[0] = x86_memory_read32(emu, offset - 0x8000 + 0x7FFC);
+	emu->cr[3] = x86_memory_read32(emu, offset - 0x8000 + 0x7FF8);
+	x86_flags_set32(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7FF4));
+	if(!restart_io)
+	{
+		x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7FF0));
+		emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7FEC);
+		emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7FE8);
+	}
+	emu->gpr[X86_R_BP] = x86_memory_read32(emu, offset - 0x8000 + 0x7FE4);
+	emu->gpr[X86_R_SP] = x86_memory_read32(emu, offset - 0x8000 + 0x7FE0);
+	emu->gpr[X86_R_BX] = x86_memory_read32(emu, offset - 0x8000 + 0x7FDC);
+	emu->gpr[X86_R_DX] = x86_memory_read32(emu, offset - 0x8000 + 0x7FD8);
+	if(!restart_io)
+		emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7FD4);
+	emu->gpr[X86_R_AX] = x86_memory_read32(emu, offset - 0x8000 + 0x7FD0);
+	emu->dr[6] = x86_memory_read32(emu, offset - 0x8000 + 0x7FCC);
+	emu->dr[7] = x86_memory_read32(emu, offset - 0x8000 + 0x7FC8);
+	emu->sr[X86_R_TR].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FC4);
+	emu->sr[X86_R_LDTR].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FC0);
+	emu->sr[X86_R_GS].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FBC);
+	emu->sr[X86_R_FS].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FB8);
+	emu->sr[X86_R_DS].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FB4);
+	emu->sr[X86_R_SS].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FB0);
+	emu->sr[X86_R_CS].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FAC);
+	emu->sr[X86_R_ES].selector = x86_memory_read32(emu, offset - 0x8000 + 0x7FA8);
 
-	x86_memory_write16(emu, offset - 0x8000 + 0x7F02, emu->state == X86_STATE_HALTED ? 1 : 0);
-	x86_memory_write16(emu, offset - 0x8000 + 0x7F00, 0); // I/O trap slot
-	x86_memory_write32(emu, offset - 0x8000 + 0x7EFC, emu->smm_revision_identifier);
 	if((emu->smm_revision_identifier & SMM_REVID_SMBASE_RELOC) != 0)
-		x86_memory_write32(emu, offset - 0x8000 + 0x7EF8, emu->smbase);
-#endif
+		emu->smbase = x86_memory_read32(emu, offset - 0x8000 + 0x7EF8);
 }
 
 static inline void x86_smm_restore_state_amd64(x86_state_t * emu, uaddr_t offset)
 {
-	(void) emu;
-	(void) offset;
-	// TODO
+	bool restart_io = (emu->smm_revision_identifier & SMM_REVID_IO_RESTART) != 0 && x86_memory_read8(emu, offset - 0x8000 + 0x7EC8) == 0xFF;
+
+	emu->gpr[X86_R_AX] = x86_memory_read64(emu, offset - 0x8000 + 0x7FF8);
+	if(!restart_io)
+		emu->gpr[X86_R_CX] = x86_memory_read64(emu, offset - 0x8000 + 0x7FF0);
+	emu->gpr[X86_R_DX] = x86_memory_read64(emu, offset - 0x8000 + 0x7FE8);
+	emu->gpr[X86_R_BX] = x86_memory_read64(emu, offset - 0x8000 + 0x7FE0);
+	emu->gpr[X86_R_SP] = x86_memory_read64(emu, offset - 0x8000 + 0x7FD8);
+	emu->gpr[X86_R_BP] = x86_memory_read64(emu, offset - 0x8000 + 0x7FD0);
+	if(!restart_io)
+	{
+		emu->gpr[X86_R_SI] = x86_memory_read64(emu, offset - 0x8000 + 0x7FC8);
+		emu->gpr[X86_R_DI] = x86_memory_read64(emu, offset - 0x8000 + 0x7FC0);
+	}
+	emu->gpr[8] = x86_memory_read64(emu, offset - 0x8000 + 0x7FB8);
+	emu->gpr[9] = x86_memory_read64(emu, offset - 0x8000 + 0x7FB0);
+	emu->gpr[10] = x86_memory_read64(emu, offset - 0x8000 + 0x7FA8);
+	emu->gpr[11] = x86_memory_read64(emu, offset - 0x8000 + 0x7FA0);
+	emu->gpr[12] = x86_memory_read64(emu, offset - 0x8000 + 0x7F98);
+	emu->gpr[13] = x86_memory_read64(emu, offset - 0x8000 + 0x7F90);
+	emu->gpr[14] = x86_memory_read64(emu, offset - 0x8000 + 0x7F88);
+	emu->gpr[15] = x86_memory_read64(emu, offset - 0x8000 + 0x7F80);
+	if(!restart_io)
+		x86_set_xip(emu, x86_memory_read64(emu, offset - 0x8000 + 0x7F78));
+	x86_flags_set64(emu, x86_memory_read64(emu, offset - 0x8000 + 0x7F70));
+	emu->dr[6] = x86_memory_read64(emu, offset - 0x8000 + 0x7F68);
+	emu->dr[7] = x86_memory_read64(emu, offset - 0x8000 + 0x7F60);
+	emu->cr[0] = x86_memory_read64(emu, offset - 0x8000 + 0x7F58);
+	emu->cr[3] = x86_memory_read64(emu, offset - 0x8000 + 0x7F50);
+	emu->cr[4] = x86_memory_read64(emu, offset - 0x8000 + 0x7F48);
+
+	emu->smbase = x86_memory_read32(emu, offset - 0x8000 + 0x7F00);
+
+	emu->efer = x86_memory_read64(emu, offset - 0x8000 + 0x7ED0);
+
+	x86_set_cpl(emu, x86_memory_read8(emu, offset - 0x8000 + 0x7ECB));
+
+	// TODO: guessing
+	if(restart_io)
+	{
+		emu->gpr[X86_R_DI] = x86_memory_read32(emu, offset - 0x8000 + 0x7EB8);
+		emu->gpr[X86_R_SI] = x86_memory_read32(emu, offset - 0x8000 + 0x7EB0);
+		emu->gpr[X86_R_CX] = x86_memory_read32(emu, offset - 0x8000 + 0x7EA8);
+		x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7EA0));
+	}
+
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE90, &emu->sr[X86_R_TR]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE80, &emu->sr[X86_R_IDTR]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE70, &emu->sr[X86_R_LDTR]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE60, &emu->sr[X86_R_GDTR]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE50, &emu->sr[X86_R_GS]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE40, &emu->sr[X86_R_FS]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE30, &emu->sr[X86_R_DS]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE20, &emu->sr[X86_R_SS]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE10, &emu->sr[X86_R_CS]);
+	x86_descriptor_cache_read_amd64(emu, offset - 0x8000 + 0xFE00, &emu->sr[X86_R_ES]);
 }
 
 static inline void x86_smm_restore_state_intel64(x86_state_t * emu, uaddr_t offset)
 {
-	(void) emu;
-	(void) offset;
-	// TODO
+	bool restart_io = (emu->smm_revision_identifier & SMM_REVID_IO_RESTART) != 0 && x86_memory_read8(emu, offset - 0x8000 + 0x7F00) == 0xFF;
+
+	emu->cr[0] = x86_memory_read64(emu, offset - 0x8000 + 0x7FF8);
+	emu->cr[3] = x86_memory_read64(emu, offset - 0x8000 + 0x7FF0);
+	x86_flags_set64(emu, x86_memory_read64(emu, offset - 0x8000 + 0x7FE8));
+	emu->efer = x86_memory_read64(emu, offset - 0x8000 + 0x7FE0);
+	if(!restart_io)
+		x86_set_xip(emu, x86_memory_read64(emu, offset - 0x8000 + 0x7FD8));
+	emu->dr[6] = x86_memory_read64(emu, offset - 0x8000 + 0x7FD0);
+	emu->dr[7] = x86_memory_read64(emu, offset - 0x8000 + 0x7FC8);
+	emu->sr[X86_R_TR].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FC4);
+	emu->sr[X86_R_LDTR].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FC0);
+	emu->sr[X86_R_GS].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FBC);
+	emu->sr[X86_R_FS].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FB8);
+	emu->sr[X86_R_DS].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FB4);
+	emu->sr[X86_R_SS].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FB0);
+	emu->sr[X86_R_CS].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FAC);
+	emu->sr[X86_R_ES].selector = x86_memory_read16(emu, offset - 0x8000 + 0x7FA8);
+
+	//if(!restart_io)
+	emu->gpr[X86_R_DI] = x86_memory_read64(emu, offset - 0x8000 + 0x7F94);
+	//if(!restart_io)
+	emu->gpr[X86_R_SI] = x86_memory_read64(emu, offset - 0x8000 + 0x7F8C);
+	emu->gpr[X86_R_BP] = x86_memory_read64(emu, offset - 0x8000 + 0x7F84);
+	emu->gpr[X86_R_SP] = x86_memory_read64(emu, offset - 0x8000 + 0x7F7C);
+	emu->gpr[X86_R_BX] = x86_memory_read64(emu, offset - 0x8000 + 0x7F74);
+	emu->gpr[X86_R_DX] = x86_memory_read64(emu, offset - 0x8000 + 0x7F6C);
+	//if(!restart_io)
+	emu->gpr[X86_R_CX] = x86_memory_read64(emu, offset - 0x8000 + 0x7F64);
+	emu->gpr[X86_R_AX] = x86_memory_read64(emu, offset - 0x8000 + 0x7F5C);
+	emu->gpr[8] = x86_memory_read64(emu, offset - 0x8000 + 0x7F54);
+	emu->gpr[9] = x86_memory_read64(emu, offset - 0x8000 + 0x7F4C);
+	emu->gpr[10] = x86_memory_read64(emu, offset - 0x8000 + 0x7F44);
+	emu->gpr[11] = x86_memory_read64(emu, offset - 0x8000 + 0x7F3C);
+	emu->gpr[12] = x86_memory_read64(emu, offset - 0x8000 + 0x7F34);
+	emu->gpr[13] = x86_memory_read64(emu, offset - 0x8000 + 0x7F2C);
+	emu->gpr[14] = x86_memory_read64(emu, offset - 0x8000 + 0x7F24);
+	emu->gpr[15] = x86_memory_read64(emu, offset - 0x8000 + 0x7F1C);
+
+	if((emu->smm_revision_identifier & SMM_REVID_SMBASE_RELOC) != 0)
+		emu->smbase = x86_memory_read32(emu, offset - 0x8000 + 0x7EF8);
+
+	emu->sr[X86_R_LDTR].base =
+		x86_memory_read32(emu, offset - 0x8000 + 0x7E9C)
+		| ((uint64_t)x86_memory_read32(emu, offset - 0x8000 + 0x7DD4) << 32);
+	emu->sr[X86_R_IDTR].base =
+		x86_memory_read32(emu, offset - 0x8000 + 0x7E94)
+		| ((uint64_t)x86_memory_read32(emu, offset - 0x8000 + 0x7DD8) << 32);
+	emu->sr[X86_R_GDTR].base =
+		x86_memory_read32(emu, offset - 0x8000 + 0x7E8C)
+		| ((uint64_t)x86_memory_read32(emu, offset - 0x8000 + 0x7DD0) << 32);
+
+	emu->cr[4] = x86_memory_read64(emu, offset - 0x8000 + 0x7E40);
+
+	if(restart_io)
+	{
+		x86_set_xip(emu, x86_memory_read32(emu, offset - 0x8000 + 0x7DE8));
+	}
 }
 
 static inline void x86_smm_restore_state_cyrix(x86_state_t * emu, uaddr_t offset)
