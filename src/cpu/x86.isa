@@ -4061,7 +4061,7 @@ if(!x86_smm_instruction_valid(emu))
 {
 	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
-/* TODO: (Cyrix) SMINT */
+x86_smint(emu);
 
 @instruction SMSW
 if(x86_is_ia64(emu))

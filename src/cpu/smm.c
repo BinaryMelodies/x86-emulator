@@ -1327,6 +1327,15 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 	}
 }
 
+static inline void x86_smint(x86_state_t * emu)
+{
+	x86_smi_attributes_t attributes;
+	memset(&attributes, 0, sizeof attributes);
+	attributes.source = X86_SMISRC_SMINT;
+	attributes.nested_smi = emu->cpu_level == X86_LEVEL_SMM;
+	x86_smm_enter(emu, attributes);
+}
+
 // Resume from SMI
 
 static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)

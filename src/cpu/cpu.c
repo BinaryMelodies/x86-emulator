@@ -1420,6 +1420,7 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 				x86_smi_attributes_t attributes;
 				memset(&attributes, 0, sizeof attributes);
 				attributes.source = X86_SMISRC_EXTERNAL;
+				attributes.nested_smi = emu->cpu_level == X86_LEVEL_SMM;
 				x86_smm_enter(emu, attributes);
 				return true;
 			}
