@@ -2463,7 +2463,7 @@ $dx.$O = rem;
 
 @instruction DMINT
 @comment Cyrix specific
-if(!x86_dmm_instruction_valid(emu))
+if(!x86_dmint_instruction_valid(emu))
 {
 	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
@@ -4057,7 +4057,7 @@ else
 
 @instruction SMINT
 @comment Cyrix specific
-if(!x86_smm_instruction_valid(emu))
+if(!x86_smint_instruction_valid(emu))
 {
 	x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 }
@@ -7726,7 +7726,7 @@ if(($a & 0x08) != 0)
   features: $cx486slce, cpuid
   family: 4
   aliases: 5x86, cx5x86
-  smmformat: 5x86
+  smmformat: m1
 
 - id: mediagx
   description: Cyrix MediaGX
@@ -7811,7 +7811,7 @@ if(($a & 0x08) != 0)
   model: 2
   highest_function: 0x01
   aliases: 6x86, cx6x86
-  smmformat: 5x86
+  smmformat: m1
 
 - id: cx6x86l
   description: Cyrix 6x86L
@@ -7822,7 +7822,7 @@ if(($a & 0x08) != 0)
   family: 5
   model: 2
   highest_function: 0x01
-  smmformat: 5x86
+  smmformat: m1
 
 - id: m2
   description: Cyrix 6x86MX, Cyrix MII

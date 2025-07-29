@@ -107,6 +107,9 @@ static inline void x86_prefetch_queue_fill(x86_state_t * emu);
 // smm
 
 static inline void x86_ice_storeall_386(x86_state_t * emu, uaddr_t offset);
+static inline bool x86_smm_instruction_valid(x86_state_t * emu);
+static inline bool x86_smint_instruction_valid(x86_state_t * emu);
+static inline bool x86_dmint_instruction_valid(x86_state_t * emu);
 
 // x87
 

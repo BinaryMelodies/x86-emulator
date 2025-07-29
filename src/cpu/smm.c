@@ -974,9 +974,7 @@ static inline void x86_smm_store_state_cyrix(x86_state_t * emu, uaddr_t offset, 
 			x86_memory_write32(emu, offset - 0x30, ins_is_write ? emu->io_restart_xsi : emu->io_restart_xdi);
 		break;
 
-	case X86_SMM_5X86:
-		// TODO: layout unknown for 5x86, using that of 6x86
-
+	case X86_SMM_M1:
 		x86_segment_store_protected_mode_386(emu, X86_R_CS, code_descriptor);
 		x86_memory_write(emu, offset - 0x20, 8, code_descriptor);
 
@@ -1273,7 +1271,7 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 		emu->sr[X86_R_CS].base = (emu->arr[3] & 0xFFF0) << 12;
 		x86_set_xip(emu, 0);
 		break;
-	case X86_SMM_5X86:
+	case X86_SMM_M1:
 		emu->cpu_level = X86_LEVEL_SMM;
 		x86_smm_store_state_cyrix(emu,
 			((emu->arr[3] & 0xFFFFF0) << 12) + ((emu->arr[3] & 0xF) < 15 ? 0x2000 << (emu->arr[3] & 0xF) : 0x100000000),
@@ -1643,9 +1641,7 @@ static inline void x86_smm_restore_state_cyrix(x86_state_t * emu, uaddr_t offset
 		x86_set_cpl(emu, code_descriptor[5] >> 5);
 		break;
 
-	case X86_SMM_5X86:
-		// TODO: layout unknown for 5x86, using that of 6x86
-
+	case X86_SMM_M1:
 		x86_memory_read(emu, offset - 0x20, 8, code_descriptor);
 		x86_descriptor_cache_read_cyrix(emu, X86_R_CS, code_descriptor);
 
@@ -1727,7 +1723,7 @@ static inline void x86_smm_resume(x86_state_t * emu)
 		x86_smm_restore_state_cyrix(emu,
 			((emu->arr[3] & 0xFFF0) << 12) + ((emu->arr[3] & 0xF) < 15 ? 0x2000 << (emu->arr[3] & 0xF) : 0x100000000));
 		break;
-	case X86_SMM_5X86:
+	case X86_SMM_M1:
 		x86_smm_restore_state_cyrix(emu,
 			((emu->arr[3] & 0xFFFFF0) << 12) + ((emu->arr[3] & 0xF) < 15 ? 0x2000 << (emu->arr[3] & 0xF) : 0x100000000));
 		break;
@@ -1760,25 +1756,82 @@ static inline bool x86_smm_instruction_valid(x86_state_t * emu)
 		return emu->cpu_level == X86_LEVEL_SMM;
 
 	case X86_SMM_CX486SLCE:
-		return emu->cpl == 0 && (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0);
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0)
+			&& (emu->ccr[1] & (X86_CCR1_USE_SMI|X86_CCR1_SM3)) != 0;
 
-	case X86_SMM_5X86:
-		// TODO: this is the 6x86
-		return emu->cpl == 0 && (emu->arr[3] & 0xF) != 0 && (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0) && (emu->ccr[1] & X86_CCR1_SM3) != 0;
+	case X86_SMM_M1:
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0)
+			&& (emu->ccr[1] & X86_CCR1_USE_SMI) != 0
+			&& (emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_5X86 || (emu->ccr[1] & X86_CCR1_SM3) != 0);
 
 	case X86_SMM_M2:
-		// TODO: Cyrix III ignores SMAC bit
-		return emu->cpl == 0 && (emu->arr[3] & 0xF) != 0 && (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0) && (emu->ccr[1] & (X86_CCR1_USE_SMI|X86_CCR1_SM3)) != 0;
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->cpu_level == X86_LEVEL_SMM || (emu->cpu_traits.cpu_subtype != X86_CPU_CYRIX_III && (emu->ccr[1] & X86_CCR1_SMAC) != 0))
+			&& (emu->ccr[1] & (X86_CCR1_USE_SMI|X86_CCR1_SM3)) != 0;
 
 	case X86_SMM_MEDIAGX:
-		return emu->cpl == 0 && (emu->arr[3] & 0xF) != 0 && (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0) && (emu->ccr[1] & X86_CCR1_USE_SMI) != 0;
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->cpu_level == X86_LEVEL_SMM || (emu->ccr[1] & X86_CCR1_SMAC) != 0)
+			&& (emu->ccr[1] & X86_CCR1_USE_SMI) != 0;
 
 	case X86_SMM_GX2:
-		return emu->cpl == 0 && ((emu->smm_ctl & X86_SMI_INST) != 0 || emu->cpu_level != X86_LEVEL_USER);
+		return emu->cpl == 0
+			&& ((emu->smm_ctl & X86_SMI_INST) != 0 || emu->cpu_level != X86_LEVEL_USER);
 	}
 }
 
-static inline bool x86_dmm_instruction_valid(x86_state_t * emu)
+static inline bool x86_smint_instruction_valid(x86_state_t * emu)
+{
+	switch(emu->cpu_traits.smm_format)
+	{
+	case X86_SMM_NONE:
+		return false;
+
+	case X86_SMM_80386SL:
+	case X86_SMM_P5:
+	case X86_SMM_P6:
+	case X86_SMM_P4:
+	case X86_SMM_K5:
+	case X86_SMM_K6:
+	case X86_SMM_AMD64:
+		// TODO: anything else? double check
+	default:
+		return false;
+
+	case X86_SMM_CX486SLCE:
+		return false;
+
+	case X86_SMM_M1:
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->ccr[1] & X86_CCR1_SMAC) != 0
+			&& (emu->ccr[1] & X86_CCR1_USE_SMI) != 0
+			&& (emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_5X86 ? (emu->ccr[3] & X86_CCR3_SMM_MODE) == 0 : (emu->ccr[1] & X86_CCR1_SM3) != 0);
+
+	case X86_SMM_M2:
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->ccr[1] & X86_CCR1_SMAC) != 0
+			&& (emu->ccr[1] & (X86_CCR1_USE_SMI|X86_CCR1_SM3)) != 0;
+
+	case X86_SMM_MEDIAGX:
+		return emu->cpl == 0
+			&& (emu->arr[3] & 0xF) != 0
+			&& (emu->ccr[1] & X86_CCR1_SMAC) != 0
+			&& (emu->ccr[1] & X86_CCR1_USE_SMI) != 0;
+
+	case X86_SMM_GX2:
+		return x86_smm_instruction_valid(emu);
+	}
+}
+
+static inline bool x86_dmint_instruction_valid(x86_state_t * emu)
 {
 	if(emu->cpu_traits.smm_format != X86_SMM_GX2)
 	{
@@ -1786,7 +1839,8 @@ static inline bool x86_dmm_instruction_valid(x86_state_t * emu)
 	}
 	else
 	{
-		return emu->cpl == 0 && ((emu->dmi_ctl & X86_DMI_INST) != 0 || emu->cpu_level != X86_LEVEL_USER);
+		return emu->cpl == 0
+			&& ((emu->dmi_ctl & X86_DMI_INST) != 0 || emu->cpu_level != X86_LEVEL_USER);
 	}
 }
 

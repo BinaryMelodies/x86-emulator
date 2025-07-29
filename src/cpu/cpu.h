@@ -771,6 +771,7 @@ enum
 	X86_CCR1_SM3 = 0x80,
 
 	// Cyrix 5x86
+	X86_CCR3_SMM_MODE = 0x04,
 	X86_CCR3_MAPEN_MASK = 0xF0,
 	X86_CCR3_MAPEN_SHIFT = 4,
 
@@ -1172,7 +1173,7 @@ enum x86_smm_format_t
 	X86_SMM_AMD64,
 	/* Cyrix */
 	X86_SMM_CX486SLCE,
-	X86_SMM_5X86,
+	X86_SMM_M1,
 	X86_SMM_M2,
 	X86_SMM_MEDIAGX,
 	X86_SMM_GX2, // TODO: check if GX2 worked like LX did
