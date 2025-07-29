@@ -223,7 +223,7 @@ static inline void x86_descriptor_cache_write_k5_no_access(x86_state_t * emu, ua
 }
 
 // TODO: attribute word format unknown
-static inline void x86_descriptor_cache_read_64(x86_state_t * emu, uaddr_t offset, x86_segment_t * segment)
+static inline void x86_descriptor_cache_read_amd64(x86_state_t * emu, uaddr_t offset, x86_segment_t * segment)
 {
 	uint8_t cache[16];
 	x86_memory_read(emu, offset, 16, cache);
@@ -234,7 +234,7 @@ static inline void x86_descriptor_cache_read_64(x86_state_t * emu, uaddr_t offse
 		| ((uint64_t)cache[12] << 32) | ((uint64_t)cache[13] << 40) | ((uint64_t)cache[14] << 48) | ((uint64_t)cache[15] << 56);
 }
 
-static inline void x86_descriptor_cache_write_64(x86_state_t * emu, uaddr_t offset, const x86_segment_t * segment)
+static inline void x86_descriptor_cache_write_amd64(x86_state_t * emu, uaddr_t offset, const x86_segment_t * segment)
 {
 	uint8_t cache[16];
 	cache[0]  = segment->selector;
@@ -431,10 +431,10 @@ static inline void x86_ice_storeall_386(x86_state_t * emu, uaddr_t offset)
 
 	emu->cr[0] = 0xFFF0;
 
-	/*if(emu->cpu_type == X86_CPU_386 && emu->cpu_traits.cpu_subtype == X86_CPU_386_376)
+	if(emu->cpu_type == X86_CPU_386 && emu->cpu_traits.cpu_subtype == X86_CPU_386_376)
 	{
-		emu->cr[0] = 0x0000001F;
-	}*/ // TODO: does ICE exist on the Intel 80376?
+		emu->cr[0] = 0x0000001F; // TODO: does ICE exist on the Intel 80376?
+	}
 	emu->cr[0] = 0x60000000;
 
 	emu->cr[2] = 0;
@@ -554,6 +554,7 @@ static inline void x86_smm_store_state32(x86_state_t * emu, uaddr_t offset, x86_
 		ins_size = 0;
 		break;
 	}
+	uint32_t io_misc_info;
 
 	switch(emu->cpu_traits.smm_format)
 	{
@@ -649,11 +650,12 @@ static inline void x86_smm_store_state32(x86_state_t * emu, uaddr_t offset, x86_
 
 		if(is_ins_io)
 		{
-			x86_memory_write32(emu, offset - 0x8000 + 0x7FA4,
+			io_misc_info =
 				0x0001
 				+ (ins_size << 1)
 				+ (io_type << 4)
-				+ ((uint32_t)io_port << 16));
+				+ ((uint32_t)io_port << 16);
+			x86_memory_write32(emu, offset - 0x8000 + 0x7FA4, io_misc_info);
 			x86_memory_write32(emu, offset - 0x8000 + 0x7FA0, io_address);
 
 			x86_memory_write32(emu, offset - 0x8000 + 0x7F84, emu->io_restart_xsi);
@@ -668,12 +670,13 @@ static inline void x86_smm_store_state32(x86_state_t * emu, uaddr_t offset, x86_
 		break;
 	case X86_SMM_K5:
 	case X86_SMM_K6: // TODO
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FA4,
+		io_misc_info =
 			(is_ins_io ? 0x00000001 : 0)
 			| (is_valid_io ? 0x00000002 : 0)
 			| (is_io_string ? 0x00000004 : 0)
 			| (ins_had_rep ? 0x00000008 : 0)
-			| ((uint32_t)io_port << 16));
+			| ((uint32_t)io_port << 16);
+		x86_memory_write32(emu, offset - 0x8000 + 0x7FA4, io_misc_info);
 		if(is_ins_io)
 		{
 			x86_memory_write32(emu, offset - 0x8000 + 0x7F9E, emu->old_xip);
@@ -729,7 +732,7 @@ static inline void x86_smm_store_state32(x86_state_t * emu, uaddr_t offset, x86_
 		x86_memory_write32(emu, offset - 0x8000 + 0x7EF8, emu->smbase);
 }
 
-static inline void x86_smm_store_state64(x86_state_t * emu, uaddr_t offset, x86_smi_attributes_t attributes)
+static inline void x86_smm_store_state_amd64(x86_state_t * emu, uaddr_t offset, x86_smi_attributes_t attributes)
 {
 	bool is_ins_io = attributes.source == X86_SMISRC_IO;
 	int io_type = attributes.io_type;
@@ -788,32 +791,124 @@ static inline void x86_smm_store_state64(x86_state_t * emu, uaddr_t offset, x86_
 	// TODO: guessing
 	if(is_ins_io)
 	{
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FC0,
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EC0,
 			0x0001
 			+ (ins_size << 1)
 			+ (io_type << 4)
 			+ ((uint32_t)io_port << 16));
 
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FB8, emu->io_restart_xdi);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FB0, emu->io_restart_xsi);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FA8, emu->io_restart_xcx);
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FA0, emu->old_xip);
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EB8, emu->io_restart_xdi);
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EB0, emu->io_restart_xsi);
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EA8, emu->io_restart_xcx);
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EA0, emu->old_xip);
 	}
 	else
 	{
-		x86_memory_write32(emu, offset - 0x8000 + 0x7FC0, 0);
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EC0, 0);
 	}
 
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE90, &emu->sr[X86_R_TR]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE80, &emu->sr[X86_R_IDTR]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE70, &emu->sr[X86_R_LDTR]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE60, &emu->sr[X86_R_GDTR]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE50, &emu->sr[X86_R_GS]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE40, &emu->sr[X86_R_FS]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE30, &emu->sr[X86_R_DS]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE20, &emu->sr[X86_R_SS]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE10, &emu->sr[X86_R_CS]);
-	x86_descriptor_cache_write_64(emu, offset - 0x8000 + 0xFE00, &emu->sr[X86_R_ES]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE90, &emu->sr[X86_R_TR]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE80, &emu->sr[X86_R_IDTR]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE70, &emu->sr[X86_R_LDTR]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE60, &emu->sr[X86_R_GDTR]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE50, &emu->sr[X86_R_GS]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE40, &emu->sr[X86_R_FS]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE30, &emu->sr[X86_R_DS]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE20, &emu->sr[X86_R_SS]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE10, &emu->sr[X86_R_CS]);
+	x86_descriptor_cache_write_amd64(emu, offset - 0x8000 + 0xFE00, &emu->sr[X86_R_ES]);
+}
+
+static inline void x86_smm_store_state_intel64(x86_state_t * emu, uaddr_t offset, x86_smi_attributes_t attributes)
+{
+	// TODO: much of this is undocumented and unknown
+	bool is_ins_io = attributes.source == X86_SMISRC_IO;
+	int io_type = attributes.io_type;
+	uint16_t io_port = attributes.write_address;
+	uint32_t io_address = 0; // TODO
+	int ins_size;
+	switch(attributes.write_size)
+	{
+	case SIZE_8BIT:
+		ins_size = 1;
+		break;
+	case SIZE_16BIT:
+		ins_size = 2;
+		break;
+	case SIZE_32BIT:
+		ins_size = 4;
+		break;
+	default:
+		ins_size = 0;
+		break;
+	}
+
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FF8, emu->cr[0]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FF0, emu->cr[3]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FE8, x86_flags_get64(emu));
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FE0, emu->efer);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FD8, emu->xip);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FD0, emu->dr[6]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7FC8, emu->dr[7]);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FC4, emu->sr[X86_R_TR].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FC0, emu->sr[X86_R_LDTR].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FBC, emu->sr[X86_R_GS].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FB8, emu->sr[X86_R_FS].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FB4, emu->sr[X86_R_DS].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FB0, emu->sr[X86_R_SS].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FAC, emu->sr[X86_R_CS].selector);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7FA8, emu->sr[X86_R_ES].selector);
+
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F94, emu->gpr[X86_R_DI]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F8C, emu->gpr[X86_R_SI]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F84, emu->gpr[X86_R_BP]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F7C, emu->gpr[X86_R_SP]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F74, emu->gpr[X86_R_BX]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F6C, emu->gpr[X86_R_DX]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F64, emu->gpr[X86_R_CX]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F5C, emu->gpr[X86_R_AX]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F54, emu->gpr[8]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F4C, emu->gpr[9]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F44, emu->gpr[10]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F3C, emu->gpr[11]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F34, emu->gpr[12]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F2C, emu->gpr[13]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F24, emu->gpr[14]);
+	x86_memory_write64(emu, offset - 0x8000 + 0x7F1C, emu->gpr[15]);
+
+	x86_memory_write16(emu, offset - 0x8000 + 0x7F02, emu->state == X86_STATE_HALTED ? 1 : 0);
+	x86_memory_write16(emu, offset - 0x8000 + 0x7F00, 0); // I/O trap slot
+	x86_memory_write32(emu, offset - 0x8000 + 0x7EFC, emu->smm_revision_identifier);
+	if((emu->smm_revision_identifier & SMM_REVID_SMBASE_RELOC) != 0)
+		x86_memory_write32(emu, offset - 0x8000 + 0x7EF8, emu->smbase);
+
+	x86_memory_write32(emu, offset - 0x8000 + 0x7E9C, emu->sr[X86_R_LDTR].base);
+	x86_memory_write32(emu, offset - 0x8000 + 0x7E94, emu->sr[X86_R_IDTR].base);
+	x86_memory_write32(emu, offset - 0x8000 + 0x7E8C, emu->sr[X86_R_GDTR].base);
+
+	x86_memory_write64(emu, offset - 0x8000 + 0x7E40, emu->cr[4]);
+
+//	x86_memory_write64(emu, offset - 0x8000 + 0x7DE8, emu->cr[4]);// TODO: IO_RIP
+
+	x86_memory_write32(emu, offset - 0x8000 + 0x7DD8, emu->sr[X86_R_IDTR].base >> 32);
+	x86_memory_write32(emu, offset - 0x8000 + 0x7DD4, emu->sr[X86_R_LDTR].base >> 32);
+	x86_memory_write32(emu, offset - 0x8000 + 0x7DD0, emu->sr[X86_R_GDTR].base >> 32);
+
+	if(is_ins_io)
+	{
+		x86_memory_write32(emu, offset - 0x8000 + 0x7FA4,
+			0x0001
+			+ (ins_size << 1)
+			+ (io_type << 4)
+			+ ((uint32_t)io_port << 16));
+		x86_memory_write32(emu, offset - 0x8000 + 0x7FA0, io_address);
+
+		x86_memory_write32(emu, offset - 0x8000 + 0x7DE8, emu->old_xip);
+	}
+	else
+	{
+		x86_memory_write32(emu, offset - 0x8000 + 0x7FA0, 0);
+	}
 }
 
 static inline void x86_smm_store_state_cyrix(x86_state_t * emu, uaddr_t offset, x86_smi_attributes_t attributes)
@@ -1103,10 +1198,34 @@ static inline void x86_smm_enter(x86_state_t * emu, x86_smi_attributes_t attribu
 		break;
 
 	// Intel and AMD CPUs (64-bit)
+	case X86_SMM_INTEL64:
+		// TODO
+		emu->cpu_level = X86_LEVEL_SMM;
+		x86_smm_store_state_intel64(emu, emu->smbase + 0xFFFF + 1, attributes);
+
+		// TODO: check
+		x86_flags_set32(emu, 0x0002); // clear all flags
+		for(x86_segnum_t segment = X86_R_ES; segment <= X86_R_GS; segment++)
+		{
+			emu->sr[segment].limit = 0xFFFFFFFF;
+			if(segment == X86_R_CS)
+				continue;
+			emu->sr[segment].selector = 0;
+			emu->sr[segment].base = 0;
+			emu->sr[segment].access = X86_DESC_W | X86_DESC_S | X86_DESC_P | X86_DESC_G;
+		}
+		emu->cr[0] &= ~(X86_CR0_PE | X86_CR0_MP | X86_CR0_EM | X86_CR0_TS | X86_CR0_PG);
+		emu->cr[4] = 0;
+		emu->dr[7] = 0x00000400;
+
+		emu->sr[X86_R_CS].selector = emu->smbase >> 4;
+		emu->sr[X86_R_CS].base = emu->smbase;
+		x86_set_xip(emu, 0x8000);
+		break;
 	case X86_SMM_AMD64:
 		// TODO: check
 		emu->cpu_level = X86_LEVEL_SMM;
-		x86_smm_store_state64(emu, emu->smbase + 0xFFFF + 1, attributes);
+		x86_smm_store_state_amd64(emu, emu->smbase + 0xFFFF + 1, attributes);
 
 		// TODO: check
 		x86_flags_set32(emu, 0x0002); // clear all flags
@@ -1375,7 +1494,14 @@ static inline void x86_smm_restore_state32(x86_state_t * emu, uaddr_t offset)
 #endif
 }
 
-static inline void x86_smm_restore_state64(x86_state_t * emu, uaddr_t offset)
+static inline void x86_smm_restore_state_amd64(x86_state_t * emu, uaddr_t offset)
+{
+	(void) emu;
+	(void) offset;
+	// TODO
+}
+
+static inline void x86_smm_restore_state_intel64(x86_state_t * emu, uaddr_t offset)
 {
 	(void) emu;
 	(void) offset;
@@ -1409,8 +1535,11 @@ static inline void x86_smm_resume(x86_state_t * emu)
 		break;
 
 	// Intel and AMD CPUs (64-bit)
+	case X86_SMM_INTEL64:
+		x86_smm_restore_state_intel64(emu, emu->smbase + 0xFFFF + 1);
+		break;
 	case X86_SMM_AMD64:
-		x86_smm_restore_state64(emu, emu->smbase + 0xFFFF + 1);
+		x86_smm_restore_state_amd64(emu, emu->smbase + 0xFFFF + 1);
 		break;
 
 	// Cyrix CPUs and derivatives (32-bit)

@@ -7215,7 +7215,7 @@ if(($a & 0x08) != 0)
   highest_function: 0x0A
   highest_extended_function: 0x08
   aliases: core
-  smmformat: amd64
+  smmformat: intel64
 
 - id: penryn
   description: Intel Core 2 "Penryn"
@@ -7226,7 +7226,7 @@ if(($a & 0x08) != 0)
   model: 23
   highest_function: 0x0A
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: nehalem
   description: Intel "Nehalem"
@@ -7237,7 +7237,7 @@ if(($a & 0x08) != 0)
   model: 26
   highest_function: 0x0B
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: westmere
   description: Intel "Westmere"
@@ -7249,7 +7249,7 @@ if(($a & 0x08) != 0)
   model: 26
   highest_function: 0x0B
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: sandybridge
   description: Intel "Sandy Bridge"
@@ -7260,7 +7260,7 @@ if(($a & 0x08) != 0)
   model: 42
   highest_function: 0x0D
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: ivybridge
   description: Intel "Ivy Bridge"
@@ -7271,7 +7271,7 @@ if(($a & 0x08) != 0)
   model: 58
   highest_function: 0x0D
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: haswell
   description: Intel "Haswell"
@@ -7282,7 +7282,7 @@ if(($a & 0x08) != 0)
   model: 60
   highest_function: 0x0D
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: broadwell
   description: Intel "Broadwell"
@@ -7293,7 +7293,7 @@ if(($a & 0x08) != 0)
   model: 61
   highest_function: 0x0D
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: skylake
   description: Intel "Skylake"
@@ -7305,7 +7305,7 @@ if(($a & 0x08) != 0)
   highest_function: 0x16
   highest_extended_function: 0x08
   aliases: intel
-  smmformat: amd64
+  smmformat: intel64
 
 # Intel Atom line
 
@@ -7317,7 +7317,7 @@ if(($a & 0x08) != 0)
   family: 6
   highest_function: 0x0A
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: silvermont
   description: Intel Atom "silvermont"
@@ -7328,7 +7328,7 @@ if(($a & 0x08) != 0)
   model: 55
   highest_function: 0x0B
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: goldmont
   description: Intel Atom "Goldmont"
@@ -7339,7 +7339,7 @@ if(($a & 0x08) != 0)
   model: 92
   highest_function: 0x15
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: gracemont
   description: Intel Atom "Gracemont"
@@ -7349,7 +7349,7 @@ if(($a & 0x08) != 0)
   family: 6
   highest_function: 0x0A
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 # Larrabee and Xeon Phi
 
@@ -7359,7 +7359,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $p5, l10m
   family: 6
-  smmformat: amd64
+  smmformat: intel64
 
 - id: knc
   description: Intel Xeon Phi x100 "Knights Corner"
@@ -7367,7 +7367,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $knf, -l10m, mvex
   family: 11
-  smmformat: amd64
+  smmformat: intel64
 
 - id: knl
   description: Intel Xeon Phi x200 "Knights Landing"
@@ -7378,7 +7378,7 @@ if(($a & 0x08) != 0)
   model: 87
   highest_function: 0x0D
   highest_extended_function: 0x08
-  smmformat: amd64
+  smmformat: intel64
 
 - id: x86s
   description: hypothetical x86s Intel CPU
@@ -7386,7 +7386,7 @@ if(($a & 0x08) != 0)
   class: intel
   features: $skylake, x86s
   family: 19
-  smmformat: amd64
+  smmformat: intel64
 
 #### AMD and NexGen CPUs
 
@@ -7969,7 +7969,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: vianano, isaiah, via64
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: nano3000
   description: VIA Nano "3000"
@@ -7982,7 +7982,7 @@ if(($a & 0x08) != 0)
   highest_function: 0x0D
   highest_extended_function: 0x08
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: nanox2
   description: VIA Nano "X2"
@@ -7996,7 +7996,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: zxa, zx-a, zx_a, zxb, zx-b, zx_b
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: nanoc4000
   description: VIA Nano "QuadCore C4000"
@@ -8011,7 +8011,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: quadcore, c4000, zxc, zx-c, zx_c, zhangjiang, 张江高, 張江高
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 # unreleased
 - id: cns
@@ -8024,7 +8024,7 @@ if(($a & 0x08) != 0)
   highest_function: 0x0D
   highest_extended_function: 0x08
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: zxcplus
   description: Zhaoxin ZX-C+
@@ -8038,7 +8038,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: zxc+, zx-c+, zx_c+, zxcplus, zx-cplus, zx_cplus
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: zxd
   description: Zhaoxin ZX-D/KX-5000/KH-20000 "Wudaoku"
@@ -8052,7 +8052,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: zxd, zx-d, zx_d, kx5000, kx-5000, kx_5000, kx5k, kx-5k, kx_5k, kh20000, kh-20000, kh_20000, kh20k, kh-20k, kh_20k, wudaokou, 五道口
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: zxe
   description: Zhaoxin ZX-E/KX-6000/KH-30000 "Lujiazui"
@@ -8065,7 +8065,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: zxe, zx-e, zx_e, kx6000, kx-6000, kx_6000, kx6k, kx-6k, kx_6k, kh30000, kh-23000, kh_30000, kh30k, kh-30k, kh_30k, lujiazui, 陆家嘴
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: kh40000
   description: Zhaoxin KH-40000 "Yongfeng"
@@ -8078,7 +8078,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: kh40000, kh-40000, kh_40000, kh40k, kh-40k, kh_40k, yongfeng, 永豐, 永丰
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 - id: zxf
   description: Zhaoxin ZX-F "Shijidadao"
@@ -8091,7 +8091,7 @@ if(($a & 0x08) != 0)
   highest_extended_function: 0x08
   aliases: zx, via, kx7000, kx-7000, kx_7000, kx7k, kx-7k, kx_7k, shijidadao, 世纪大道
 # TODO: guessing
-  smmformat: amd64
+  smmformat: intel64
 
 #### NEC CPUs
 

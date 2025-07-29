@@ -1165,6 +1165,7 @@ enum x86_smm_format_t
 	X86_SMM_P5,
 	X86_SMM_P6,
 	X86_SMM_P4,
+	X86_SMM_INTEL64,
 	/* AMD */
 	X86_SMM_K5,
 	X86_SMM_K6,
