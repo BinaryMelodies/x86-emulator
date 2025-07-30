@@ -353,24 +353,8 @@ enum x86_exception_t
 	X86_EXC_BR  = 0x05, /* bound range exceeded */
 	/* 80186+ */
 	X86_EXC_UD  = 0x06, /* undefined/invalid opcode */
-	/* 80186+, V25 */
+	/* 80186+, V25, V55 */
 	X86_EXC_NM  = 0x07, /* no math/x87 device not available */
-	/* V25 only */
-	X86_EXC_IO  = 0x15, /* I/O instruction when ^IBRK is cleared */
-	/* µPD9002 Z80 mode only */
-	X86_EXC_IN  = 0x7C, /* executed on IN instructions */
-	X86_EXC_OUT = 0x7D, /* executed on OUT instructions */
-	X86_EXC_LDAR = 0x7E, /* executed on LD A, R */
-	/* 80186 only */
-	X86_EXC_TIMER0 = 0x08,
-	X86_EXC_DMA0 = 0x0A,
-	X86_EXC_DMA1 = 0x0B,
-	X86_EXC_INT0 = 0x0C,
-	X86_EXC_INT1 = 0x0D,
-	X86_EXC_INT2 = 0x0E,
-	X86_EXC_INT3 = 0x0F,
-	X86_EXC_TIMER1 = 0x12,
-	X86_EXC_TIMER2 = 0x13,
 	/* 80286+ */
 	X86_EXC_DF  = 0x08, /* double fault */
 	/* 80286, 80386 only */
@@ -394,6 +378,70 @@ enum x86_exception_t
 	X86_EXC_HV  = 0x1C, /* hypervisor injection exception */
 	X86_EXC_VC  = 0x1D, /* VMM communication exception */
 	X86_EXC_SX  = 0x1E, /* security exception */
+	/* V25 only */
+	X86_EXC_IO_V25  = 0x13, /* I/O instruction when ^IBRK is cleared */
+	/* V55 only */
+	X86_EXC_IO_V55  = 0x06, /* I/O instruction when ^IBRK is cleared */
+#define X86_EXC_IO() (emu->cpu_type == X86_CPU_V25 ? X86_EXC_IO_V25 : emu->cpu_type == X86_CPU_V55 ? X86_EXC_IO_V55 : -1)
+	/* V25 hardware interrupts */
+	X86_EXC_INTSER0_V25 = 0x0C, /* channel 0 serial error */
+	X86_EXC_INTSR0_V25 = 0x0D, /* channel 0 serial receiver */
+	X86_EXC_INTST0_V25 = 0x0E, /* channel 0 serial transmitter */
+	X86_EXC_INTSER1_V25 = 0x10, /* channel 1 serial error */
+	X86_EXC_INTSR1_V25 = 0x11, /* channel 1 serial receiver */
+	X86_EXC_INTST1_V25 = 0x12, /* channel 1 serial transmitter */
+	X86_EXC_INTD0_V25 = 0x14, /* DMA channel 0 */
+	X86_EXC_INTD1_V25 = 0x15, /* DMA channel 1 */
+	X86_EXC_INTP0_V25 = 0x18, /* peripheral 0 */
+	X86_EXC_INTP1_V25 = 0x19, /* peripheral 1 */
+	X86_EXC_INTP2_V25 = 0x1A, /* peripheral 2 */
+	X86_EXC_INTTU0 = 0x1C, /* timer unit 0 */
+	X86_EXC_INTTU1 = 0x1D, /* timer unit 1 */
+	X86_EXC_INTTU2 = 0x1E, /* timer unit 2 */
+	X86_EXC_INTTB = 0x1F, /* time base counter */
+	/* V55 hardware interrupts */
+	X86_EXC_WDT = 0x08, /* watchdog timer overflow */
+	X86_EXC_INTP0_V55 = 0x09, /* INTP0 pin */
+	X86_EXC_INTP1_V55 = 0x0A, /* INTP0 pin */
+	X86_EXC_INTP2_V55 = 0x0B, /* INTP0 pin */
+	X86_EXC_INTP3_V55 = 0x0C, /* INTP0 pin */
+	X86_EXC_INTP4_V55 = 0x0D, /* INTP0 pin */
+	X86_EXC_INTP5_V55 = 0x0E, /* INTP0 pin */
+	X86_EXC_INCM00 = 0x10, /* CM00 match detection */
+	X86_EXC_INCM01 = 0x11, /* CM01 match detection */
+	X86_EXC_INCM10 = 0x12, /* CM10 match detection */
+	X86_EXC_INCM11 = 0x13, /* CM11 match detection */
+	X86_EXC_INCM21 = 0x14, /* CM21 match detection */
+	X86_EXC_INCM31 = 0x15, /* CM31 match detection */
+	X86_EXC_INTD0_V55 = 0x16, /* DMA channel 0 main */
+	X86_EXC_INTD0S_V55 = 0x17, /* DMA channel 0 sub */
+	X86_EXC_INTD1_V55 = 0x18, /* DMA channel 1 main */
+	X86_EXC_INTD1S_V55 = 0x19, /* DMA channel 1 sub */
+	X86_EXC_INTSER0_V55 = 0x1A, /* channel 0 UART reception error */
+	X86_EXC_INTSER1_V55 = 0x1B, /* channel 1 UART reception error */
+	X86_EXC_INTSR0_V55 = 0x1C, /* channel 0 UART reception */
+	X86_EXC_INTSI0_V55 = X86_EXC_INTSR0_V55, /* channel 0 serial transmission/reception */
+	X86_EXC_INTSR1_V55 = 0x1D, /* channel 1 UART reception */
+	X86_EXC_INTSI1_V55 = X86_EXC_INTSR1_V55, /* LDMA channel 5 */
+	X86_EXC_INTST0_V55 = 0x1E, /* channel 0 UART transmission */
+	X86_EXC_INTST1_V55 = 0x1F, /* channel 1 UART transmission */
+	X86_EXC_INTSIT = 0x20, /* STM match detection */
+	X86_EXC_INTPAI = 0x24, /* Parallel I/F */
+	X86_EXC_INTAD = 0x25, /* A/D converter */
+	/* µPD9002 Z80 mode only */
+	X86_EXC_IN  = 0x7C, /* executed on IN instructions */
+	X86_EXC_OUT = 0x7D, /* executed on OUT instructions */
+	X86_EXC_LDAR = 0x7E, /* executed on LD A, R */
+	/* 80186 hardware interrupts */
+	X86_EXC_TIMER0 = 0x08,
+	X86_EXC_DMA0 = 0x0A,
+	X86_EXC_DMA1 = 0x0B,
+	X86_EXC_INT0 = 0x0C,
+	X86_EXC_INT1 = 0x0D,
+	X86_EXC_INT2 = 0x0E,
+	X86_EXC_INT3 = 0x0F,
+	X86_EXC_TIMER1 = 0x12,
+	X86_EXC_TIMER2 = 0x13,
 	/* internal flags used for interrupt management */
 	X86_EXC_FAULT = 0x100,
 	X86_EXC_TRAP = 0x200,

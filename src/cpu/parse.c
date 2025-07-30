@@ -573,7 +573,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 	do \
 	{ \
 		if(execute && emu->ibrk_ == 0) \
-			x86_trigger_interrupt(emu, X86_EXC_IO | X86_EXC_FAULT, 0); \
+			x86_trigger_interrupt(emu, X86_EXC_IO() | X86_EXC_FAULT, 0); \
 	} while(0)
 
 #define REGFLDVAL(prs) (((prs)->modrm_byte >> 3) & 7)
