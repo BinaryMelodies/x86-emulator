@@ -2265,6 +2265,29 @@ static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t 
 	x86_load_x80_registers(emu);
 }
 
+static inline void x86_enter_interrupt_bank_switching(x86_state_t * emu, int exception, int register_bank)
+{
+	emu->state = X86_STATE_RUNNING;
+
+	x86_store_x80_registers(emu);
+	if((exception & X86_EXC_FAULT) != 0)
+	{
+		x86_set_xip(emu, emu->old_xip);
+	}
+
+	uint16_t flags = x86_flags_get16(emu);
+	x86_set_register_bank_number(emu, register_bank);
+	emu->bank[emu->rb].w[X86_BANK_PSW_SAVE] = htole16(flags);
+	emu->bank[emu->rb].w[X86_BANK_PC_SAVE] = htole16(emu->xip);
+	emu->_if = 0;
+	emu->tf = 0;
+	emu->md = x86_native_state_flag(emu); // not used by V25/V55, included for consistency
+	emu->ac = 0; // not used by V25/V55, included for consistency
+	x86_set_xip(emu, emu->bank[emu->rb].w[X86_BANK_VECTOR_PC]);
+
+	x86_load_x80_registers(emu);
+}
+
 static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int exception, uoff_t error_code)
 {
 	if(emu->fetch_mode == FETCH_MODE_PREFETCH)
@@ -2365,7 +2388,87 @@ static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int except
 	}
 	else
 	{
-		x86_enter_interrupt(emu, exception, error_code);
+		bool use_nec_bank_switching = false;
+		int register_bank = 7;
+		if(x86_is_real_mode(emu))
+		{
+			switch(emu->cpu_type)
+			{
+			case X86_CPU_V25:
+				switch(exception & 0xFF)
+				{
+				case X86_EXC_INTSER0_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_SEIC0] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_SEIC0] & X86_V25_IC_RB_MASK;
+					break;
+				case X86_EXC_INTSR0_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_SRIC0] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_SRIC0] & X86_V25_IC_RB_MASK;
+					break;
+				case X86_EXC_INTST0_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_STIC0] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_STIC0] & X86_V25_IC_RB_MASK;
+					break;
+				case X86_EXC_INTSER1_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_SEIC1] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_SEIC0] & X86_V25_IC_RB_MASK; // same bank as 0
+					break;
+				case X86_EXC_INTSR1_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_SRIC1] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_SRIC0] & X86_V25_IC_RB_MASK; // same bank as 0
+					break;
+				case X86_EXC_INTST1_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_STIC1] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_STIC0] & X86_V25_IC_RB_MASK; // same bank as 0
+					break;
+				case X86_EXC_INTD0_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_DIC0] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_DIC0] & X86_V25_IC_RB_MASK;
+					break;
+				case X86_EXC_INTD1_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_DIC1] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_DIC0] & X86_V25_IC_RB_MASK; // same bank as 0
+					break;
+				case X86_EXC_INTP0_V25:
+					use_nec_bank_switching = emu->iram[X86_SFR_EXIC0] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_EXIC0] & X86_V25_IC_RB_MASK;
+					break;
+				case X86_EXC_INTP1_V25:
+				case X86_EXC_INTP2_V25:
+				case X86_EXC_INTTU0:
+					use_nec_bank_switching = emu->iram[X86_SFR_TMIC0] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_TMIC0] & X86_V25_IC_RB_MASK;
+					break;
+				case X86_EXC_INTTU1:
+					use_nec_bank_switching = emu->iram[X86_SFR_TMIC1] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_TMIC0] & X86_V25_IC_RB_MASK; // same bank as 0
+					break;
+				case X86_EXC_INTTU2:
+					use_nec_bank_switching = emu->iram[X86_SFR_TMIC2] & X86_V25_IC_ENCS;
+					register_bank = emu->iram[X86_SFR_TMIC0] & X86_V25_IC_RB_MASK; // same bank as 0
+					break;
+				case X86_EXC_INTTB:
+					break;
+				default:
+					break;
+				}
+				break;
+			case X86_CPU_V55:
+				// TODO
+				break;
+			default:
+				break;
+			}
+		}
+		// TODO: V25/V55 macros, as alternative
+		if(use_nec_bank_switching)
+		{
+			x86_enter_interrupt_bank_switching(emu, exception, register_bank);
+		}
+		else
+		{
+			x86_enter_interrupt(emu, exception, error_code);
+		}
 		emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception & 0xFF);
 	}
 	longjmp(emu->exc[emu->fetch_mode], 1);
