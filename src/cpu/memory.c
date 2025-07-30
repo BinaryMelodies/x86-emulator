@@ -891,15 +891,17 @@ static inline void x87_memory_segmented_read(x86_state_t * emu, x86_segnum_t seg
 static inline uint8_t x86_memory_segmented_read8(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset)
 {
 	uint8_t result = 0;
+	emu->ind_register = offset;
 	x86_memory_segmented_read(emu, segment_number, offset, 1, &result);
-	return result;
+	return emu->opr_register = result;
 }
 
 static inline uint16_t x86_memory_segmented_read16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset)
 {
 	uint16_t result = 0;
+	emu->ind_register = offset;
 	x86_memory_segmented_read(emu, segment_number, offset, 2, &result);
-	return le16toh(result);
+	return emu->opr_register = le16toh(result);
 }
 
 static inline uint32_t x86_memory_segmented_read32(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset)
@@ -1096,11 +1098,15 @@ static inline void x87_memory_segmented_write(x86_state_t * emu, x86_segnum_t se
 
 static inline void x86_memory_segmented_write8(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uint8_t value)
 {
+	emu->ind_register = offset;
+	emu->opr_register = value;
 	x86_memory_segmented_write(emu, segment_number, offset, 1, &value);
 }
 
 static inline void x86_memory_segmented_write16(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, uint16_t value)
 {
+	emu->ind_register = offset;
+	emu->opr_register = value;
 	value = htole16(value);
 	x86_memory_segmented_write(emu, segment_number, offset, 2, &value);
 }

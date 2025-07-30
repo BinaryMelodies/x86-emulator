@@ -645,6 +645,8 @@ static inline void x87_environment_restore_real_mode16(x86_state_t * emu, x86_se
 	emu->x87.tw = x87_memory_segmented_read16(emu, segment, offset, offset + 0x0004);
 	emu->x87.fip = x87_memory_segmented_read16(emu, segment, offset, offset + 0x0006);
 	uint16_t fip_fop = x87_memory_segmented_read16(emu, segment, offset, offset + 0x0008);
+	// in theory, reading back CS:IP and DS:DP is ambiguous in real mode
+	// however it is consistent with 8087 as well as tested Pentium III behavior
 	emu->x87.fip |= (fip_fop & 0xF000) << 4;
 	emu->x87.fop = 0xD800 | (fip_fop & 0x07FF);
 	emu->x87.fcs = 0;
