@@ -3270,7 +3270,7 @@ break;
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
-			emu->sr[segnum].selector = registers.ds;
+			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 4 : registers.ds;
 			emu->sr[segnum].base = registers.ds << 4;
 		}
 		if(registers.sp_given)
@@ -3296,7 +3296,7 @@ break;
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
-			emu->sr[segnum].selector = registers.ds;
+			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 4 : registers.ds;
 			emu->sr[segnum].base = registers.ds << 4;
 		}
 		if(registers.sp_given)

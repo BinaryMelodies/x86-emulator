@@ -254,6 +254,6 @@ static const char * _x86_register_name32[];
 static const char * _x86_register_name64[];
 #define x86_register_name64(prs, number) (_x86_register_name64[(number)])
 static const char * _x86_segment_name[]; // NEC names come first, followed by Intel names
-#define x86_segment_name(prs, number) (_x86_segment_name[(number) + ((prs)->use_nec_syntax ? 0 : 8)])
+#define x86_segment_name(prs, number) (_x86_segment_name[(number) + ((prs)->use_nec_syntax ? 0 : 16)])
 
 #endif // __GENERAL_H

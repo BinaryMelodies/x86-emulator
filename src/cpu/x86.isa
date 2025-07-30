@@ -388,9 +388,9 @@ X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 63	86	JNB	Jb
 63	v20	NOP	Ew
 63	v25	BRKN	Ib	feature:	V25S
-63	v55	DS2:
+63	v55,ext	DS2:
 63	v60	exit_v20_emulation
-63	!64,286+	ARPL	Ew, Gw
+63	!64,286+,!ext	ARPL	Ew, Gw
 63	64,586+	MOVSXD	Gv, Ed
 64	86	JZ	Jb
 64	nec+	REPNC:
@@ -632,9 +632,9 @@ D3/7	86+	SAR	Ev, CL	nec:	SHRA	Ev, CL
 D4	!64,86+	AAM	Ub	nec:	CVTBD
 D5	!64,86+	AAD	Ub	nec:	CVTDB
 D5	64,intel,ext	REX2:	-	feature:	APX_F
-D6	!64,86+,!nec	SALC
+D6	!64,86+,!nec,!ext	SALC
 D6	nec+,!v55	XLAT	-	nec:	TRANS	# duplicate
-D6	v55	DS3:
+D6	v55,ext	DS3:
 D6	64,intel	L10MD6:	-	feature:	L10M
 D7	86+	XLAT	-	nec:	TRANS
 
@@ -669,10 +669,10 @@ EF	86+	OUT	DX, eAX
 F0	86+	LOCK:	-	nec:	BUSLOCK:
 F1	286	USR:
 F1	86,186,nec+,!v25,!v55	LOCK:	-	nec:	BUSLOCK:
-F1	386+	INT1	-	feature:	!AMD_SMM
+F1	386+,!ext	INT1	-	feature:	!AMD_SMM
 F1	386,486	SMI	-	feature:	AMD_SMM
 F1	v25	BRKS	Ib	feature:	V25S
-F1	v55	IRAM:
+F1	v55,ext	IRAM:
 F2	86+	REPNZ:
 F3	86+	REPZ:
 F4	86+	HLT	-	nec:	HALT
@@ -843,7 +843,7 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 #0F33	586+	RDPMC		feature:	RDPMC
 0F34	586+	SYSENTER		feature:	SEP
 0F35	586+	SYSEXIT		feature:	SEP
-0F36	v55	MOV	DS3, Gw, Mp
+0F36	v55,ext	MOV	DS3, Gw, Mp
 0F36	cyrix+	RDSHR	Ed	feature:	RDSHR
 0F37	cyrix+	WRSHR	Ed	feature:	RDSHR
 
@@ -860,8 +860,7 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F3C	cyrix+	CPU_WRITE		feature:	MEDIA_GX
 0F3D/0	v55	BSCH	Ew
 0F3D	cyrix+	CPU_READ		feature:	MEDIA_GX
-0F3E	v55	MOV	DS2, Gw, Mp
-0F273E	ext	MOV	DS2, Gw, Mp
+0F3E	v55,ext	MOV	DS2, Gw, Mp
 0F3F	via+	JMPAI
 
 0F40	586+	CMOVO	Gv, Ev	feature:	CMOV
@@ -930,9 +929,9 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F73/6	586+	PSLLQ	Nq, Ib	feature:	MMX
 0F74	586+	PCMPEQB	Pq, Qq	feature:	MMX
 0F75	586+	PCMPEQW	Pq, Qq	feature:	MMX
-0F76	v55	PUSH	DS3
+0F76	v55,ext	PUSH	DS3
 0F76	586+	PCMPEQD	Pq, Qq	feature:	MMX
-0F77	v55	POP	DS3
+0F77	v55,ext	POP	DS3
 0F77	586+	EMMS		feature:	MMX
 
 #0F78	v55	SCHEOL	-	# v55pi
@@ -946,10 +945,10 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F7C	!64,cyrix+,ext	SVTS	M10
 #0F7D	v55	MRDEC	-	# v55pi
 0F7D	!64,cyrix+,ext	RSTS	M10
-0F7E	v55	PUSH	DS2
+0F7E	v55,ext	PUSH	DS2
 0F7E	cyrix+	SMINT		feature:	!MMX
 0F7E	586+	MOVD	Ed, Pd	feature:	MMX
-0F7F	v55	POP	DS2
+0F7F	v55,ext	POP	DS2
 0F7F	586+	MOVQ	Qq, Pq	feature:	MMX
 
 0F80	386+	JO	Jz
@@ -1153,6 +1152,7 @@ F30FBD	586+	LZCNT	Gv, Ev	feature:	LZCNT
 0F27D6	ext	DS3:	# extension (V55)
 0F27F1	ext	IRAM:	# extension (V55)
 0F2736	ext	MOV	DS3, Gw, Mp	# extension (V55)
+0F273E	ext	MOV	DS2, Gw, Mp
 0F2776	ext	PUSH	DS3	# extension (V55)
 0F2777	ext	POP	DS3	# extension (V55)
 0F277E	ext	PUSH	DS2	# extension (V55)

@@ -60,10 +60,10 @@ static const char * _x86_segment_name[] =
 {
 	// NEC names
 	"ds1", "ps", "ss", "ds0", "fs", "gs", "ds3", "ds2",
+	NULL, NULL, NULL, NULL, NULL, "iram", NULL, NULL,
 	// Intel names
 	"es",  "cs", "ss", "ds",  "fs", "gs", "ds3", "ds2",
-	// NEC name
-	"iram"
+	NULL, NULL, NULL, NULL, NULL, "iram", NULL, NULL,
 };
 
 static uint8_t _x80_fetch8(x80_parser_t * prs)
@@ -667,6 +667,13 @@ static void x86_debug64(FILE * file, x86_state_t * emu)
 		emu->sr[X86_R_FS].selector, emu->sr[X86_R_FS].base, emu->sr[X86_R_FS].limit, emu->sr[X86_R_FS].access >> 8);
 	fprintf(file, "GS  =%04"PRIX16":base=%016"PRIX64",limit=%08"PRIX32",access=%04"PRIX32"\n",
 		emu->sr[X86_R_GS].selector, emu->sr[X86_R_GS].base, emu->sr[X86_R_GS].limit, emu->sr[X86_R_GS].access >> 8);
+	if(emu->cpu_type == X86_CPU_EXTENDED)
+	{
+		fprintf(file, "DS3 =%04"PRIX16":base=%08"PRIX64",limit=%08"PRIX32",access=%04"PRIX32"\n",
+			emu->sr[X86_R_DS3].selector, emu->sr[X86_R_DS3].base, emu->sr[X86_R_DS3].limit, emu->sr[X86_R_DS3].access >> 8);
+		fprintf(file, "DS2 =%04"PRIX16":base=%08"PRIX64",limit=%08"PRIX32",access=%04"PRIX32"\n",
+			emu->sr[X86_R_DS2].selector, emu->sr[X86_R_DS2].base, emu->sr[X86_R_DS2].limit, emu->sr[X86_R_DS2].access >> 8);
+	}
 	fprintf(file, "GDTR     :base=%016"PRIX64",limit=%08"PRIX32"\n",
 		emu->sr[X86_R_GDTR].base, emu->sr[X86_R_GDTR].limit);
 	fprintf(file, "IDTR     :base=%016"PRIX64",limit=%08"PRIX32"\n",
@@ -708,6 +715,13 @@ static void x86_debug32(FILE * file, x86_state_t * emu)
 		emu->sr[X86_R_FS].selector, emu->sr[X86_R_FS].base, emu->sr[X86_R_FS].limit, emu->sr[X86_R_FS].access >> 8);
 	fprintf(file, "GS  =%04"PRIX16":base=%08"PRIX64",limit=%08"PRIX32",access=%04"PRIX32"\n",
 		emu->sr[X86_R_GS].selector, emu->sr[X86_R_GS].base, emu->sr[X86_R_GS].limit, emu->sr[X86_R_GS].access >> 8);
+	if(emu->cpu_type == X86_CPU_EXTENDED)
+	{
+		fprintf(file, "DS3 =%04"PRIX16":base=%08"PRIX64",limit=%08"PRIX32",access=%04"PRIX32"\n",
+			emu->sr[X86_R_DS3].selector, emu->sr[X86_R_DS3].base, emu->sr[X86_R_DS3].limit, emu->sr[X86_R_DS3].access >> 8);
+		fprintf(file, "DS2 =%04"PRIX16":base=%08"PRIX64",limit=%08"PRIX32",access=%04"PRIX32"\n",
+			emu->sr[X86_R_DS2].selector, emu->sr[X86_R_DS2].base, emu->sr[X86_R_DS2].limit, emu->sr[X86_R_DS2].access >> 8);
+	}
 	fprintf(file, "GDTR     :base=%08"PRIX64",limit=%08"PRIX32"\n",
 		emu->sr[X86_R_GDTR].base, emu->sr[X86_R_GDTR].limit);
 	fprintf(file, "IDTR     :base=%08"PRIX64",limit=%08"PRIX32"\n",
@@ -1052,9 +1066,6 @@ void x86_debug(FILE * file, x86_state_t * emu)
 	case X86_CPU_286:
 		x86_debug_286(file, emu);
 		break;
-//	case X86_CPU_EXTENDED:
-//		x86_debug_extended(file, emu);
-//		break;
 	default:
 		if(x86_is_long_mode_supported(emu))
 		{

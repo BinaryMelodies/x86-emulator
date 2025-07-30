@@ -274,7 +274,7 @@ enum x86_segnum_t
 	/* Phantom register to use with 8087/80287/80387 emulation */
 	X86_R_FDS = X86_SR_COUNT + X86_TABLEREG_COUNT,
 	/* V55 segment prefix for internal RAM */
-	X86_R_IRAM = 16,
+	X86_R_IRAM,
 };
 typedef enum x86_segnum_t x86_segnum_t;
 
