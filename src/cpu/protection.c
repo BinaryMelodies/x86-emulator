@@ -2288,6 +2288,58 @@ static inline void x86_enter_interrupt_bank_switching(x86_state_t * emu, int exc
 	x86_load_x80_registers(emu);
 }
 
+static inline void x86_enter_interrupt_macro_service_v25(x86_state_t * emu, uint8_t msc_register, int interrupt_register_number)
+{
+	int channel = msc_register & 7;
+	bool dir = msc_register & 0x10;
+	int mode = msc_register >> 5;
+	// note: only modes 0, 1, 4 are supported, others are prohibited
+
+	uint8_t msc = x86_sfr_get(emu, 8 * channel);
+	uint8_t sfrp = x86_sfr_get(emu, 8 * channel + 1);
+	uint16_t schr = x86_sfr_get(emu, 8 * channel + 2);
+	uint8_t msp = x86_sfr_get16(emu, 8 * channel + 4);
+	uint16_t mss = x86_sfr_get(emu, 8 * channel + 6);
+	uint16_t data;
+
+	if((mode & 1) == 0)
+	{
+		if(dir)
+		{
+			data = x86_sfr_get(emu, sfrp);
+			x86_memory_write8(emu, ((uint32_t)mss << 4) + msp, data);
+		}
+		else
+		{
+			data = x86_memory_read8_external(emu, ((uint32_t)mss << 4) + msp);
+			x86_sfr_set(emu, sfrp, data);
+		}
+		x86_sfr_set16(emu, 8 * channel + 4, msp + 1);
+	}
+	else
+	{
+		if(dir)
+		{
+			data = x86_sfr_get16(emu, sfrp);
+			x86_memory_write16(emu, ((uint32_t)mss << 4) + msp, data);
+		}
+		else
+		{
+			data = x86_memory_read16_external(emu, ((uint32_t)mss << 4) + msp);
+			x86_sfr_set16(emu, sfrp, data);
+		}
+		x86_sfr_set16(emu, 8 * channel + 4, msp + 2);
+	}
+
+	--msc;
+	x86_sfr_set(emu, 8 * channel, msc);
+
+	if(msc == 0 || (((mode & 4) != 0) && schr == data))
+	{
+		x86_sfr_set(emu, interrupt_register_number, x86_sfr_get(emu, interrupt_register_number) & ~X86_V25_IC_MS);
+	}
+}
+
 static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int exception, uoff_t error_code)
 {
 	if(emu->fetch_mode == FETCH_MODE_PREFETCH)

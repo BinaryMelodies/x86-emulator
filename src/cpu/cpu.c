@@ -518,6 +518,8 @@ void x86_reset(x86_state_t * emu, bool reset)
 		emu->iram[0x14D] = 0x47; // EXIC1
 		emu->iram[0x14E] = 0x47; // EXIC2
 		emu->iram[0x1FC] = 0x00; // ISPR
+
+		emu->v25_int_pending = 0;
 	}
 	if(emu->cpu_type == X86_CPU_V55)
 	{
@@ -1450,6 +1452,7 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 			{
 				bool use_interrupt_register = false;
 				int priority_register_number;
+				int msc_register_number = -1;
 				switch(emu->cpu_type)
 				{
 				case X86_CPU_V25:
@@ -1464,11 +1467,13 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_SRIC0;
 						priority_register_number = X86_SFR_SRIC0;
+						msc_register_number = X86_SFR_SRMS0;
 						break;
 					case X86_EXC_INTST0_V25:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_STIC0;
 						priority_register_number = X86_SFR_STIC0;
+						msc_register_number = X86_SFR_STMS0;
 						break;
 					case X86_EXC_INTSER1_V25:
 						use_interrupt_register = true;
@@ -1479,11 +1484,13 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_SRIC1;
 						priority_register_number = X86_SFR_SRIC0; // same bank as 0
+						msc_register_number = X86_SFR_SRMS1;
 						break;
 					case X86_EXC_INTST1_V25:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_STIC1;
 						priority_register_number = X86_SFR_STIC0; // same bank as 0
+						msc_register_number = X86_SFR_STMS1;
 						break;
 					case X86_EXC_INTD0_V25:
 						use_interrupt_register = true;
@@ -1499,31 +1506,37 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_EXIC0;
 						priority_register_number = X86_SFR_EXIC0;
+						msc_register_number = X86_SFR_EMS0;
 						break;
 					case X86_EXC_INTP1_V25:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_EXIC1;
 						priority_register_number = X86_SFR_EXIC0; // same bank as 0
+						msc_register_number = X86_SFR_EMS1;
 						break;
 					case X86_EXC_INTP2_V25:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_EXIC2;
 						priority_register_number = X86_SFR_EXIC0; // same bank as 0
+						msc_register_number = X86_SFR_EMS2;
 						break;
 					case X86_EXC_INTTU0:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_TMIC0;
 						priority_register_number = X86_SFR_TMIC0;
+						msc_register_number = X86_SFR_TMMS0;
 						break;
 					case X86_EXC_INTTU1:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_TMIC1;
 						priority_register_number = X86_SFR_TMIC0; // same bank as 0
+						msc_register_number = X86_SFR_TMMS1;
 						break;
 					case X86_EXC_INTTU2:
 						use_interrupt_register = true;
 						interrupt_register_number = X86_SFR_TMIC2;
 						priority_register_number = X86_SFR_TMIC0; // same bank as 0
+						msc_register_number = X86_SFR_TMMS2;
 						break;
 					case X86_EXC_INTTB:
 						break;
@@ -1540,24 +1553,48 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 						{
 							// interrupt is masked
 							accept_interrupt = false;
+							// ("pending B" in NEC manual)
 						}
 						else if((x86_sfr_get(emu, X86_SFR_ISPR) & ((1 << priority) - 1)) != 0)
 						{
 							// a higher priority interrupt is being serviced
-							accept_interrupt = false; // TODO: set to pending
+							accept_interrupt = false;
+							emu->v25_int_pending |= 1 << priority;
 						}
-						else if((x86_sfr_get(emu, interrupt_register_number) & X86_V25_IC_MS) != 0)
+						else if(msc_register_number != -1
+							&& (x86_sfr_get(emu, interrupt_register_number) & X86_V25_IC_MS) != 0
+							&& (emu->v25_int_pending & ((1 << priority) - 1)) == 0)
 						{
-							// TODO: check pending interrupts (but IMK == 0)
+							// macro services enabled, no higher priority pending
 							use_nec_macro_service = true;
+						}
+						else if(!accept_interrupt)
+						{
+							// interrupts disabled
+							emu->v25_int_pending |= 1 << priority;
 						}
 
 						if(!accept_interrupt && !use_nec_macro_service)
+						{
 							x86_sfr_set(emu, interrupt_register_number, x86_sfr_get(emu, interrupt_register_number) | X86_V25_IC_IF);
+						}
 						else
+						{
 							x86_sfr_set(emu, interrupt_register_number, x86_sfr_get(emu, interrupt_register_number) & ~X86_V25_IC_IF);
+							emu->v25_int_pending &= ~(1 << priority);
+						}
+					}
 
-						// TODO: if(!accept_interrupt) => set pending
+					if(use_nec_macro_service)
+					{
+						x86_enter_interrupt_macro_service_v25(emu, x86_sfr_get(emu, msc_register_number), interrupt_register_number);
+
+						if((x86_sfr_get(emu, interrupt_register_number) & X86_V25_IC_MS) == 0
+							&& !accept_interrupt)
+						{
+							x86_sfr_set(emu, interrupt_register_number, x86_sfr_get(emu, interrupt_register_number) | X86_V25_IC_IF);
+							emu->v25_int_pending |= 1 << priority;
+						}
 					}
 
 					break;
@@ -1566,16 +1603,6 @@ bool x86_hardware_interrupt(x86_state_t * emu, uint16_t exception_number, size_t
 					break;
 				default:
 					break;
-				}
-			}
-
-			if(use_nec_macro_service)
-			{
-				// TODO: V25/V55 macros
-				if((x86_sfr_get(emu, interrupt_register_number) & X86_V25_IC_MS) == 0) // TODO: V55
-				{
-					// TODO: check pending interrupts (but IMK == 0)
-					// TODO: set IF, set pending
 				}
 			}
 

@@ -36,6 +36,11 @@ static inline void x86_load_register_bank(x86_state_t * emu);
 static inline void x86_load_x80_registers(x86_state_t * emu);
 static inline void x86_store_x80_registers(x86_state_t * emu);
 
+static inline uint8_t x86_sfr_get(x86_state_t * emu, uint16_t index);
+static inline uint16_t x86_sfr_get16(x86_state_t * emu, uint16_t index);
+static inline void x86_sfr_set(x86_state_t * emu, uint16_t index, uint8_t value);
+static inline void x86_sfr_set16(x86_state_t * emu, uint16_t index, uint8_t value);
+
 // protection
 
 static inline unsigned x86_get_cpl(x86_state_t * emu);
@@ -54,6 +59,9 @@ static inline void x86_segment_check_write(x86_state_t * emu, x86_segnum_t segme
 
 static inline void x86_segment_store_protected_mode_386(x86_state_t * emu, x86_segnum_t segment_number, uint8_t * descriptor);
 
+static inline void x86_enter_interrupt(x86_state_t * emu, int exception, uoff_t error_code);
+static inline void x86_enter_interrupt_bank_switching(x86_state_t * emu, int exception, int register_bank);
+static inline void x86_enter_interrupt_macro_service_v25(x86_state_t * emu, uint8_t msc_register, int interrupt_register_number);
 static inline noreturn void x86_trigger_interrupt(x86_state_t * emu, int exception, uoff_t error_code);
 
 static inline uint8_t x80_memory_read8(x80_state_t * emu, uint16_t address);

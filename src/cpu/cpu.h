@@ -626,15 +626,25 @@ enum
 	X86_XAM_XA = 0x01,
 
 	// v25 only, special function registers, accessed in emu->iram
+	X86_SFR_EMS0 = 0x144,
+	X86_SFR_EMS1 = 0x145,
+	X86_SFR_EMS2 = 0x146,
 	X86_SFR_EXIC0 = 0x14C,
 	X86_SFR_EXIC1 = 0x14D,
 	X86_SFR_EXIC2 = 0x14E,
+	X86_SFR_SRMS0 = 0x165,
+	X86_SFR_STMS0 = 0x166,
 	X86_SFR_SEIC0 = 0x16C,
 	X86_SFR_SRIC0 = 0x16D,
 	X86_SFR_STIC0 = 0x16E,
+	X86_SFR_SRMS1 = 0x175,
+	X86_SFR_STMS1 = 0x176,
 	X86_SFR_SEIC1 = 0x17C,
 	X86_SFR_SRIC1 = 0x17D,
 	X86_SFR_STIC1 = 0x17E,
+	X86_SFR_TMMS0 = 0x194,
+	X86_SFR_TMMS1 = 0x195,
+	X86_SFR_TMMS2 = 0x196,
 	X86_SFR_TMIC0 = 0x19C,
 	X86_SFR_TMIC1 = 0x19D,
 	X86_SFR_TMIC2 = 0x19E,
@@ -2044,6 +2054,9 @@ struct x86_state_t
 		/* V25 internal data area, first 256 bytes mapped to the register banks, the rest are SFRs; the V55 chip RAM uses standard memory access */
 		uint8_t iram[512];
 	};
+
+	/* v25 pending interrupts */
+	uint16_t v25_int_pending;
 
 	// 186
 	/* Peripheral control block, stored in little endian format */

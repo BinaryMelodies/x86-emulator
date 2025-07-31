@@ -2124,6 +2124,11 @@ static inline uint8_t x86_sfr_get(x86_state_t * emu, uint16_t index)
 	}
 }
 
+static inline uint16_t x86_sfr_get16(x86_state_t * emu, uint16_t index)
+{
+	return x86_sfr_get(emu, index) | (x86_sfr_get(emu, index + 1) << 8);
+}
+
 static inline void x86_sfr_set(x86_state_t * emu, uint16_t index, uint8_t value)
 {
 	switch(emu->cpu_type)
@@ -2137,5 +2142,11 @@ static inline void x86_sfr_set(x86_state_t * emu, uint16_t index, uint8_t value)
 	default:
 		assert(false);
 	}
+}
+
+static inline void x86_sfr_set16(x86_state_t * emu, uint16_t index, uint8_t value)
+{
+	x86_sfr_set(emu, index,     value);
+	x86_sfr_set(emu, index + 1, value >> 8);
 }
 
