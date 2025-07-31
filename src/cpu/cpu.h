@@ -450,6 +450,7 @@ enum x86_exception_t
 	X86_EXC_INT_N = 0x1000, /* originates from INT N instruction */
 	X86_EXC_INT_SW = 0x2000, /* originates from INT3 or INTO instruction */
 	X86_EXC_ICEBP = 0x4000, /* INT1 instruction (F1) */
+	X86_EXC_INT_HW = 0x8000, /* hardware interrupt */
 	X86_EXC_ICE = 0x10000, /* in-circuit emulator interrupt */ // TODO
 	X86_EXC_SMI = 0x20000, /* system management interrupt */ // TODO
 
