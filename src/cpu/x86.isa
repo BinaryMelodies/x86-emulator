@@ -2526,6 +2526,14 @@ switch(emu->cpu_type)
 {
 case X86_CPU_V25:
 	x86_sfr_set(emu, X86_V25_SFR_ISPR, x86_sfr_get(emu, X86_V25_SFR_ISPR) & ~1);
+	for(int bit = 1; bit < 0x100; bit <<= 1)
+	{
+		if((x86_sfr_get(emu, X86_SFR_ISPR) & bit) != 0)
+		{
+			x86_sfr_set(emu, X86_SFR_ISPR, x86_sfr_get(emu, X86_SFR_ISPR) & ~bit);
+			break;
+		}
+	}
 	break;
 case X86_CPU_V55:
 	x86_sfr_set(emu, X86_V55_SFR_ISPR, x86_sfr_get(emu, X86_V55_SFR_ISPR) & ~1);

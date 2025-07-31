@@ -383,6 +383,20 @@ enum x86_exception_t
 	/* V55 only */
 	X86_EXC_IO_V55  = 0x06, /* I/O instruction when ^IBRK is cleared */
 #define X86_EXC_IO() (emu->cpu_type == X86_CPU_V25 ? X86_EXC_IO_V25 : emu->cpu_type == X86_CPU_V55 ? X86_EXC_IO_V55 : -1)
+	/* µPD9002 Z80 mode only */
+	X86_EXC_IN  = 0x7C, /* executed on IN instructions */
+	X86_EXC_OUT = 0x7D, /* executed on OUT instructions */
+	X86_EXC_LDAR = 0x7E, /* executed on LD A, R */
+	/* 80186 hardware interrupts */
+	X86_EXC_TIMER0 = 0x08,
+	X86_EXC_DMA0 = 0x0A,
+	X86_EXC_DMA1 = 0x0B,
+	X86_EXC_INT0 = 0x0C,
+	X86_EXC_INT1 = 0x0D,
+	X86_EXC_INT2 = 0x0E,
+	X86_EXC_INT3 = 0x0F,
+	X86_EXC_TIMER1 = 0x12,
+	X86_EXC_TIMER2 = 0x13,
 	/* V25 hardware interrupts */
 	X86_EXC_INTSER0_V25 = 0x0C, /* channel 0 serial error */
 	X86_EXC_INTSR0_V25 = 0x0D, /* channel 0 serial receiver */
@@ -428,20 +442,7 @@ enum x86_exception_t
 	X86_EXC_INTSIT = 0x20, /* STM match detection */
 	X86_EXC_INTPAI = 0x24, /* Parallel I/F */
 	X86_EXC_INTAD = 0x25, /* A/D converter */
-	/* µPD9002 Z80 mode only */
-	X86_EXC_IN  = 0x7C, /* executed on IN instructions */
-	X86_EXC_OUT = 0x7D, /* executed on OUT instructions */
-	X86_EXC_LDAR = 0x7E, /* executed on LD A, R */
-	/* 80186 hardware interrupts */
-	X86_EXC_TIMER0 = 0x08,
-	X86_EXC_DMA0 = 0x0A,
-	X86_EXC_DMA1 = 0x0B,
-	X86_EXC_INT0 = 0x0C,
-	X86_EXC_INT1 = 0x0D,
-	X86_EXC_INT2 = 0x0E,
-	X86_EXC_INT3 = 0x0F,
-	X86_EXC_TIMER1 = 0x12,
-	X86_EXC_TIMER2 = 0x13,
+
 	/* internal flags used for interrupt management */
 	X86_EXC_FAULT = 0x100,
 	X86_EXC_TRAP = 0x200,
@@ -639,9 +640,13 @@ enum
 	X86_SFR_TMIC2 = 0x19E,
 	X86_SFR_DIC0 = 0x1AC,
 	X86_SFR_DIC1 = 0x1AD,
-	X86_V25_IC_ENCS = 0x10,
 	X86_V25_IC_RB_MASK = 0x07,
+	X86_V25_IC_ENCS = 0x10,
+	X86_V25_IC_MS = 0x20,
+	X86_V25_IC_IMK = 0x40,
+	X86_V25_IC_IF = 0x80,
 
+	X86_SFR_ISPR = 0x1FC,
 	X86_SFR_FLAG = 0x1EA,
 	X86_SFR_PRC  = 0x1EB,
 	X86_PRC_RAMEN = 0x40,
