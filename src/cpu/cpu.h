@@ -664,6 +664,33 @@ enum
 	X86_SFR_IDB  = 0x1FF,
 
 	// v55 only, accessed offset from 0xFFE00
+	X86_SFR_IC09 = 0x0C9,
+	X86_SFR_IC10 = 0x0CA,
+	X86_SFR_IC11 = 0x0CB,
+	X86_SFR_IC12 = 0x0CC,
+	X86_SFR_IC13 = 0x0CD,
+	X86_SFR_IC14 = 0x0CE,
+	X86_SFR_IC16 = 0x0D0,
+	X86_SFR_IC17 = 0x0D1,
+	X86_SFR_IC18 = 0x0D2,
+	X86_SFR_IC19 = 0x0D3,
+	X86_SFR_IC20 = 0x0D4,
+	X86_SFR_IC21 = 0x0D5,
+	X86_SFR_IC22 = 0x0D6,
+	X86_SFR_IC23 = 0x0D7,
+	X86_SFR_IC24 = 0x0D8,
+	X86_SFR_IC25 = 0x0D9,
+	X86_SFR_IC26 = 0x0DA,
+	X86_SFR_IC27 = 0x0DB,
+	X86_SFR_IC28 = 0x0DC,
+	X86_SFR_IC29 = 0x0DD,
+	X86_SFR_IC30 = 0x0DE,
+	X86_SFR_IC31 = 0x0DF,
+	X86_SFR_IC32 = 0x0E0,
+	X86_SFR_IC36 = 0x0E4,
+	X86_SFR_IC37 = 0x0E5,
+	X86_V55_IC_ENCS = X86_V25_IC_ENCS, // TODO: guessing, no documentation available
+	X86_V55_IC_RB_MASK = 0x0F, // TODO: guessing, no documentation available
 	X86_V55_SFR_ISPR = 0x0C4,
 
 	// x87 registers
