@@ -1300,7 +1300,7 @@ void x87_step(x86_state_t * emu)
 	DEBUG("[FPU]\t");
 #undef prs
 
-	x87_parse(emu->parser, emu, false, emu->x87.next_fop, emu->x87.next_fcs, emu->x87.next_fip, emu->x87.next_fds, emu->x87.next_fdp, emu->x87.segment, emu->x87.offset,
+	x87_parse(emu->parser, emu, false, emu->x87.next_fop, emu->x87.next_fcs, emu->x87.next_fip, emu->x87.segment, emu->x87.offset,
 		disassemble, true);
 	if(emu->x87.fpu_type != X87_FPU_INTEGRATED)
 	{

@@ -4599,8 +4599,8 @@ if(prs->fpu_type != X87_FPU_NONE)
 			_x87_int();
 	}
 
-	uint16_t fop, fcs, fds;
-	uoff_t fip, fdp;
+	uint16_t fop, fcs;
+	uoff_t fip;
 
 	fop = (opcode << 8) | (prs->modrm_byte);
 	if(!execute)
@@ -4615,8 +4615,6 @@ if(prs->fpu_type != X87_FPU_NONE)
 			fip = opcode_offset; // without any prefixes
 		else
 			fip = $old_rip;
-		fds = emu->sr[_seg].selector;
-		fdp = _off;
 	}
 
 	if(execute)
@@ -4630,11 +4628,11 @@ if(prs->fpu_type != X87_FPU_NONE)
 			x86_memory_segmented_read(emu, _seg, _off, 2, emu->x87.operand_data);
 			emu->sr[X86_R_FDS] = emu->sr[_seg];
 		}
-		x87_parse(prs, emu, true, fop, fcs, fip, fds, fdp, X86_R_FDS, _off, disassemble, execute);
+		x87_parse(prs, emu, true, fop, fcs, fip, X86_R_FDS, _off, disassemble, execute);
 	}
 	else
 	{
-		x87_parse(prs, emu, true, fop, fcs, fip, fds, fdp, _seg, _off, disassemble, execute);
+		x87_parse(prs, emu, true, fop, fcs, fip, _seg, _off, disassemble, execute);
 	}
 }
 
@@ -4672,14 +4670,12 @@ if(prs->fpu_type != X87_FPU_NONE)
 			fip = opcode_offset; // without any prefixes
 		else
 			fip = $old_rip;
-		//fds = emu->sr[_seg].selector;
-		//fdp = _off;
 	}
 
 //	if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
 //		memcpy(emu->x87.address_text, prs->address_text, sizeof prs->address_text);
 
-	x87_parse(prs, emu, true, fop, fcs, fip, 0, 0, NONE, 0, disassemble, execute);
+	x87_parse(prs, emu, true, fop, fcs, fip, NONE, 0, disassemble, execute);
 }
 
 @instruction F2XM1

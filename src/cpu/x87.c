@@ -889,7 +889,7 @@ static inline void x87_store_exception_pointers(x86_state_t * emu)
 	emu->x87.fop = emu->x87.next_fop;
 	emu->x87.fcs = emu->x87.next_fcs;
 	emu->x87.fip = emu->x87.next_fip;
-	emu->x87.fds = emu->x87.next_fds;
-	emu->x87.fdp = emu->x87.next_fdp;
+	emu->x87.fds = emu->sr[emu->x87.segment].selector;
+	emu->x87.fdp = emu->x87.offset;
 }
 

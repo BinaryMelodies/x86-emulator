@@ -720,8 +720,6 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 			emu->x87.next_fop = fop; \
 			emu->x87.next_fcs = fcs; \
 			emu->x87.next_fip = fip; \
-			emu->x87.next_fds = fds; \
-			emu->x87.next_fdp = fdp; \
 			emu->x87.segment = _seg; \
 			emu->x87.offset = _off; \
 			if(emu->x87.fpu_type != X87_FPU_INTEGRATED) \
@@ -810,12 +808,12 @@ static inline uint16_t _satuluw(uint32_t value)
 	prs - The parser state, should reference emu->parser if emu is not NULL
 	emu - The emulator state, only needed if execute == true
 	sync - true if called from x86_parse, false if called separately
-	fop, fcs, fip, fds, fdp - Values for the exception pointers, if those need to be set
+	fop, fcs, fip - Values for the exception pointers, if those need to be set
 	segment_number, segment_offset - Parsed operand
 	disassemble - true to fill debug output buffer with the disassembled instruction
 	execute - true to execute instruction, false to only disassemble
 */
-static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
+static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
 
 // do instruction again (for REP prefix and WAIT)
 #define _restart() \

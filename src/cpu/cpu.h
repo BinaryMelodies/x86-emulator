@@ -1627,9 +1627,9 @@ struct x87_state_t
 	/* Operand data read by the main CPU, for memory operands */
 	uint8_t operand_data[2];
 
-	/* Stored for asynchronous execution, required to pass the 8087/80287/80387 parameters */
-	uint16_t next_fop, next_fcs, next_fds;
-	uaddr_t next_fip, next_fdp;
+	/* Stored for asynchronous execution, required to pass parameters to the 8087/80287/80387 */
+	uint16_t next_fop, next_fcs;
+	uaddr_t next_fip;
 
 	/* Memory operand segment number and offset, required for asynchronouns access by 8087/80287/80387 */
 	/* Note that for the 8087/80287/80387, this will reference the phantom register X86_R_FDS */

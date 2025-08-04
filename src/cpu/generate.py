@@ -3065,7 +3065,7 @@ with open(outfile, 'w') as fp:
 	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
 	print_file("}", file = fp)
 
-	print_file("static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, uint16_t fds, uaddr_t fdp, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute)", file = fp)
+	print_file("static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute)", file = fp)
 	print_file("{", file = fp)
 	print_file("\t_seg = segment_number;", file = fp)
 	print_file("\t_off = segment_offset;", file = fp)
