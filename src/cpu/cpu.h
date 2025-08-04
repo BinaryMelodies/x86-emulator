@@ -706,7 +706,12 @@ enum
 	X87_CW_PC_SHIFT = 8,
 	X87_CW_RC_MASK = 0x0C00,
 	X87_CW_RC_SHIFT = 10,
-	X87_CW_X  = 0x1000, // 8087, 287
+	X87_CW_IC  = 0x1000, // 8087, 287
+
+	X87_RC_NEAREST = 0,
+	X87_RC_DOWN = 1,
+	X87_RC_UP = 2,
+	X87_RC_ZERO = 3,
 
 	// Status word flags, accessed via emu->x87.sw
 	X87_SW_IE = 0x0001,

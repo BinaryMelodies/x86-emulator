@@ -1,6 +1,10 @@
 
 //// Floating point and x87 support
 
+#if _SUPPORT_FLOAT80
+# include <fenv.h>
+#endif
+
 enum
 {
 	FP80_NAN,
@@ -92,6 +96,18 @@ static inline x87_float80_t x87_float80_make_8087(long double value)
 		break;
 	}
 	return result;
+}
+#endif
+
+#if _SUPPORT_FLOAT80
+x87_float80_t x87_make_unnormal(x87_float80_t x87value, uint16_t exponent)
+{
+	if(x87value.exponent < exponent)
+	{
+		// TODO: clear lowest (exponent - actual_exponent) bits
+		x87value.exponent = exponent;
+	}
+	return x87value;
 }
 #endif
 
@@ -280,6 +296,25 @@ static inline x87_float80_t x87_convert_to_float80(uint64_t fraction, uint16_t e
 #endif
 	return result;
 }
+
+#if _SUPPORT_FLOAT80
+static inline int x87_get_std_rounding_mode(x86_state_t * emu)
+{
+	switch((emu->x87.cw & X87_CW_RC_MASK) >> X87_CW_RC_SHIFT)
+	{
+	case X87_RC_NEAREST:
+		return FE_TONEAREST;
+	case X87_RC_DOWN:
+		return FE_DOWNWARD;
+	case X87_RC_UP:
+		return FE_UPWARD;
+	case X87_RC_ZERO:
+		return FE_TOWARDZERO;
+	default:
+		assert(false);
+	}
+}
+#endif
 
 static inline x87_float80_t x87_convert32_to_float(uint32_t value)
 {
@@ -681,10 +716,57 @@ static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 
 static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
+	x87_float80_t result;
+
 	(void) emu;
-	// TODO: non long double versions
-	// TODO: precision/rounding
-	return x87_float80_make(value1.value + value2.value);
+	// TODO: precision
+#if _SUPPORT_FLOAT80
+	if(emu->x87.fpu_type < X87_FPU_387)
+	{
+		if(fp80classify(value1) == FP80_SUBNORMAL)
+			value1 = x87_float80_make_8087(value1.value);
+		if(fp80classify(value2) == FP80_SUBNORMAL)
+			value2 = x87_float80_make_8087(value2.value);
+
+		if(isinf80(value1) && isinf80(value2) && (emu->x87.cw & X87_CW_IC) == 0)
+		{
+			result = x87_float80_make_indefinite();
+		}
+		else if(isnan80(value1) && isnan80(value2))
+		{
+			if(value1.fraction > value2.fraction)
+				result = value1;
+			else
+				result = value2;
+		}
+		else if(isnan80(value1))
+		{
+			result = value1;
+		}
+		else if(isnan80(value2))
+		{
+			result = value2;
+		}
+		else
+		{
+			fesetround(x87_get_std_rounding_mode(emu));
+			result = x87_float80_make_8087(value1.value + value2.value);
+
+			if(fp80classify(value1) == FP80_UNNORMAL || fp80classify(value2) == FP80_UNNORMAL)
+			{
+				result = x87_make_unnormal(result, min(value1.exponent, value2.exponent));
+			}
+		}
+	}
+	else
+	{
+		fesetround(x87_get_std_rounding_mode(emu));
+		result = x87_float80_make(value1.value + value2.value);
+	}
+#else
+	// TODO
+#endif
+	return result;
 }
 
 static inline x87_float80_t x87_fchs(x86_state_t * emu, x87_float80_t value)
@@ -804,26 +886,30 @@ static inline void x87_fxam(x86_state_t * emu, x87_float80_t value, bool is_empt
 	}
 	else
 	{
-		// TODO: emulate unnormals?
-		switch(fpclassify(value.value)) // TODO: fp80classify
+		switch(fp80classify(value))
 		{
-		case FP_NAN:
+		case FP80_NAN_SIGNALING:
+		case FP80_NAN_QUIET:
+		case FP80_PSEUDO_NAN:
 			emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C2);
 			emu->x87.sw |= X87_SW_C0;
 			break;
-		//case FP_UNNORMAL:
-		//	emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C2 | X87_SW_C0);
-		//	break;
-		case FP_INFINITE:
+		case FP80_UNNORMAL:
+			emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C2 | X87_SW_C0);
+			break;
+		case FP80_INFINITE:
+		case FP80_PSEUDO_INFINITE:
 			emu->x87.sw &= ~(X87_SW_C3);
 			emu->x87.sw |= X87_SW_C2 | X87_SW_C0;
 			break;
-		case FP_ZERO:
+		case FP80_ZERO:
+		case FP80_PSEUDO_ZERO:
 			emu->x87.sw &= ~(X87_SW_C2 | X87_SW_C0);
 			emu->x87.sw |= X87_SW_C3;
 			break;
-		case FP_SUBNORMAL:
-		case FP_NORMAL:
+		case FP80_SUBNORMAL:
+		case FP80_PSEUDO_SUBNORMAL:
+		case FP80_NORMAL:
 			emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C0);
 			emu->x87.sw |= X87_SW_C2;
 			break;
