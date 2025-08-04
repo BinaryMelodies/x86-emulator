@@ -2544,7 +2544,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 							print_file(f"{indent1}\tif(emu->x87.fpu_type == X87_FPU_INTEGRATED)", file = file)
 							print_file(f"{indent1}\t\t_x87_int();", file = file)
 							print_file(f"{indent1}\t_x87_busy();", file = file)
-						if mode == '87' and (x87_async or mnem not in {'fldcw', 'fldenv', 'frstor', 'frstpm', 'fsetpm'}):
+						if mode == '87' and (not x87_async and mnem not in {'fldcw', 'fldenv', 'frstor', 'frstpm', 'fsetpm'}):
 							print_file(f"{indent1}\tx87_store_exception_pointers(emu);", file = file)
 
 						print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t', **kwds), file = file)
