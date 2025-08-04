@@ -4684,14 +4684,14 @@ $st = x87_f2xm1(emu, $st);
 
 @instruction F4X4
 @comment IIT specific
-float80_t st[4];
+x87_float80_t st[4];
 for(int j = 0; j < 4; j++)
 {
-	st[j] = 0.0;
+	st[j] = x87_float80_make(0.0);
 	for(int i = 0; i < 4; i++)
 	{
-		st[j] += x87_register_get80_bank(emu, i, 0)
-			* x87_register_get80_bank(emu, 4 - i + 4 * (1 - (j & 1)), 2 - (j / 2));
+		st[j].value += x87_register_get80_bank(emu, i, 0).value
+			* x87_register_get80_bank(emu, 4 - i + 4 * (1 - (j & 1)), 2 - (j / 2)).value;
 	}
 }
 for(int j = 0; j < 4; j++)
@@ -4820,7 +4820,7 @@ x87_push(emu, $0);
 /* TODO */
 
 @instruction FLD1
-x87_push(emu, 1.0);
+x87_push(emu, x87_float80_make(1.0));
 /* TODO */
 
 @instruction FILD
@@ -4858,27 +4858,27 @@ else
 /* TODO */
 
 @instruction FLDL2E
-x87_push(emu, M_LOG2E);
+x87_push(emu, x87_float80_make(M_LOG2E));
 /* TODO */
 
 @instruction FLDL2T
-x87_push(emu, M_LOG2E * M_LN10);
+x87_push(emu, x87_float80_make(M_LOG2E * M_LN10));
 /* TODO */
 
 @instruction FLDLG2
-x87_push(emu, M_LOG10E * M_LN2);
+x87_push(emu, x87_float80_make(M_LOG10E * M_LN2));
 /* TODO */
 
 @instruction FLDLN2
-x87_push(emu, M_LN2);
+x87_push(emu, x87_float80_make(M_LN2));
 /* TODO */
 
 @instruction FLDPI
-x87_push(emu, M_PI);
+x87_push(emu, x87_float80_make(M_PI));
 /* TODO */
 
 @instruction FLDZ
-x87_push(emu, 0.0);
+x87_push(emu, x87_float80_make(0.0));
 /* TODO */
 
 @instruction FMUL|cnt=1
@@ -5034,7 +5034,7 @@ $st = x87_fprem(emu, $st, $st1);
 /* TODO */
 
 @instruction FPTAN
-float80_t st, st1;
+x87_float80_t st, st1;
 x87_fptan(emu, $st, &st, &st1);
 $st = st1;
 x87_push(emu, st);
@@ -5192,12 +5192,12 @@ $st = x87_fsub(emu, x87_int64_to_float80(emu, $0), $st);
 /* TODO */
 
 @instruction FTST
-x87_fcom(emu, $st, 0.0);
+x87_fcom(emu, $st, x87_float80_make(0.0));
 /* TODO */
 
 @instruction FTSTP
 @comment Cyrix specific
-x87_fcom(emu, $st, 0.0);
+x87_fcom(emu, $st, x87_float80_make(0.0));
 x87_pop(emu);
 /* TODO */
 
@@ -5221,7 +5221,7 @@ x87_fxam(emu, $st, x87_tag_get(emu, x87_register_number(emu, 0)) == X87_TAG_EMPT
 /* TODO */
 
 @instruction FXCH
-float80_t tmp = $0;
+x87_float80_t tmp = $0;
 $0 = $st;
 $st = tmp;
 /* TODO */
@@ -5257,7 +5257,7 @@ else
 }
 
 @instruction FXTRACT
-float80_t st, st1;
+x87_float80_t st, st1;
 x87_fxtract(emu, $st, &st, &st1);
 $st = st1;
 x87_push(emu, st);

@@ -1079,14 +1079,14 @@ OPERAND_CODE = {
 	},
 	'mem32real': {
 		'size':    '',
-		'read':    "x87_float32_to_float80(emu, _read32fp(_seg, _off))",
-		'write':   "_write32fp(_seg, _off, x87_float80_to_float32(emu, $$))",
+		'read':    "_read32fp(_seg, _off)", #"x87_float32_to_float80(emu, _read32fp(_seg, _off))",
+		'write':   "_write32fp(_seg, _off, $$)", #"_write32fp(_seg, _off, x87_float80_to_float32(emu, $$))"
 		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
 	},
 	'mem64real': {
 		'size':    '',
-		'read':    "x87_float64_to_float80(emu, _read64fp(_seg, _off))",
-		'write':   "_write64fp(_seg, _off, x87_float80_to_float64(emu, $$))",
+		'read':    "_read64fp(_seg, _off)", #"x87_float64_to_float80(emu, _read64fp(_seg, _off))",
+		'write':   "_write64fp(_seg, _off, $$)", #"_write64fp(_seg, _off, x87_float80_to_float64(emu, $$))",
 		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
 	},
 	'mem80real': {

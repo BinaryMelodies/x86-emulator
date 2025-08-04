@@ -1,20 +1,287 @@
 
 //// Floating point and x87 support
 
-static inline void x87_convert_from_float80(float80_t value, uint64_t * fraction, uint16_t * exponent, bool * sign)
+enum
 {
+	FP80_NAN,
+	FP80_INFINITE,
+	FP80_ZERO,
+	FP80_SUBNORMAL,
+	FP80_NORMAL,
+	// 8087/287 specific values
+	FP80_PSEUDO_NAN,
+	FP80_PSEUDO_INFINITE,
+	FP80_PSEUDO_ZERO,
+	FP80_PSEUDO_SUBNORMAL,
+	FP80_UNNORMAL,
+	// 387 and later
+	FP80_NAN_SIGNALING,
+	FP80_NAN_QUIET = FP80_NAN,
+};
+
+static inline x87_float80_t x87_float80_make_indefinite(void)
+{
+	x87_float80_t result;
+#if _SUPPORT_FLOAT80
+	result.value = copysignl(NAN, -1.0);
+	result.fraction = 0xC000000000000000U;
+#else
+	result.exponent = 0xFFFF;
+	result.fraction = 0xC000000000000000U;
+#endif
+	return result;
+}
+
+#if _SUPPORT_FLOAT80
+static inline x87_float80_t x87_float80_make(long double value)
+{
+	x87_float80_t result;
 	int exp;
-	*fraction = (uint64_t)ldexpl(frexpl(value, &exp), 64);
-	*sign = signbit(value);
-	*exponent = exp + 0x3FFE;
+	switch(fpclassify(value))
+	{
+	case FP_NAN:
+		result = x87_float80_make_indefinite();
+		break;
+	case FP_INFINITE:
+		result.value = INFINITY;
+		result.fraction = 0x8000000000000000U;
+		break;
+	case FP_ZERO:
+		result.value = 0.0;
+		result.exponent = 0;
+		break;
+	case FP_SUBNORMAL:
+		result.value = value;
+		result.exponent = 0;
+		break;
+	case FP_NORMAL:
+		result.value = value;
+		frexpl(value, &exp);
+		result.exponent = exp + 0x3FFE;
+		break;
+	}
+	return result;
 }
 
-static inline float80_t x87_convert_to_float80(uint64_t fraction, uint16_t exponent, bool sign)
+static inline x87_float80_t x87_float80_make_8087(long double value)
 {
-	return ldexpl(copysign((long double)fraction, sign ? -1.0 : 1.0), (int)exponent - (0x3FFE + 64));
+	x87_float80_t result;
+	int exp;
+	switch(fpclassify(value))
+	{
+	case FP_NAN:
+		result = x87_float80_make_indefinite();
+		break;
+	case FP_INFINITE:
+		result.value = INFINITY;
+		result.fraction = 0x8000000000000000U;
+		break;
+	case FP_ZERO:
+		result.value = 0.0;
+		result.exponent = 0;
+		break;
+	case FP_SUBNORMAL:
+		// load as unnormal
+		result.value = value;
+		result.exponent = 1;
+		break;
+	case FP_NORMAL:
+		result.value = value;
+		frexpl(value, &exp);
+		result.exponent = exp + 0x3FFE;
+		break;
+	}
+	return result;
+}
+#endif
+
+static inline int fp80classify(x87_float80_t x87value)
+{
+#if _SUPPORT_FLOAT80
+	switch(fpclassify(x87value.value))
+	{
+	case FP_NAN:
+		if((x87value.fraction & 0x8000000000000000U) == 0)
+			return FP80_PSEUDO_NAN;
+		else if((x87value.fraction & 0x4000000000000000U) == 0)
+			return FP80_NAN_QUIET;
+		else
+			return FP80_NAN_SIGNALING;
+	case FP_INFINITE:
+		if((x87value.fraction & 0x8000000000000000U) == 0)
+			return FP80_PSEUDO_INFINITE;
+		else
+			return FP80_INFINITE;
+	case FP_ZERO:
+		if(x87value.exponent == 0)
+			return FP80_ZERO;
+		else
+			return FP80_PSEUDO_ZERO;
+	case FP_SUBNORMAL:
+		if(x87value.exponent == 0)
+			return FP80_SUBNORMAL;
+		else
+			return FP80_PSEUDO_SUBNORMAL;
+	case FP_NORMAL:
+		if(x87value.exponent == 0)
+			return FP80_PSEUDO_SUBNORMAL;
+		else
+		{
+			int exp;
+			frexpl(x87value.value, &exp);
+			if(x87value.exponent == exp + 0x3FFE)
+				return FP80_NORMAL;
+			else
+				return FP80_UNNORMAL;
+		}
+	default:
+		assert(false);
+	}
+#else
+	if((x87value.exponent & 0x7FFF) == 0)
+	{
+		if(x87value.fraction == 0)
+			return FP80_ZERO;
+		else if((x87value.fraction & 0x8000000000000000U) == 0)
+			return FP80_PSEUDO_SUBNORMAL;
+		else
+			return FP80_SUBNORMAL;
+	}
+	else if((x87value.exponent & 0x7FFF) == 0x7FFF)
+	{
+		if(x87value.fraction == 0)
+			return FP80_PSEUDO_INFINITE;
+		else if(x87value.fraction == 0x8000000000000000U)
+			return FP80_INFINITE;
+		else if((x87value.fraction & 0x8000000000000000U) == 0)
+			return FP80_PSEUDO_NAN;
+		else if((x87value.fraction & 0x4000000000000000U) == 0)
+			return FP80_NAN_QUIET;
+		else
+			return FP80_NAN_SIGNALING;
+	}
+	else
+	{
+		if(x87value.fraction == 0)
+			return FP80_PSEUDO_ZERO;
+		else if((x87value.fraction & 0x8000000000000000U) == 0)
+			return FP80_UNNORMAL;
+		else
+			return FP80_NORMAL;
+	}
+#endif
 }
 
-static inline float80_t x87_convert32_to_float(uint32_t value)
+static inline bool isinf80(x87_float80_t x87value)
+{
+	return fp80classify(x87value) == FP80_INFINITE || fp80classify(x87value) == FP80_PSEUDO_INFINITE;
+}
+
+static inline bool isnan80(x87_float80_t x87value)
+{
+	return fp80classify(x87value) == FP80_NAN || fp80classify(x87value) == FP80_NAN_SIGNALING || fp80classify(x87value) == FP80_PSEUDO_NAN;
+}
+
+static inline void x87_convert_from_float80(x87_float80_t x87value, uint64_t * fraction, uint16_t * exponent, bool * sign)
+{
+#if _SUPPORT_FLOAT80
+	int exp;
+	*sign = signbit(x87value.value);
+	switch(fpclassify(x87value.value))
+	{
+	case FP_NAN:
+		// also pseudo-NaNs
+		*fraction = x87value.fraction;
+		*exponent = 0x7FFF;
+		break;
+	case FP_INFINITE:
+		// also pseudo-infinity
+		*fraction = x87value.fraction;
+		*exponent = 0x7FFF;
+		break;
+	case FP_ZERO:
+		// also pseudo-zeroes
+		*fraction = 0;
+		*exponent = x87value.exponent;
+		break;
+	case FP_SUBNORMAL:
+		*fraction = (uint64_t)ldexpl(fabsl(x87value.value), 0x3FFE - 1 + 64);
+		if(x87value.exponent != 0)
+		{
+			// unnormal
+			*fraction >>= (x87value.exponent - 1);
+			*exponent = x87value.exponent;
+		}
+		else
+		{
+			*exponent = 0;
+		}
+		break;
+	case FP_NORMAL:
+		*fraction = (uint64_t)ldexpl(frexpl(fabsl(x87value.value), &exp), 64);
+		*exponent = exp + 0x3FFE;
+
+		if(x87value.exponent == 0)
+		{
+			// pseudo-subnormal
+			// Note: exponent is *expected to be 1
+			*exponent = x87value.exponent;
+		}
+		else if(x87value.exponent != *exponent)
+		{
+			// unnormal
+			*fraction >>= (x87value.exponent - *exponent);
+			*exponent = x87value.exponent;
+		}
+		break;
+	}
+#else
+	*fraction = x87value.fraction;
+	*exponent = x87value.exponent & 0x7FFF;
+	*sign = x87value.exponent & 0x8000;
+#endif
+}
+
+static inline x87_float80_t x87_convert_to_float80(uint64_t fraction, uint16_t exponent, bool sign)
+{
+	x87_float80_t result;
+#if _SUPPORT_FLOAT80
+	exponent &= 0x7FFF;
+	if(exponent == 0x7FFF)
+	{
+		if((fraction & ~0x8000000000000000U) == 0)
+		{
+			// infinity, pseudo-infinity
+			result.value = copysignl(INFINITY, sign ? -1.0 : 1.0);
+			result.fraction = fraction;
+		}
+		else
+		{
+			// NaN, pseudo-NaN
+			result.value = copysignl((long double)NAN, sign ? -1.0 : 1.0);
+			result.fraction = fraction;
+		}
+	}
+	else if(exponent == 0)
+	{
+		// pseudo-denormal, denormal, zero
+		result.value = ldexpl(copysignl((long double)fraction, sign ? -1.0 : 1.0), (int)0x0001 - (0x3FFE + 64));
+		result.exponent = 0;
+	}
+	else
+	{
+		// normal, unnormal, pseudo-zero
+		result.value = ldexpl(copysignl((long double)fraction, sign ? -1.0 : 1.0), (int)exponent - (0x3FFE + 64));
+		result.exponent = exponent;
+	}
+#else
+	result.fraction = fraction;
+	result.exponent = (exponent & 0x7FFF) | (sign ? 0x8000 : 0x0000);
+#endif
+	return result;
+}
+
+static inline x87_float80_t x87_convert32_to_float(uint32_t value)
 {
 	uint64_t fraction;
 	uint16_t exponent;
@@ -26,7 +293,7 @@ static inline float80_t x87_convert32_to_float(uint32_t value)
 	return x87_convert_to_float80(fraction, exponent, sign);
 }
 
-static inline float80_t x87_convert64_to_float(uint64_t value)
+static inline x87_float80_t x87_convert64_to_float(uint64_t value)
 {
 	uint64_t fraction;
 	uint16_t exponent;
@@ -38,7 +305,7 @@ static inline float80_t x87_convert64_to_float(uint64_t value)
 	return x87_convert_to_float80(fraction, exponent, sign);
 }
 
-static inline uint32_t x87_convert32_from_float(float80_t value)
+static inline uint32_t x87_convert32_from_float(x87_float80_t value)
 {
 	uint32_t result;
 	uint64_t fraction;
@@ -53,7 +320,7 @@ static inline uint32_t x87_convert32_from_float(float80_t value)
 	return result;
 }
 
-static inline uint64_t x87_convert64_from_float(float80_t value)
+static inline uint64_t x87_convert64_from_float(x87_float80_t value)
 {
 	uint64_t result;
 	uint64_t fraction;
@@ -118,67 +385,74 @@ static inline void x87_signal_interrupt(x86_state_t * emu, int intnum)
 	}
 }
 
-static inline float32_t x87_float80_to_float32(x86_state_t * emu, float80_t value)
+static inline float32_t x87_float80_to_float32(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: without float80 support
-	return value;
+	return value.value;
 }
 
-static inline float80_t x87_float32_to_float80(x86_state_t * emu, float32_t value)
+static inline x87_float80_t x87_float32_to_float80(x86_state_t * emu, float32_t value)
 {
 	(void) emu;
 	// TODO: without float80 support
-	return value;
+	return x87_float80_make(value);
 }
 
-static inline float64_t x87_float80_to_float64(x86_state_t * emu, float80_t value)
+static inline float64_t x87_float80_to_float64(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: without float80 support
-	return value;
+	return value.value;
 }
 
-static inline float80_t x87_float64_to_float80(x86_state_t * emu, float64_t value)
+static inline x87_float80_t x87_float64_to_float80(x86_state_t * emu, float64_t value)
 {
 	(void) emu;
 	// TODO: without float80 support
-	return value;
+	return x87_float80_make(value);
 }
 
-static inline int64_t x87_float80_to_int64(x86_state_t * emu, float80_t value)
+static inline int64_t x87_float80_to_int64(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: without float80 support
-	return value;
+	return value.value;
 }
 
-static inline float80_t x87_int64_to_float80(x86_state_t * emu, int64_t value)
+static inline x87_float80_t x87_int64_to_float80(x86_state_t * emu, int64_t value)
 {
 	(void) emu;
 	// TODO: without float80 support
-	return value;
+	return x87_float80_make(value);
 }
 
-static inline float80_t x87_packed80_to_float80(const uint8_t bytes[10])
+static inline x87_float80_t x87_packed80_to_float80(const uint8_t bytes[10])
 {
 	int64_t int_value = 0;
+	x87_float80_t result;
 	for(int digit_pair = 0, tens = 1; digit_pair < 9; digit_pair++, tens *= 100)
 	{
 		int_value +=
 			tens * (bytes[digit_pair] & 0xF)
 			+ tens * 10 * ((bytes[digit_pair] >> 4) & 0xF);
 	}
+	result = x87_float80_make(int_value);
 	if((bytes[0] & 0x80) == 0)
-		return (float80_t)int_value;
-	else
-		return -(float80_t)int_value;
+	{
+#if _SUPPORT_FLOAT80
+		result.value = -result.value;
+#else
+		result.exponent ^= 0x8000;
+#endif
+	}
+	return result;
 }
 
-static inline void x87_float80_to_packed80(float80_t value, uint8_t bytes[10])
+static inline void x87_float80_to_packed80(x87_float80_t value, uint8_t bytes[10])
 {
-	int64_t int_value = (int64_t)(value + 0.5);
-	bytes[0] = value < 0 ? 0x80 : 0;
+	int64_t int_value = (int64_t)(value.value + 0.5);
+	bytes[0] = value.value < 0 ? 0x80 : 0;
 	if(int_value < 0)
 		int_value = -int_value;
 	for(int digit_pair = 0; digit_pair < 9; digit_pair++)
@@ -214,7 +488,7 @@ static inline void x87_tag_set(x86_state_t * emu, int number, int tag)
 	emu->x87.tw = (emu->x87.tw & ~(3 << (number * 2))) | ((tag & 3) << (number * 2));
 }
 
-static inline float80_t x87_restrict_precision(x86_state_t * emu, float80_t value)
+static inline x87_float80_t x87_restrict_precision(x86_state_t * emu, x87_float80_t value)
 {
 	switch((emu->x87.cw >> X87_CW_PC_SHIFT) & 3)
 	{
@@ -233,7 +507,7 @@ static inline float80_t x87_restrict_precision(x86_state_t * emu, float80_t valu
 	}
 }
 
-static inline float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t number)
+static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t number)
 {
 	/* TODO: other fields? (tag) */
 	number = x87_register_number(emu, number);
@@ -255,7 +529,7 @@ static inline float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t numbe
 #endif
 }
 
-static inline float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number)
+static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number)
 {
 	/* TODO: other fields? (tag) */
 	number = x87_register_number(emu, number);
@@ -277,27 +551,45 @@ static inline float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t 
 #endif
 }
 
+static inline unsigned x87_determine_tag(x86_state_t * emu, x87_float80_t x87value)
+{
+	switch(fp80classify(x87value))
+	{
+	case FP80_NAN_QUIET:
+	case FP80_NAN_SIGNALING:
+	case FP80_PSEUDO_NAN:
+	case FP80_INFINITE:
+	case FP80_PSEUDO_INFINITE:
+	case FP80_SUBNORMAL:
+	case FP80_PSEUDO_SUBNORMAL:
+		return X87_TAG_SPECIAL;
+	case FP80_ZERO:
+		return X87_TAG_ZERO;
+	case FP80_PSEUDO_ZERO:
+		if(emu->x87.fpu_type < X87_FPU_387)
+			return X87_TAG_VALID;
+		else
+			return X87_TAG_SPECIAL;
+	case FP80_UNNORMAL:
+		if(emu->x87.fpu_type < X87_FPU_387)
+			return X87_TAG_VALID;
+		else
+			return X87_TAG_SPECIAL;
+	case FP80_NORMAL:
+		return X87_TAG_VALID;
+	default:
+		assert(false);
+	}
+}
+
 static inline void x87_register_tag(x86_state_t * emu, x86_regnum_t number)
 {
 	number = x87_register_number(emu, number);
 	// TODO: emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
-	switch(fpclassify(emu->x87.bank[emu->x87.current_bank].fpr[number].f))
-	{
-	case FP_ZERO:
-		x87_tag_set(emu, number, X87_TAG_ZERO);
-		break;
-	case FP_NORMAL:
-		x87_tag_set(emu, number, X87_TAG_VALID);
-		break;
-	case FP_NAN:
-	case FP_INFINITE:
-	case FP_SUBNORMAL:
-		x87_tag_set(emu, number, X87_TAG_SPECIAL);
-		break;
-	}
+	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.bank[emu->x87.current_bank].fpr[number].f));
 }
 
-static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, float80_t value)
+static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, x87_float80_t value)
 {
 	// TODO: on stack underflow, issue #IS
 	value = x87_restrict_precision(emu, value);
@@ -306,23 +598,10 @@ static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, fl
 	emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
 #endif
 	emu->x87.bank[emu->x87.current_bank].fpr[number].f = value;
-	switch(fpclassify(value))
-	{
-	case FP_ZERO:
-		x87_tag_set(emu, number, X87_TAG_ZERO);
-		break;
-	case FP_NORMAL:
-		x87_tag_set(emu, number, X87_TAG_VALID);
-		break;
-	case FP_NAN:
-	case FP_INFINITE:
-	case FP_SUBNORMAL:
-		x87_tag_set(emu, number, X87_TAG_SPECIAL);
-		break;
-	}
+	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.bank[emu->x87.current_bank].fpr[number].f));
 }
 
-static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, int bank_number, float80_t value)
+static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, int bank_number, x87_float80_t value)
 {
 	// TODO: on stack underflow, issue #IS
 	value = x87_restrict_precision(emu, value);
@@ -331,20 +610,7 @@ static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t numbe
 	emu->x87.bank[bank_number].fpr[number].isfp = true;
 #endif
 	emu->x87.bank[bank_number].fpr[number].f = value;
-	switch(fpclassify(value))
-	{
-	case FP_ZERO:
-		x87_tag_set(emu, number, X87_TAG_ZERO);
-		break;
-	case FP_NORMAL:
-		x87_tag_set(emu, number, X87_TAG_VALID);
-		break;
-	case FP_NAN:
-	case FP_INFINITE:
-	case FP_SUBNORMAL:
-		x87_tag_set(emu, number, X87_TAG_SPECIAL);
-		break;
-	}
+	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.bank[bank_number].fpr[number].f));
 }
 
 static inline void x87_register_free(x86_state_t * emu, x86_regnum_t number)
@@ -353,17 +619,17 @@ static inline void x87_register_free(x86_state_t * emu, x86_regnum_t number)
 	x87_tag_set(emu, number, X87_TAG_EMPTY);
 }
 
-static inline float80_t x87_pop(x86_state_t * emu)
+static inline x87_float80_t x87_pop(x86_state_t * emu)
 {
 	if(x87_tag_get(emu, 0) == X87_TAG_EMPTY)
 		x87_signal_interrupt(emu, X87_CW_IM);
 
-	float80_t value = x87_register_get80(emu, 0);
+	x87_float80_t value = x87_register_get80(emu, 0);
 	x87_set_sw_top(emu, x87_get_sw_top(emu) + 1);
 	return value;
 }
 
-static inline void x87_push(x86_state_t * emu, float80_t value)
+static inline void x87_push(x86_state_t * emu, x87_float80_t value)
 {
 	if(x87_tag_get(emu, 7) != X87_TAG_EMPTY)
 		x87_signal_interrupt(emu, X87_CW_IM);
@@ -398,52 +664,52 @@ static inline void x86_mmx_set(x86_state_t * emu, x86_regnum_t number, uint64_t 
 	emu->x87.bank[emu->x87.current_bank].fpr[number].mmx.q[0] = value;
 }
 
-static inline float80_t x87_f2xm1(x86_state_t * emu, float80_t value)
+static inline x87_float80_t x87_f2xm1(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	(void) value;
-	return expm1l(log2l(value)); // TODO
+	return x87_float80_make(expm1l(log2l(value.value))); // TODO
 }
 
-static inline float80_t x87_fabs(x86_state_t * emu, float80_t value)
+static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return fabsl(value);
+	return x87_float80_make(fabsl(value.value));
 }
 
-static inline float80_t x87_fadd(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return value1 + value2;
+	return x87_float80_make(value1.value + value2.value);
 }
 
-static inline float80_t x87_fchs(x86_state_t * emu, float80_t value)
+static inline x87_float80_t x87_fchs(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return -value;
+	return x87_float80_make(-value.value);
 }
 
-static inline void x87_fcom(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline void x87_fcom(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	if(value1 > value2)
+	if(value1.value > value2.value)
 	{
 		emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C0);
 	}
-	else if(value1 > value2)
+	else if(value1.value > value2.value)
 	{
 		emu->x87.sw &= ~X87_SW_C3;
 		emu->x87.sw |= X87_SW_C0;
 	}
-	else if(value1 == value2)
+	else if(value1.value == value2.value)
 	{
 		emu->x87.sw |= X87_SW_C3;
 		emu->x87.sw &= ~X87_SW_C0;
@@ -455,50 +721,50 @@ static inline void x87_fcom(x86_state_t * emu, float80_t value1, float80_t value
 	}
 }
 
-static inline float80_t x87_fdiv(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fdiv(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return value1 / value2;
+	return x87_float80_make(value1.value / value2.value);
 }
 
-static inline float80_t x87_fmul(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fmul(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return value1 * value2;
+	return x87_float80_make(value1.value * value2.value);
 }
 
-static inline float80_t x87_fprem(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fprem(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	(void) value1;
 	(void) value2;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return 0; // TODO
+	return x87_float80_make(0.0); // TODO
 }
 
-static inline void x87_fptan(x86_state_t * emu, float80_t value, float80_t * result1, float80_t * result2)
+static inline void x87_fptan(x86_state_t * emu, x87_float80_t value, x87_float80_t * result1, x87_float80_t * result2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	*result1 = 1.0;
-	*result2 = tanl(value);
+	*result1 = x87_float80_make(1.0);
+	*result2 = x87_float80_make(tanl(value.value));
 }
 
-static inline float80_t x87_fpatan(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fpatan(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return atan2l(value1, value2);
+	return x87_float80_make(atan2l(value1.value, value2.value));
 }
 
-static inline float80_t x87_frndint(x86_state_t * emu, float80_t value)
+static inline x87_float80_t x87_frndint(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: non long double versions
@@ -506,31 +772,31 @@ static inline float80_t x87_frndint(x86_state_t * emu, float80_t value)
 	return x87_int64_to_float80(emu, x87_float80_to_int64(emu, value));
 }
 
-static inline float80_t x87_fscale(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fscale(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return ldexpl(value1, x87_float80_to_int64(emu, value2));
+	return x87_float80_make(ldexpl(value1.value, x87_float80_to_int64(emu, value2)));
 }
 
-static inline float80_t x87_fsub(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fsub(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return value1 - value2;
+	return x87_float80_make(value1.value - value2.value);
 }
 
-static inline float80_t x87_fsqrt(x86_state_t * emu, float80_t value)
+static inline x87_float80_t x87_fsqrt(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return sqrtl(value);
+	return x87_float80_make(sqrtl(value.value));
 }
 
-static inline void x87_fxam(x86_state_t * emu, float80_t value, bool is_empty)
+static inline void x87_fxam(x86_state_t * emu, x87_float80_t value, bool is_empty)
 {
 	if(is_empty)
 	{
@@ -539,7 +805,7 @@ static inline void x87_fxam(x86_state_t * emu, float80_t value, bool is_empty)
 	else
 	{
 		// TODO: emulate unnormals?
-		switch(fpclassify(value))
+		switch(fpclassify(value.value)) // TODO: fp80classify
 		{
 		case FP_NAN:
 			emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C2);
@@ -562,44 +828,44 @@ static inline void x87_fxam(x86_state_t * emu, float80_t value, bool is_empty)
 			emu->x87.sw |= X87_SW_C2;
 			break;
 		}
-		if(signbit(value))
+		if(signbit(value.value))
 			emu->x87.sw |= X87_SW_C1;
 		else
 			emu->x87.sw &= ~X87_SW_C1;
 	}
 }
 
-static inline void x87_fxtract(x86_state_t * emu, float80_t value, float80_t * result1, float80_t * result2)
+static inline void x87_fxtract(x86_state_t * emu, x87_float80_t value, x87_float80_t * result1, x87_float80_t * result2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
 	int exp;
-	*result1 = frexpl(value, &exp);
+	*result1 = x87_float80_make(frexpl(value.value, &exp));
 	*result2 = x87_int64_to_float80(emu, exp);
 }
 
-static inline float80_t x87_fyl2x(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fyl2x(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return value2 * log2l(value1);
+	return x87_float80_make(value2.value * log2l(value1.value));
 }
 
-static inline float80_t x87_fyl2xp1(x86_state_t * emu, float80_t value1, float80_t value2)
+static inline x87_float80_t x87_fyl2xp1(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
 	// TODO: non long double versions
 	// TODO: precision/rounding
-	return value2 * log2l(value1 + 1);
+	return x87_float80_make(value2.value * log2l(value1.value + 1));
 }
 
 static inline void x87_state_save_registers(x86_state_t * emu, x86_segnum_t segment, uoff_t x86_offset, uoff_t offset)
 {
 	for(int i = 0; i < 8; i++)
 	{
-		float80_t fpr = x87_register_get80(emu, i);
+		x87_float80_t fpr = x87_register_get80(emu, i);
 		x87_memory_segmented_write80fp(emu, segment, x86_offset, offset + 10 * i, fpr);
 	}
 }
@@ -608,7 +874,7 @@ static inline void x87_state_restore_registers(x86_state_t * emu, x86_segnum_t s
 {
 	for(int i = 0; i < 8; i++)
 	{
-		float80_t fpr = x87_memory_segmented_read80fp(emu, segment, x86_offset, offset + 10 * i);
+		x87_float80_t fpr = x87_memory_segmented_read80fp(emu, segment, x86_offset, offset + 10 * i);
 
 		int number = x87_register_number(emu, i);
 #if _SUPPORT_FLOAT80
@@ -798,7 +1064,7 @@ static inline void x87_state_save_extended_common(x86_state_t * emu, x86_segnum_
 	x86_memory_segmented_write32(emu, segment, offset + 0x001C, 0); // TODO: MXCSR_MASK
 	for(int i = 0; i < 8; i++)
 	{
-		float80_t fpr = x87_register_get80(emu, i);
+		x87_float80_t fpr = x87_register_get80(emu, i);
 		x86_memory_segmented_write80fp(emu, segment, offset + 0x0020 + 16 * i, fpr);
 	}
 	for(int i = 0; i < xmm_count; i++)
@@ -816,7 +1082,7 @@ static inline void x87_state_restore_extended_common(x86_state_t * emu, x86_segn
 	emu->mxcsr = x86_memory_segmented_read32(emu, segment, offset + 0x0018);
 	for(int i = 0; i < 8; i++)
 	{
-		float80_t fpr = x86_memory_segmented_read80fp(emu, segment, offset + 10 * i);
+		x87_float80_t fpr = x86_memory_segmented_read80fp(emu, segment, offset + 10 * i);
 
 		int number = x87_register_number(emu, i);
 #if _SUPPORT_FLOAT80

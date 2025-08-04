@@ -918,7 +918,7 @@ static inline uint64_t x86_memory_segmented_read64(x86_state_t * emu, x86_segnum
 	return le64toh(result);
 }
 
-static inline float80_t x86_memory_segmented_read80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset)
+static inline x87_float80_t x86_memory_segmented_read80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset)
 {
 	uint64_t fraction;
 	uint16_t exponent;
@@ -950,7 +950,7 @@ static inline uint32_t x87_memory_segmented_read32(x86_state_t * emu, x86_segnum
 	return le32toh(result);
 }
 
-static inline float80_t x87_memory_segmented_read32fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset)
+static inline x87_float80_t x87_memory_segmented_read32fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset)
 {
 	uint32_t result = 0;
 	x87_memory_segmented_read(emu, segment_number, x86_offset, offset, 4, &result);
@@ -964,7 +964,7 @@ static inline uint64_t x87_memory_segmented_read64(x86_state_t * emu, x86_segnum
 	return le64toh(result);
 }
 
-static inline float80_t x87_memory_segmented_read80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset)
+static inline x87_float80_t x87_memory_segmented_read80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset)
 {
 	uint64_t fraction;
 	uint16_t exponent;
@@ -1123,7 +1123,7 @@ static inline void x86_memory_segmented_write64(x86_state_t * emu, x86_segnum_t 
 	x86_memory_segmented_write(emu, segment_number, offset, 8, &value);
 }
 
-static inline void x86_memory_segmented_write80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, float80_t value)
+static inline void x86_memory_segmented_write80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t offset, x87_float80_t value)
 {
 	uint64_t fraction;
 	uint16_t exponent;
@@ -1157,7 +1157,7 @@ static inline void x87_memory_segmented_write64(x86_state_t * emu, x86_segnum_t 
 	x87_memory_segmented_write(emu, segment_number, x86_offset, offset, 8, &value);
 }
 
-static inline void x87_memory_segmented_write80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset, float80_t value)
+static inline void x87_memory_segmented_write80fp(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset, x87_float80_t value)
 {
 	uint64_t fraction;
 	uint16_t exponent;

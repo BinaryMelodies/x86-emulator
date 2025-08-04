@@ -1400,6 +1400,31 @@ typedef union x86_mmx_t x86_mmx_t;
 #define MMX_Q(i) q[(i)]
 #define MMX_D(i) d[(i)]
 
+#if _SUPPORT_FLOAT80
+/* We represent all 8087 floating point values as an IEEE floating point value plus some additional data
+ * All NaNs (signaling and quiet, quiet being new to 387) as well as pseudo-NaNs are stored as NAN with the payload in the mantissa field
+ * Pseudoinfinities are represented as infinities, but the most significant bit of the mantissa field is cleared
+ * Unnormals and pseudo-denormals are normalized, but the original exponent is stored in the exponent field
+ * Pseudozeros are stored as zeros, but the original exponent is stored in the exponent field
+ * Subnormals (denormals) are stored as subnormals
+ */
+typedef struct x87_float80_t
+{
+	long double value;
+	union
+	{
+		uint16_t exponent; // actual exponent for unnormals, pseudo-unnormals and pseudo-zeroes
+		uint64_t fraction; // for NaN payloads and bit 63 of pseudo-NaNs and pseudo-infinities
+	};
+} x87_float80_t;
+#else
+typedef struct x87_float80_t
+{
+	uint16_t exponent;
+	uint64_t fraction;
+} x87_float80_t;
+#endif
+
 /* Represents an x87/MMX register */
 struct x87_register_t
 {
@@ -1409,7 +1434,7 @@ struct x87_register_t
 #endif
 	union
 	{
-		float80_t f;
+		x87_float80_t f;
 		struct
 		{
 			x86_mmx_t mmx;
