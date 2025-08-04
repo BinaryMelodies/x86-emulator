@@ -32,19 +32,19 @@ typedef float       float32_t;
 typedef double      float64_t;
 #if defined __i386__ || defined __amd64__
 # define _SUPPORT_FLOAT80 1
-typedef __float80   float80_t;
+//typedef __float80   float80_t;
 #elif defined __ia16__ || defined __m68k__
 # define _SUPPORT_FLOAT80 1
-typedef long double float80_t;
+//typedef long double float80_t;
 //#elif ???
 //# define _SUPPORT_FLOAT80
 //typedef __float128 float80_t;
 #else
-typedef struct float80_t
+/*typedef struct float80_t
 {
 	uint64_t mantissa;
 	uint16_t exponent;
-} float80_t;
+} float80_t;*/
 #endif
 
 #ifdef __SIZEOF_INT128__

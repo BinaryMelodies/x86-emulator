@@ -434,7 +434,7 @@ void x86_reset(x86_state_t * emu, bool reset)
 				emu->x87.bank[b].fpr[i].isfp = true;
 				emu->x87.bank[b].fpr[i].f = x87_float80_make(0.0);
 #else
-				emu->x87.bank[b].fpr[i].f.mantissa = 0;
+				emu->x87.bank[b].fpr[i].f.fraction = 0;
 				emu->x87.bank[b].fpr[i].f.exponent = 0;
 #endif
 		
@@ -935,8 +935,12 @@ static void x87_debug(FILE * file, x86_state_t * emu)
 		int number = x87_register_number(emu, i);
 		x87_float80_t fpr = x87_register_get80(emu, i);
 		x87_convert_from_float80(fpr, &fraction, &exponent, &sign);
-		// TODO: isfp
+		// TODO: display isfp
+#if _SUPPORT_FLOAT80
 		fprintf(file, "FPR%d/ST(%d)=%Le:%d %04X %016"PRIX64",tag=%d\n", number, i, fpr.value, sign, exponent, fraction, x87_tag_get(emu, number));
+#else
+		// TODO
+#endif
 	}
 	fprintf(file, "CW=%04X,SW=%04X,TW=%04X\n", emu->x87.cw, emu->x87.sw, emu->x87.tw);
 	switch(emu->x87.fpu_type)
