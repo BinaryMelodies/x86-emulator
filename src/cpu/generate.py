@@ -1079,14 +1079,14 @@ OPERAND_CODE = {
 	},
 	'mem32real': {
 		'size':    '',
-		'read':    "_read32fp(_seg, _off)", #"x87_float32_to_float80(emu, _read32fp(_seg, _off))",
-		'write':   "_write32fp(_seg, _off, $$)", #"_write32fp(_seg, _off, x87_float80_to_float32(emu, $$))"
+		'read':    "_read32fp(_seg, _off)",
+		'write':   "_write32fp(_seg, _off, $$, $$.tag)",
 		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
 	},
 	'mem64real': {
 		'size':    '',
-		'read':    "_read64fp(_seg, _off)", #"x87_float64_to_float80(emu, _read64fp(_seg, _off))",
-		'write':   "_write64fp(_seg, _off, $$)", #"_write64fp(_seg, _off, x87_float80_to_float64(emu, $$))",
+		'read':    "_read64fp(_seg, _off)",
+		'write':   "_write64fp(_seg, _off, $$, $$.tag)",
 		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
 	},
 	'mem80real': {
@@ -1557,10 +1557,13 @@ def replace(code, replacements):
 					break
 				ix2 = code.find(';', ix1)
 				if operator is None:
-					code = code[:ix0] + replace(value, {'$$': code[ix1 + 1:ix2].strip()}) + code[ix2:]
+					source = code[ix1 + 1:ix2].strip()
 				else:
-					code = code[:ix0] + replace(value, {'$$':
-						replacements[key[:-1]] + ' ' + operator + ' (' + code[ix1 + 1:ix2].strip() + ')'}) + code[ix2:]
+					source = replacements[key[:-1]] + ' ' + operator + ' (' + code[ix1 + 1:ix2].strip() + ')'
+				destination_replacements = {'$$': source}
+				if 'x87_register_get80' in source:
+					destination_replacements['$$.tag'] = source.replace('x87_register_get80', 'x87_tag_get')
+				code = code[:ix0] + replace(value, destination_replacements) + code[ix2:]
 			else:
 				ix0 = code.find(key)
 				if ix0 == -1:
