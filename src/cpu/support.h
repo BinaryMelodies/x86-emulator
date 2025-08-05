@@ -2,6 +2,7 @@
 #define __SUPPORT_H
 
 #include <stdint.h>
+#include <float.h>
 
 #ifdef __SIZEOF_INT128__
 typedef          __int128  int128_t;
@@ -28,23 +29,36 @@ typedef struct
 } int128_t;
 #endif
 
-typedef float       float32_t;
-typedef double      float64_t;
-#if defined __i386__ || defined __amd64__
-# define _SUPPORT_FLOAT80 1
-//typedef __float80   float80_t;
-#elif defined __ia16__ || defined __m68k__
-# define _SUPPORT_FLOAT80 1
-//typedef long double float80_t;
-//#elif ???
-//# define _SUPPORT_FLOAT80
-//typedef __float128 float80_t;
-#else
-/*typedef struct float80_t
-{
-	uint64_t mantissa;
-	uint16_t exponent;
-} float80_t;*/
+#if FLT_RADIX == 2
+# if LDBL_MANT_DIG >= 63 && LDBL_MIN_EXP <= -13681 && LDBL_MAX_EXP >= 16384
+#  define _SUPPORT_FLOAT80 1
+typedef long double float80_t;
+#  if LDBL_MANT_DIG == 64
+#   define _FLOAT80_EXACT 1
+#  endif
+# endif
+
+# if DBL_MANT_DIG >= 53 && DBL_MIN_EXP <= -1021 && DBL_MAX_EXP >= 1024
+#  define _SUPPORT_FLOAT64 1
+typedef double float64_t;
+#  if DBL_MANT_DIG == 53
+#   define _FLOAT64_EXACT 1 // casting to float64_t will yield the correct truncated value
+#  endif
+# elif _SUPPORT_FLOAT80
+#  define _SUPPORT_FLOAT64 1
+typedef float80_t float64_t;
+# endif
+
+# if FLT_MANT_DIG >= 24 && FLT_MIN_EXP <= -125 && FLT_MAX_EXP >= 128
+#  define _SUPPORT_FLOAT32 1
+typedef float float32_t;
+#  if FLT_MANT_DIG == 24
+#   define _FLOAT32_EXACT 1 // casting to float32_t will yield the correct truncated value
+#  endif
+# elif _SUPPORT_FLOAT64
+#  define _SUPPORT_FLOAT32 1
+typedef float64_t float32_t;
+# endif
 #endif
 
 #ifdef __SIZEOF_INT128__

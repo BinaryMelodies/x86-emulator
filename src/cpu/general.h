@@ -122,7 +122,7 @@ static inline bool x86_dmint_instruction_valid(x86_state_t * emu);
 // x87
 
 #if _SUPPORT_FLOAT80
-static inline x87_float80_t x87_float80_make(long double value);
+static inline x87_float80_t x87_float80_make(float80_t value);
 #endif
 
 static inline void x87_convert_from_float80(x87_float80_t value, uint64_t * fraction, uint16_t * exponent, bool * sign);

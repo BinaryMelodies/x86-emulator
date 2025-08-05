@@ -1415,7 +1415,7 @@ typedef union x86_mmx_t x86_mmx_t;
  */
 typedef struct x87_float80_t
 {
-	long double value;
+	float80_t value;
 	union
 	{
 		uint16_t exponent; // actual exponent for unnormals, pseudo-unnormals and pseudo-zeroes

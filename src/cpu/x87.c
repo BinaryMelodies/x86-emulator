@@ -36,7 +36,7 @@ static inline x87_float80_t x87_float80_make_indefinite(void)
 	return result;
 }
 
-static inline x87_float80_t x87_float80_make(long double value)
+static inline x87_float80_t x87_float80_make(float80_t value)
 {
 	x87_float80_t result;
 	int exp;
@@ -87,7 +87,7 @@ static inline x87_float80_t x87_float80_make(long double value)
 }
 
 #if _SUPPORT_FLOAT80
-static inline x87_float80_t x87_float80_make_8087(long double value)
+static inline x87_float80_t x87_float80_make_8087(float80_t value)
 {
 	x87_float80_t result;
 	int exp;
@@ -294,20 +294,20 @@ static inline x87_float80_t x87_convert_to_float80(uint64_t fraction, uint16_t e
 		else
 		{
 			// NaN, pseudo-NaN
-			result.value = copysignl((long double)NAN, sign ? -1.0 : 1.0);
+			result.value = copysignl((float80_t)NAN, sign ? -1.0 : 1.0);
 			result.fraction = fraction;
 		}
 	}
 	else if(exponent == 0)
 	{
 		// pseudo-denormal, denormal, zero
-		result.value = ldexpl(copysignl((long double)fraction, sign ? -1.0 : 1.0), (int)0x0001 - (0x3FFE + 64));
+		result.value = ldexpl(copysignl((float80_t)fraction, sign ? -1.0 : 1.0), (int)0x0001 - (0x3FFE + 64));
 		result.exponent = 0;
 	}
 	else
 	{
 		// normal, unnormal, pseudo-zero
-		result.value = ldexpl(copysignl((long double)fraction, sign ? -1.0 : 1.0), (int)exponent - (0x3FFE + 64));
+		result.value = ldexpl(copysignl((float80_t)fraction, sign ? -1.0 : 1.0), (int)exponent - (0x3FFE + 64));
 		result.exponent = exponent;
 	}
 #else
@@ -753,7 +753,6 @@ static inline x87_float80_t x87_f2xm1(x86_state_t * emu, x87_float80_t value)
 static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(fabsl(value.value));
@@ -820,7 +819,6 @@ static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x8
 static inline x87_float80_t x87_fchs(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(-value.value);
@@ -832,7 +830,6 @@ static inline x87_float80_t x87_fchs(x86_state_t * emu, x87_float80_t value)
 static inline void x87_fcom(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	if(value1.value > value2.value)
@@ -862,7 +859,6 @@ static inline void x87_fcom(x86_state_t * emu, x87_float80_t value1, x87_float80
 static inline x87_float80_t x87_fdiv(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(value1.value / value2.value);
@@ -874,7 +870,6 @@ static inline x87_float80_t x87_fdiv(x86_state_t * emu, x87_float80_t value1, x8
 static inline x87_float80_t x87_fmul(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(value1.value * value2.value);
@@ -888,7 +883,6 @@ static inline x87_float80_t x87_fprem(x86_state_t * emu, x87_float80_t value1, x
 	(void) emu;
 	(void) value1;
 	(void) value2;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(0.0); // TODO
@@ -900,7 +894,6 @@ static inline x87_float80_t x87_fprem(x86_state_t * emu, x87_float80_t value1, x
 static inline void x87_fptan(x86_state_t * emu, x87_float80_t value, x87_float80_t * result1, x87_float80_t * result2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	*result1 = x87_float80_make(1.0);
@@ -913,7 +906,6 @@ static inline void x87_fptan(x86_state_t * emu, x87_float80_t value, x87_float80
 static inline x87_float80_t x87_fpatan(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(atan2l(value1.value, value2.value));
@@ -925,7 +917,6 @@ static inline x87_float80_t x87_fpatan(x86_state_t * emu, x87_float80_t value1, 
 static inline x87_float80_t x87_frndint(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 	return x87_int64_to_float80(emu, x87_float80_to_int64(emu, value));
 }
@@ -933,7 +924,6 @@ static inline x87_float80_t x87_frndint(x86_state_t * emu, x87_float80_t value)
 static inline x87_float80_t x87_fscale(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(ldexpl(value1.value, x87_float80_to_int64(emu, value2)));
@@ -945,7 +935,6 @@ static inline x87_float80_t x87_fscale(x86_state_t * emu, x87_float80_t value1, 
 static inline x87_float80_t x87_fsub(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(value1.value - value2.value);
@@ -957,7 +946,6 @@ static inline x87_float80_t x87_fsub(x86_state_t * emu, x87_float80_t value1, x8
 static inline x87_float80_t x87_fsqrt(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(sqrtl(value.value));
@@ -1016,7 +1004,6 @@ static inline void x87_fxam(x86_state_t * emu, x87_float80_t value, bool is_empt
 static inline void x87_fxtract(x86_state_t * emu, x87_float80_t value, x87_float80_t * result1, x87_float80_t * result2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	int exp;
@@ -1030,7 +1017,6 @@ static inline void x87_fxtract(x86_state_t * emu, x87_float80_t value, x87_float
 static inline x87_float80_t x87_fyl2x(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(value2.value * log2l(value1.value));
@@ -1042,7 +1028,6 @@ static inline x87_float80_t x87_fyl2x(x86_state_t * emu, x87_float80_t value1, x
 static inline x87_float80_t x87_fyl2xp1(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	// TODO: non long double versions
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(value2.value * log2l(value1.value + 1));
