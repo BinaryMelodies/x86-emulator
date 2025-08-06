@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+<title>Comparison of Intel processors and coprocessors</title>
+<style>
+td {
+	text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>Comparison of Intel processors and coprocessors</h1>
+
+<table align='center' border='1'>
+<tr>
+<td></td>
+<td>Intel 8080<br>Intel 8085</td>
+<td>Intel 8086<br>Intel 8088</td>
+<td>Intel 8087</td>
+<td>Intel 8089</td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td colspan='2'>General purpose processor</td>
+<td>Floating point coprocessor</td>
+<td>I/O coprocessor</td>
+</tr>
+
+<tr>
+<td>Instruction stream</td>
+<td colspan='2'>Processor specific</td>
+<td>Shared with 8086 stream</td>
+<td>Dedicated</td>
+</tr>
+
+<tr>
+<td>Threads</td>
+<td colspan='2'>1</td>
+<td>1</td>
+<td>2 channels</td>
+</tr>
+
+<tr>
+<td>Instruction set</td>
+<td>8080</td>
+<td>8086</td>
+<td>8086 extension</td>
+<td>8089</td>
+</tr>
+
+<tr>
+<td>Addressing modes</td>
+<td>8080 modes</td>
+<td>8086 modes</td>
+<td>8086 modes</td>
+<td>8089 specific</td>
+</tr>
+
+<tr>
+<td>Synchronization</td>
+<td colspan='2'>&mdash;</td>
+<td>WAIT instruction</td>
+<td>channel attention (OUT instruction)</td>
+</tr>
+
+<tr>
+<td>Data types</td>
+<td>Signed 8-bit integer<br>Unsigned 8-bit integer<br>16-bit integer<br>16-bit pointer</td>
+<td>Signed 8-bit integer<br>Unsigned 8-bit integer<br>Signed 16-bit integer<br>Unsigned 16-bit integer<br>Signed 32-bit integer<br>Unsigned 32-bit integer<br>16-bit near pointer<br>16-bit segment<br>32-bit far pointer<br>Packed 8-bit BCD<br>Unpacked 8-bit BCD</td>
+<td>Signed 16-bit integer<br>Signed 32-bit integer<br>Signed 64-bit integer<br>IEEE single precision (32-bit)<br>IEEE double precision (64-bit)<br>IEEE extended precision (64-bit)<br>Packed 80-bit BCD<hr>(only internally)<br>16-bit integer<br>20-bit pointer</td>
+<td>8-bit integer<br>16-bit integer<br>20-bit pointer with 1-bit tag<hr>(only internally)<br>20-bit pointer</td>
+</tr>
+
+<tr>
+<td>Registers</td>
+<td>(i16) PSW, B, D, H, SP, PC<br>(i1) INTE<hr>(Z80 extends this set<br>with the 16-bit IX, IY<br>as well as 2 banks<br>and a few control registers)</td>
+<td>(i16) AX, CX, DX, BX, SP, BP, SI, DI<br>ES, CS, SS, DS, FLAGS, IP<hr>(later versions vastly<br>expand the instruction set)</td>
+<td>(f80) ST(0)-ST(7)<br>(i16) CW, SW, TW<br>(i11) FOP<br>(p20) FIP, FDP<hr>(later versions offer<br>extended FCS:FIP and FDS:FDP)</td>
+<td>(p21, 2&times;) GA, GB, GC, TP<br>(p20, 2&times;) PP<br>(p20, 1&times;) CP<br>(i16, 2&times;) BC, IX, CC, MC<br>(i8, 2&times;) PSW</td>
+</tr>
+
+<tr>
+<td>Instruction length</td>
+<td>1 to 3 bytes</td>
+<td>1 to arbitrary bytes<br>Without prefixes: 6 bytes<br>Usual maximum prefix: 4 bytes<br>Usual maximum: 9 bytes</td>
+<td>2 to arbitrary bytes<br>Without prefixes: 4 bytes</td>
+<td>2 to 6 bytes</td>
+</tr>
+
+<tr>
+<td>Extensions</td>
+<td>8085<br>Z80<br>&hellip;</td>
+<td>80186<br>286<br>386<br>x86-64<br>&hellip;</td>
+<td>287<br>387<br>integrated</td>
+<td>&mdash;</td>
+</tr>
+
+</table>
+</body>
+</html>
