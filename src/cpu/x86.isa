@@ -5130,19 +5130,19 @@ $st = x87_fscale(emu, $st, $st1);
 
 @instruction FSBP0
 @comment IIT specific
-emu->x87.current_bank = 0;
+x87_set_register_bank(emu, 0);
 
 @instruction FSBP1
 @comment IIT specific
-emu->x87.current_bank = 1;
+x87_set_register_bank(emu, 1);
 
 @instruction FSBP2
 @comment IIT specific
-emu->x87.current_bank = 2;
+x87_set_register_bank(emu, 2);
 
 @instruction FSBP3
 @comment IIT specific
-emu->x87.current_bank = 3;
+x87_set_register_bank(emu, 3);
 
 @instruction FSETPM
 if(emu->x87.fpu_type == X87_FPU_287)

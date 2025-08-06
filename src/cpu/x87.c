@@ -843,6 +843,32 @@ static inline x87_float80_t x87_restrict_precision(x86_state_t * emu, x87_float8
 	}
 }
 
+static inline void x87_store_register_bank(x86_state_t * emu)
+{
+	for(size_t number = 0; number < 8; number++)
+	{
+		emu->x87.bank[emu->x87.current_bank].fpr[number] = emu->x87.fpr[number];
+	}
+}
+
+static inline void x87_load_register_bank(x86_state_t * emu)
+{
+	for(size_t number = 0; number < 8; number++)
+	{
+		emu->x87.fpr[number] = emu->x87.bank[emu->x87.current_bank].fpr[number];
+	}
+}
+
+static inline void x87_set_register_bank(x86_state_t * emu, unsigned bank_number)
+{
+	if(emu->x87.current_bank == bank_number)
+		return;
+
+	x87_store_register_bank(emu);
+	emu->x87.current_bank = bank_number;
+	x87_load_register_bank(emu);
+}
+
 static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t number)
 {
 	number = x87_register_number(emu, number);
@@ -850,22 +876,26 @@ static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t n
 		x87_signal_interrupt(emu, X87_CW_IM);
 
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	if(emu->x87.fpr[number].isfp)
 	{
-		return emu->x87.bank[emu->x87.current_bank].fpr[number].f;
+		return emu->x87.fpr[number].f;
 	}
 	else
 	{
-		uint16_t exponent = emu->x87.bank[emu->x87.current_bank].fpr[number].exponent;
-		return x87_convert_to_float80(emu->x87.bank[emu->x87.current_bank].fpr[number].mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
+		uint16_t exponent = emu->x87.fpr[number].exponent;
+		return x87_convert_to_float80(emu->x87.fpr[number].mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
 	}
 #else
-	return emu->x87.bank[emu->x87.current_bank].fpr[number].f;
+	return emu->x87.fpr[number].f;
 #endif
 }
 
 static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number)
 {
+	if(emu->x87.current_bank == bank_number)
+		// current bank is not stored in the bank array
+		return x87_register_get80(emu, number);
+
 	/* TODO: other fields? (tag) */
 	number = x87_register_number(emu, number);
 	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
@@ -889,8 +919,8 @@ static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnu
 static inline void x87_register_tag(x86_state_t * emu, x86_regnum_t number)
 {
 	number = x87_register_number(emu, number);
-	// TODO: emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
-	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.bank[emu->x87.current_bank].fpr[number].f));
+	// TODO: emu->x87.fpr[number].isfp = true;
+	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
 }
 
 static inline void x87_register_set(x86_state_t * emu, x86_regnum_t number, x87_float80_t value)
@@ -898,10 +928,10 @@ static inline void x87_register_set(x86_state_t * emu, x86_regnum_t number, x87_
 	value = x87_restrict_precision(emu, value);
 	number = x87_register_number(emu, number);
 #if _SUPPORT_FLOAT80
-	emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
+	emu->x87.fpr[number].isfp = true;
 #endif
-	emu->x87.bank[emu->x87.current_bank].fpr[number].f = value;
-	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.bank[emu->x87.current_bank].fpr[number].f));
+	emu->x87.fpr[number].f = value;
+	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
 }
 
 static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, x87_float80_t value)
@@ -912,8 +942,15 @@ static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, x8
 	x87_register_set(emu, number, value);
 }
 
-static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, int bank_number, x87_float80_t value)
+static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number, x87_float80_t value)
 {
+	if(emu->x87.current_bank == bank_number)
+	{
+		// current bank is not stored in the bank array
+		x87_register_set80(emu, number, value);
+		return;
+	}
+
 	if(x87_tag_get(emu, number) != X87_TAG_EMPTY)
 		x87_signal_interrupt(emu, X87_CW_IM); // TODO: unsure
 
@@ -955,27 +992,27 @@ static inline void x87_push(x86_state_t * emu, x87_float80_t value)
 static inline uint64_t x86_mmx_get(x86_state_t * emu, x86_regnum_t number)
 {
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	if(emu->x87.fpr[number].isfp)
 	{
 		uint64_t fraction;
 		uint16_t exponent;
 		bool sign;
-		x87_convert_from_float80(emu->x87.bank[emu->x87.current_bank].fpr[number].f, &fraction, &exponent, &sign);
+		x87_convert_from_float80(emu->x87.fpr[number].f, &fraction, &exponent, &sign);
 		return fraction;
 	}
 	else
 	{
-		return emu->x87.bank[emu->x87.current_bank].fpr[number].mmx.q[0];
+		return emu->x87.fpr[number].mmx.q[0];
 	}
 #else
-	return emu->x87.bank[emu->x87.current_bank].fpr[number].mmx.q[0];
+	return emu->x87.fpr[number].mmx.q[0];
 #endif
 }
 
 static inline void x86_mmx_set(x86_state_t * emu, x86_regnum_t number, uint64_t value)
 {
-	emu->x87.bank[emu->x87.current_bank].fpr[number].exponent = 0xFFFF;
-	emu->x87.bank[emu->x87.current_bank].fpr[number].mmx.q[0] = value;
+	emu->x87.fpr[number].exponent = 0xFFFF;
+	emu->x87.fpr[number].mmx.q[0] = value;
 }
 
 static inline x87_float80_t x87_f2xm1(x86_state_t * emu, x87_float80_t value)
@@ -1291,9 +1328,9 @@ static inline void x87_state_restore_registers(x86_state_t * emu, x86_segnum_t s
 
 		int number = x87_register_number(emu, i);
 #if _SUPPORT_FLOAT80
-		emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
+		emu->x87.fpr[number].isfp = true;
 #endif
-		emu->x87.bank[emu->x87.current_bank].fpr[number].f = fpr;
+		emu->x87.fpr[number].f = fpr;
 		if(emu->x87.fpu_type >= X87_FPU_387)
 		{
 			// TODO: also for environment_restore
@@ -1499,9 +1536,9 @@ static inline void x87_state_restore_extended_common(x86_state_t * emu, x86_segn
 
 		int number = x87_register_number(emu, i);
 #if _SUPPORT_FLOAT80
-		emu->x87.bank[emu->x87.current_bank].fpr[number].isfp = true;
+		emu->x87.fpr[number].isfp = true;
 #endif
-		emu->x87.bank[emu->x87.current_bank].fpr[number].f = fpr;
+		emu->x87.fpr[number].f = fpr;
 		if((abridged_tw & (1 << number)) != 0)
 			x87_tag_set(emu, i, X87_TAG_EMPTY);
 		else

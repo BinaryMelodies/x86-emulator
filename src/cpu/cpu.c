@@ -426,18 +426,32 @@ void x86_reset(x86_state_t * emu, bool reset)
 
 	if(reset)
 	{
-		for(int b = 0; b < (emu->x87.fpu_type == X87_FPU_IIT ? 4 : 1); b++)
+		for(int i = 0; i < 8; i++)
 		{
-			for(int i = 0; i < 8; i++)
-			{
 #if _SUPPORT_FLOAT80
-				emu->x87.bank[b].fpr[i].isfp = true;
-				emu->x87.bank[b].fpr[i].f = x87_float80_make(0.0);
+			emu->x87.fpr[i].isfp = true;
+			emu->x87.fpr[i].f = x87_float80_make(0.0);
 #else
-				emu->x87.bank[b].fpr[i].f.fraction = 0;
-				emu->x87.bank[b].fpr[i].f.exponent = 0;
+			emu->x87.fpr[i].f.fraction = 0;
+			emu->x87.fpr[i].f.exponent = 0;
 #endif
-		
+	
+		}
+		if(emu->x87.fpu_type == X87_FPU_IIT)
+		{
+			for(int b = 0; b < 4; b++)
+			{
+				for(int i = 0; i < 8; i++)
+				{
+#if _SUPPORT_FLOAT80
+					emu->x87.bank[b].fpr[i].isfp = true;
+					emu->x87.bank[b].fpr[i].f = x87_float80_make(0.0);
+#else
+					emu->x87.bank[b].fpr[i].f.fraction = 0;
+					emu->x87.bank[b].fpr[i].f.exponent = 0;
+#endif
+			
+				}
 			}
 		}
 		x87_reset(emu, reset);

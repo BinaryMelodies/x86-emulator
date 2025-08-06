@@ -942,7 +942,7 @@ static inline void x86_cyrix_set_base_msr(x86_state_t * emu, x86_segnum_t segmen
 static inline uint64_t x86_cyrix_get_mr_msr(x86_state_t * emu, unsigned number)
 {
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	if(emu->x87.fpr[number].isfp)
 	{
 		uint64_t fraction;
 		uint16_t exponent;
@@ -962,7 +962,7 @@ static inline uint64_t x86_cyrix_get_mr_msr(x86_state_t * emu, unsigned number)
 static inline void x86_cyrix_set_mr_msr(x86_state_t * emu, unsigned number, uint64_t value)
 {
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	if(emu->x87.fpr[number].isfp)
 	{
 		uint64_t fraction;
 		uint16_t exponent;
@@ -982,7 +982,7 @@ static inline void x86_cyrix_set_mr_msr(x86_state_t * emu, unsigned number, uint
 static inline uint64_t x86_cyrix_get_er_msr(x86_state_t * emu, unsigned number)
 {
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	if(emu->x87.fpr[number].isfp)
 	{
 		uint64_t fraction;
 		uint16_t exponent;
@@ -1002,7 +1002,7 @@ static inline uint64_t x86_cyrix_get_er_msr(x86_state_t * emu, unsigned number)
 static inline void x86_cyrix_set_er_msr(x86_state_t * emu, unsigned number, uint64_t value)
 {
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	if(emu->x87.fpr[number].isfp)
 	{
 		uint64_t fraction;
 		uint16_t exponent;

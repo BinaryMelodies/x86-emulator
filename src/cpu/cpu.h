@@ -1723,17 +1723,15 @@ struct x87_state_t
 	x87_fpu_type_t fpu_type;
 	x87_fpu_subtype_t fpu_subtype;
 
-	/* IIT 3c87 organizes registers into 4 banks, but not the status or tag words */
-	union
+	/* Registers with their absolute indexes instead of TOP relative indexes */
+	x87_register_t fpr[8];
+
+	/* IIT 3c87 organizes registers into 4 banks, but not the status or tag words, but we include a copy of the current bank in fpr[] */
+	struct
 	{
-		struct
-		{
-			/* Registers with their absolute indexes instead of TOP relative indexes */
-			x87_register_t fpr[8];
-		} bank[4];
 		/* Registers with their absolute indexes instead of TOP relative indexes */
 		x87_register_t fpr[8];
-	};
+	} bank[4];
 	/* IIT 3c87 current bank number */
 	unsigned current_bank;
 

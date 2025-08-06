@@ -129,8 +129,9 @@ static inline void x87_convert_from_float80(x87_float80_t value, uint64_t * frac
 static inline x87_float80_t x87_convert_to_float80(uint64_t fraction, uint16_t exponent, bool sign);
 static inline x87_float80_t x87_convert64_to_float(uint64_t value);
 
+static inline void x87_set_register_bank(x86_state_t * emu, unsigned bank_number);
 static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number);
-static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, int bank_number, x87_float80_t value);
+static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number, x87_float80_t value);
 
 static inline void x87_environment_save_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
 static inline void x87_environment_restore_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
