@@ -1,0 +1,840 @@
+cpus:
+- id: cx486
+  description: Cyrix Cx486
+- id: cx486slce
+  description: Cyrix Cx486SLC/e
+  based: cx486
+- id: 5x86
+  description: Cyrix 5x86
+  based: cx486slce
+- id: 6x86
+  description: Cyrix 6x86
+  based: 5x86
+- id: mx
+  description: Cyrix 6x86MX
+  based: 6x86
+- id: cyrixiii
+  description: VIA Cyrix III (Joshua)
+  based: mx
+- id: mediagx
+  description: Cyrix MediaGX
+  based: 5x86
+- id: gx1
+  description: Geode GX1
+  based: mediagx
+
+registers:
+- id: pcr0
+  mapen: 1
+  number: 0x20
+  name:
+  - used: 5x86, gx1
+    name: PCR0
+  - used: mediagx
+    name: PCR
+  description:
+  - used: 5x86, mediagx
+    description: Performance Control
+  - used: gx1
+    description: Performance Control 0
+  used: 5x86, mediagx, gx1
+  fields:
+  - bit: 0
+    name: RSTK_EN
+    used: 5x86
+  - bit: 0
+    name: INC_MGN0
+    used: gx1
+  - bit: 1
+    name:
+    - used: 5x86
+      name: BTB_EN
+    - used: gx1
+      name: BTB
+    used: 5x86, gx1
+  - bit: 2
+    name: LOOP_EN
+    used: 5x86
+  - bit: 2
+    name: INC_MGN1
+    used: gx1
+  - bit: 5
+    name: VGAMWSI
+    used: gx1
+  - bit: 7
+    name: LSSR
+    used: 5x86, mediagx, gx1
+
+- id: twr0
+  mapen: 1
+  number: 0x20
+  name: TWR0
+  description: Table Walk Register 0
+  used: cyrixiii
+  fields:
+  - bit: 4
+    name: Cache_TE
+    used: cyrixiii
+
+- id: lcr1
+  mapen: "0100"
+  number: 0x41
+  name: LCR1
+  description: L2 Configuration Register
+  used: cyrixiii
+  fields:
+  - bit: 2
+    name: L2_ENABLE
+    used: cyrixiii
+  - bit: 3
+    name: L2_WT
+    used: cyrixiii
+
+- id: bcr1
+  mapen: "0100"
+  number: 0x48
+  name: BCR1
+  description: Bus Configuration Register 1<br>BIOS Core to Bus Clock Ratio
+  used: cyrixiii
+  fields:
+  - bits: 0-3
+    name: BIOS_CLKRATIO
+    used: cyrixiii
+  - bits: 4-5
+    name: BSEL
+    used: cyrixiii
+  - bit: 7
+    name: HOTRST_TRIGGERED
+    used: cyrixiii
+
+- id: bcr2
+  mapen: "0100"
+  number: 0x49
+  name: BCR2
+  description: Bus Configuration Register 2<br>BIOS PLL Hot Reset
+  used: cyrixiii
+  fields:
+  - bit: 0
+    name: BIOS_HOTRESET
+    used: cyrixiii
+
+- id: arr8
+  mapen: "x010/x01x"
+  number: 0xA4, 0xA5, 0xA6
+  name: ARR8
+  description: Address Region 8
+  used: cyrixiii
+
+- id: arr9
+  mapen: "x010/x01x"
+  number: 0xA7, 0xA8, 0xA9
+  name: ARR9
+  description: Address Region 9
+  used: cyrixiii
+
+- id: arr10
+  mapen: "x010/x01x"
+  number: 0xAA, 0xAB, 0xAC
+  name: ARRA
+  description: Address Region A
+  used: cyrixiii
+
+- id: arr11
+  mapen: "x010/x01x"
+  number: 0xAD, 0xAE, 0xAF
+  name: ARRB
+  description: Address Region B
+  used: cyrixiii
+
+- id: smhr
+  mapen: 1
+  number: 0xB0, 0xB1, 0xB2, 0xB3
+  name: SMHR
+  description: SMM Header Address Register
+  used: mx, cyrixiii, mediagx, gx1
+  used-non-port: mx, cyrixiii
+  fields:
+  - number: 0xB0
+    bit: 0
+    name: valid
+    used: mx, cyrixiii
+  - number: 0xB0
+    bits: 2-7
+    name: A2-A7
+    used: mx, cyrixiii, mediagx, gx1
+  - number: 0xB1
+    bits: 0-7
+    name: A8-A15
+    used: mx, cyrixiii, mediagx, gx1
+  - number: 0xB2
+    bits: 0-7
+    name: A16-A23
+    used: mx, cyrixiii, mediagx, gx1
+  - number: 0xB3
+    bits: 0-7
+    name: A24-A31
+    used: mx, cyrixiii, mediagx, gx1
+
+- id: gcr
+  mapen: 1
+  number: 0xB8
+  name: GCR
+  description: Graphics Control Register
+  used: mediagx, gx1
+  fields:
+  - bits: 0-1
+    name: base address code
+    used: mediagx, gx1
+  - bits: 2-3
+    name: scratchpad size
+    used: mediagx, gx1
+
+- id: vgactl
+  mapen: 1 # TODO: documentation claims no MAPEN needed?
+  number: 0xB9
+  name: VGACTL
+  description: VGA Control Register
+  used: mediagx, gx1
+  fields:
+  - bit: 0
+    name: SMI for A0000-AFFFF
+    used: mediagx, gx1
+  - bit: 1
+    name: SMI for B0000-B7FFF
+    used: mediagx, gx1
+  - bit: 2
+    name: SMI for B8000-BFFFF
+    used: mediagx, gx1
+
+- id: vgam
+  mapen: 1 # TODO: documentation claims no MAPEN needed?
+  number: 0xBA, 0xBB, 0xBC, 0xBD
+  name: VGAM
+  description: VGA Mask Register
+  used: mediagx, gx1
+
+- id: ccr0
+  number: 0xC0
+  name: CCR0
+  description: Configuration Control 0
+  used: cx486, cx486slce, 6x86, mx, cyrixiii
+  fields:
+  - bit: 0
+    name: NC0
+    used: cx486, cx486slce
+  - bit: 1
+    name: NC1
+    used: cx486, cx486slce, 6x86, mx, cyrixiii
+  - bit: 2
+    name: A20M
+    used: cx486, cx486slce
+  - bit: 3
+    name: KEN
+    used: cx486, cx486slce
+  - bit: 4
+    name: FLUSH
+    used: cx486, cx486slce
+  - bit: 5
+    name: BARB
+    used: cx486, cx486slce
+  - bit: 6
+    name: CO
+    used: cx486, cx486slce
+  - bit: 7
+    name:
+    - used: cx486
+      name: SUSPEND
+    - used: cx486slce
+      name: SUS
+    used: cx486, cx486slce
+
+- id: ccr1
+  number: 0xC1
+  name: CCR1
+  description: Configuration Control 1
+  used: cx486, cx486slce, 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  fields:
+  - bit: 0
+    name: RPL
+    used: cx486, cx486slce
+  - bit: 1
+    name:
+    - used: cx486slce
+      name: SMI
+    - used: 5x86, 6x86, mx, mediagx, gx1
+      name: USE_SMI
+    smi_lock: yes
+    used: cx486slce, 5x86, 6x86, mx, mediagx, gx1
+  - bit: 2
+    name: SMAC
+    smi_lock: yes
+    used: cx486slce, 5x86, 6x86, mx, mediagx, gx1
+  - bit: 3
+    name: MMAC
+    smi_lock: yes
+    used: cx486slce, 5x86
+  - bit: 4
+    name: WP1
+    used: cx486slce
+  - bit: 4
+    name: NO_LOCK
+    used: 6x86, mx
+  - bit: 5
+    name: WP2
+    used: cx486slce
+  - bit: 6
+    name: WP3
+    used: cx486slce
+  - bit: 7
+    name:
+    - used: cx486slce
+      name: SM4
+    - used: 6x86, mx, cyrixiii
+      name: SM3
+    smi_lock: yes
+    used: cx486slce, 6x86, mx, cyrixiii
+
+- id: ccr2
+  number: 0xC2
+  name: CCR2
+  description: Configuration Control 2
+  used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  fields:
+  - bit: 1
+    name: USE_WBAK
+    used: 5x86
+  - bit: 1
+    name: SADS
+    used: mx
+  - bit: 2
+    name: LOCK_NW
+    used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - bit: 3
+    name:
+    - used: 5x86
+      name: SUSP_HALT
+    - used: 6x86, mx, cyrixiii, mediagx, gx1
+      name: SUSP_HLT
+    used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - bit: 4
+    name:
+    - used: 5x86, mediagx, gx1
+      name: WT1
+    - used: 6x86, mx, cyrixiii
+      name: WPR1
+    used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - bit: 6
+    name: BWRT
+    used: 5x86
+  - bit: 7
+    name: USE_SUSP
+    used: 5x86, 6x86, mx, mediagx, gx1
+
+- id: ccr3
+  number: 0xC3
+  name: CCR3
+  description: Configuration Control 3
+  used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  fields:
+  - bit: 0
+    name: SMI_LOCK
+    used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - bit: 1
+    name: NMI_EN
+    smi_lock: yes
+    used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - bit: 2
+    name: LINBRST
+    used: 5x86, 6x86, mx
+  - bit: 3
+    name: SMM_MODE
+    used: 5x86
+  - bit: 3
+    name: SUSP_SMM_EN
+    used: gx1
+  - bits: 4-7
+    name: MAPEN
+    used: 5x86, 6x86, mx, cyrixiii
+  - bit: 4
+    name: MAPEN
+    used: mediagx, gx1
+  - bit: 5
+    name: LSS_12
+    used: mediagx, gx1
+  - bit: 6
+    name: LSS_23
+    used: mediagx, gx1
+  - bit: 7
+    name: LSS_34
+    used: mediagx, gx1
+
+- id: arr0
+  number:
+  - used: cx486, cx486slce
+    number: 0xC5, 0xC6
+  - used: 6x86, mx, cyrixiii
+    number: 0xC4, 0xC5, 0xC6
+  name:
+  - used: cx486
+    name: NCR1
+  - used: cx486slce
+    name: ARR1
+  - used: 6x86, mx, cyrixiii
+    name: ARR0
+  description:
+  - used: cx486
+    description: Non-Cacheable Region 1
+  - used: cx486slce
+    description: Address Region 1
+  - used: 6x86, mx, cyrixiii
+    description: Address Region 0
+  used: cx486, cx486slce, 6x86, mx, cyrixiii
+
+- id: arr1
+  number:
+  - used: cx486, cx486slce
+    number: 0xC8, 0xC9
+  - used: 6x86, mx, cyrixiii
+    number: 0xC7, 0xC8, 0xC9
+  name:
+  - used: cx486
+    name: NCR2
+  - used: cx486slce
+    name: ARR2
+  - used: 6x86, mx, cyrixiii
+    name: ARR1
+  description:
+  - used: cx486
+    description: Non-Cacheable Region 2
+  - used: cx486slce
+    description: Address Region 2
+  - used: 6x86, mx, cyrixiii
+    description: Address Region 1
+  used: cx486, cx486slce, 6x86, mx, cyrixiii
+
+- id: arr2
+  number:
+  - used: cx486, cx486slce
+    number: 0xCB, 0xCC
+  - used: 6x86, mx, cyrixiii
+    number: 0xCA, 0xCB, 0xCC
+  name:
+  - used: cx486
+    name: NCR3
+  - used: cx486slce
+    name: ARR3
+  - used: 6x86, mx, cyrixiii
+    name: ARR2
+  description:
+  - used: cx486
+    description: Non-Cacheable Region 3
+  - used: cx486slce
+    description: Address Region 3
+  - used: 6x86, mx, cyrixiii
+    description: Address Region 2
+  used: cx486, cx486slce, 6x86, mx, cyrixiii
+
+- id: arr3
+  number:
+  - used: cx486, cx486slce
+    number: 0xCE, 0xCF
+  - used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+    number: 0xCD, 0xCE, 0xCF
+  name:
+  - used: cx486
+    name: NCR4
+  - used: cx486slce
+    name: ARR4
+  - used: 5x86, mediagx, gx1
+    name: SMAR
+  - used: 6x86, mx, cyrixiii
+    name: ARR3
+  description:
+  - used: cx486
+    description: Non-Cacheable Region 4
+  - used: cx486slce
+    description: Address Region 4
+  - used: 5x86, mediagx, gx1
+    description: SMM Address
+  - used: 6x86, mx, cyrixiii
+    description: Address Region 3
+  used: cx486, cx486slce, 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  fields:
+  - number: 0xCD
+    bits: 0-7
+    name: A31-A24
+    smi_lock: yes
+    used: 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - number: 0xCE
+    bits: 0-7
+    name: A23-A16
+    smi_lock: yes
+    used: cx486, cx486slce, 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - number: 0xCF
+    bits: 0-3
+    name: SIZE
+    smi_lock: yes
+    used: cx486, cx486slce, 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+  - number: 0xCF
+    bits: 4-7
+    name: A15-12
+    smi_lock: yes
+    used: cx486, cx486slce, 5x86, 6x86, mx, cyrixiii, mediagx, gx1
+
+- id: arr4
+  mapen: 1
+  number: 0xD0, 0xD1, 0xD2
+  name: ARR4
+  description: Address Region 4
+  used: 6x86, mx, cyrixiii
+
+- id: arr12
+  mapen: "x010/x01x"
+  number: 0xD0, 0xD1, 0xD2
+  name: ARRC
+  description: Address Region C
+  used: cyrixiii
+
+- id: arr5
+  mapen: 1
+  number: 0xD3, 0xD4, 0xD5
+  name: ARR5
+  description: Address Region 5
+  used: 6x86, mx, cyrixiii
+
+- id: arr13
+  mapen: "x010/x01x"
+  number: 0xD3, 0xD4, 0xD5
+  name: ARRD
+  description: Address Region D
+  used: cyrixiii
+
+- id: arr6
+  mapen: 1
+  number: 0xD6, 0xD7, 0xD8
+  name: ARR6
+  description: Address Region 6
+  used: 6x86, mx, cyrixiii
+
+- id: arr7
+  mapen: 1
+  number: 0xD9, 0xDA, 0xDB
+  name: ARR7
+  description: Address Region 7
+  used: 6x86, mx, cyrixiii
+
+- id: rcr0
+  mapen: 1
+  number: 0xDC
+  name: RCR0
+  description: Region Control 0
+  used: 6x86, mx, cyrixiii
+
+- id: rcr8
+  mapen: "x010/x01x"
+  number: 0xDC
+  name: RCR8
+  description: Region Control 8
+  used: cyrixiii
+
+- id: rcr1
+  mapen: 1
+  number: 0xDD
+  name: RCR1
+  description: Region Control 1
+  used: 6x86, mx, cyrixiii
+
+- id: rcr9
+  mapen: "x010/x01x"
+  number: 0xDD
+  name: RCR9
+  description: Region Control 9
+  used: cyrixiii
+
+- id: rcr2
+  mapen: 1
+  number: 0xDE
+  name: RCR2
+  description: Region Control 2
+  used: 6x86, mx, cyrixiii
+
+- id: rcr10
+  mapen: "x010/x01x"
+  number: 0xDE
+  name: RCRA
+  description: Region Control A
+  used: cyrixiii
+
+- id: rcr3
+  mapen: 1
+  number: 0xDF
+  name: RCR3
+  description: Region Control 3
+  used: 6x86, mx, cyrixiii
+  fields:
+  - bit: 0
+    name:
+    - used: 6x86, cyrixiii
+      name: RCD/RCE
+    - used: mx
+      name: CD
+    used: 6x86, mx, cyrixiii
+  - bit: 1
+    name: WWO
+    used: 6x86
+  - bit: 2
+    name:
+    - used: 6x86, mx
+      name: WL
+    - used: cyrixiii
+      name: WP
+    used: 6x86, mx, cyrixiii
+  - bit: 3
+    name: WG
+    used: 6x86, mx, cyrixiii
+  - bit: 4
+    name: WT
+    used: 6x86, mx, cyrixiii
+  - bit: 5
+    name: NLB
+    used: 6x86
+  - bit: 6
+    name: INV_RGN
+    used: mx, cyrixiii
+
+- id: rcr11
+  mapen: "x010/x01x"
+  number: 0xDF
+  name: RCRB
+  description: Region Control B
+  used: cyrixiii
+
+- id: rcr4
+  mapen: 1
+  number: 0xE0
+  name: RCR4
+  description: Region Control 4
+  used: 6x86, mx, cyrixiii
+
+- id: rcr12
+  mapen: "x010/x01x"
+  number: 0xE0
+  name: RCRC
+  description: Region Control C
+  used: cyrixiii
+
+- id: rcr5
+  mapen: 1
+  number: 0xE1
+  name: RCR5
+  description: Region Control 5
+  used: 6x86, mx, cyrixiii
+
+- id: rcr13
+  mapen: "x010/x01x"
+  number: 0xE1
+  name: RCRD
+  description: Region Control D
+  used: cyrixiii
+
+- id: rcr6
+  mapen: 1
+  number: 0xE2
+  name: RCR6
+  description: Region Control 6
+  used: 6x86, mx, cyrixiii
+
+- id: rcr7
+  mapen: 1
+  number: 0xE3
+  name: RCR7
+  description: Region Control 7
+  used: 6x86, mx, cyrixiii
+
+- id: ccr4
+  mapen: 1
+  number: 0xE8
+  name: CCR4
+  description: Configuration Control 4
+  used: 5x86, 6x86, mx, mediagx, gx1, cyrixiii
+  fields:
+  - bits: 0-2
+    name: IORT
+    used: 5x86, 6x86, mx, mediagx, gx1
+  - bit: 3
+    name: MEM_BYP
+    used: 5x86, mediagx, gx1
+  - bit: 4
+    name: DTE_EN
+    used: 5x86, 6x86, mediagx, gx1
+  - bit: 5
+    name: FPU_FAST_EN
+    used: gx1
+  - bit: 6
+    name: SMI_NEST
+    used: mediagx, gx1
+  - bit: 7
+    name: CPUID
+    used: 6x86, mx, cyrixiii, mediagx, gx1
+
+- id: ccr5
+  mapen: 1
+  number: 0xE9
+  name: CCR5
+  description: Configuration Control 5
+  used: 6x86, mx, cyrixiii
+  fields:
+  - bit: 0
+    name: WT_ALLOC
+    used: 6x86, mx, cyrixiii
+  - bit: 4
+    name: LBR1
+    used: 6x86
+  - bit: 5
+    name: ARREN
+    used: 6x86, mx, cyrixiii
+
+- id: ccr6
+  mapen: 1
+  number: 0xEA
+  name: CCR6
+  description: Configuration Control 6
+  used: mx, cyrixiii
+  fields:
+  - bit: 0
+    name: SMM_MODE
+    smi_lock: yes
+    used: mx, cyrixiii
+  - bit: 1
+    name: WP_ARR3
+    used: mx, cyrixiii
+  - bit: 6
+    name: N
+    smi_lock: yes
+    used: mx
+
+- id: ccr7
+  mapen: 1 # TODO: documentation claims no MAPEN needed?
+  number: 0xEB
+  name: CCR7
+  description: Configuration Control 7
+  used: mediagx, gx1, cyrixiii
+  fields:
+  - bit: 0
+    name: EMMX
+    used: mediagx, gx1
+  - bit: 2
+    name: NMI
+    used: mediagx, gx1
+  - bit: 4
+    name: 3DNOW_EN
+    used: cyrixiii
+
+- id: pmr
+  mapen: 1
+  number: 0xF0
+  name: PMR
+  description: Power Management
+  used: 5x86
+  fields:
+  - bits: 0-1
+    name: CLK
+    used: 5x86
+  - bit: 2
+    name: HLF_CLK
+    used: 5x86
+
+- id: pcr1
+  mapen: 1
+  number: 0xF0
+  name: PCR1
+  description: Performance Control 1
+  used: gx1
+  fields:
+  - bit: 0
+    name: 1XCLK
+    used: gx1
+  - bit: 1
+    name: INC
+    used: gx1
+
+- id: dir2
+  mapen: 1
+  number: 0xFB
+  name: DIR2
+  description: Device ID 2
+  used: cyrixiii
+
+- id: dir3
+  mapen: 1
+  number: 0xFC
+  name: DIR3
+  description: Device ID 3
+  used: cyrixiii
+  fields:
+  - bits: 0-3
+    name: FAMILY
+    used: cyrixiii
+  - bits: 4-7
+    name: TYPE
+    used: cyrixiii
+
+- id: dir4
+  mapen: 1
+  number: 0xFD
+  name: DIR4
+  description: Device ID 4
+  used: cyrixiii
+  fields:
+  - bits: 0-3
+    name: STEPPING
+    used: cyrixiii
+  - bits: 4-7
+    name: MODEL
+    used: cyrixiii
+
+- id: dir0
+  number: 0xFE
+  name: DIR0
+  description: Device ID 0
+  used: 5x86, 6x86, cyrixiii, mediagx, gx1
+  fields:
+  - bits: 0-7
+    name: DEVICE_ID
+    used: 5x86, 6x86
+  - bits: 0-3
+    name:
+    - used: mediagx, gx1
+      name: MULT
+    - used: cyrixiii
+      name: CLK_MULT
+    used: cyrixiii, mediagx, gx1
+  - bits: 4-7
+    name:
+    - used: mediagx, gx1
+      name: DID
+    - used: cyrixiii
+      name: Cyrix Processor Family
+    used: cyrixiii, mediagx, gx1
+
+- id: dir1
+  number: 0xFF
+  name: DIR1
+  description: Device ID 1
+  used: 5x86, 6x86, cyrixiii, mediagx, gx1
+  fields:
+  - bits: 0-3
+    name:
+    - used: 5x86, 6x86, mediagx, gx1
+      name: RID
+    - used: cyrixiii
+      name: REV_ID
+    used: 5x86, 6x86, cyrixiii, mediagx, gx1
+  - bits: 4-7
+    name:
+    - used: 5x86, 6x86, mediagx, gx1
+      name: SID
+    - used: cyrixiii
+      name: STEP_ID
+    used: 5x86, 6x86, cyrixiii, mediagx, gx1
+
