@@ -43,7 +43,7 @@ static inline x87_float80_t x87_float80_make_infinity(bool sign)
 	result.fraction = 0x8000000000000000U;
 #else
 	result.fraction = 0x8000000000000000U;
-	result.exponent = 0x7FFF | (signbit(value) ? 0x8000 : 0x0000);
+	result.exponent = 0x7FFF | (sign ? 0x8000 : 0x0000);
 #endif
 	return result;
 }
@@ -60,6 +60,22 @@ static inline x87_float80_t x87_float80_make_zero(bool sign)
 #endif
 	return result;
 }
+
+#if _SUPPORT_FLOAT80
+# define FLOAT80_MAKE(_value, _fraction, _exponent) { .value = (_value), .exponent = (_exponent) }
+# define FLOAT80_MAKE_NAN(_payload) { .value = NAN, .fraction = (_payload) }
+#else
+# define FLOAT80_MAKE(_value, _fraction, _exponent) { .fraction = (_fraction), .exponent = (_exponent) }
+# define FLOAT80_MAKE_NAN(_payload) { .fraction = (_payload), .fraction = 0x7FFF }
+#endif
+
+const x87_float80_t FLOAT80_ZERO = FLOAT80_MAKE(0.0, 0, 0);
+const x87_float80_t FLOAT80_ONE = FLOAT80_MAKE(1.0, 0x8000000000000000U, 0x3FFF);
+const x87_float80_t FLOAT80_PI = FLOAT80_MAKE(M_PI, 0xC90FDAA22168C000U /* TODO: this is the 64-bit expansion */, 0x3FFF + 1);
+const x87_float80_t FLOAT80_LOG2E = FLOAT80_MAKE(M_LOG2E, 0xB17217F7D1CF7800 /* TODO: this is the 64-bit expansion */, 0x3FFF - 1);
+const x87_float80_t FLOAT80_LOG2_10 = FLOAT80_MAKE(M_LOG2E * M_LN10, 0x9A209A84FBCFF000 /* TODO: this is the 64-bit expansion */, 0x3FFF - 2);
+const x87_float80_t FLOAT80_LOG10_2 = FLOAT80_MAKE(M_LOG10E * M_LN2, 0xD49A784BCD1B9000 /* TODO: this is the 64-bit expansion */, 0x3FFF + 1);
+const x87_float80_t FLOAT80_LN2 = FLOAT80_MAKE(M_LN2, 0xB17217F7D1CF7800 /* TODO: this is the 64-bit expansion */, 0x3FFF - 1);
 
 static inline x87_float80_t x87_float80_make_int64(int64_t value)
 {
@@ -90,7 +106,7 @@ static inline x87_float80_t x87_float80_make_int64(int64_t value)
 	return result;
 }
 
-//#if _SUPPORT_FLOAT80 // TODO
+#if _SUPPORT_FLOAT80
 static inline x87_float80_t x87_float80_make(float80_t value)
 {
 	x87_float80_t result;
@@ -128,7 +144,7 @@ static inline x87_float80_t x87_float80_make(float80_t value)
 	}
 	return result;
 }
-//#endif
+#endif
 
 #if _SUPPORT_FLOAT80
 static inline x87_float80_t x87_float80_make_8087(float80_t value)
@@ -422,6 +438,8 @@ static inline x87_float80_t x87_convert32_to_float(uint32_t value)
 	uint16_t exponent;
 	bool sign;
 
+	// TODO: floating point exceptions
+
 	fraction = ((uint64_t)(value & 0x007FFFFF) << 40) | 0x8000000000000000;
 	exponent = (value & 0x7F800000) >> 23;
 	if(exponent == 0xFF)
@@ -472,7 +490,6 @@ static inline x87_float80_t x87_convert64_to_float(uint64_t value)
 
 static inline x87_float80_t x87_float80_reduce_precision(x87_float80_t value, unsigned bits)
 {
-	int exp;
 	switch(fp80classify(value))
 	{
 	case FP80_SUBNORMAL:
@@ -480,10 +497,13 @@ static inline x87_float80_t x87_float80_reduce_precision(x87_float80_t value, un
 	case FP80_PSEUDO_SUBNORMAL:
 	case FP80_UNNORMAL:
 #if _SUPPORT_FLOAT80
-		float80_t tmp = truncl(ldexpl(frexpl(value.value, &exp), bits));
-		value.value = ldexpl(tmp, exp - bits);
+		{
+			int exp;
+			float80_t tmp = truncl(ldexpl(frexpl(value.value, &exp), bits));
+			value.value = ldexpl(tmp, exp - bits);
+		}
 #else
-		value.fraction &= -1 << (64 - bits);
+		value.fraction &= (uint64_t)-1 << (64 - bits);
 #endif
 		break;
 	}
@@ -492,6 +512,8 @@ static inline x87_float80_t x87_float80_reduce_precision(x87_float80_t value, un
 
 static inline x87_float80_t x87_float80_round24(x87_float80_t value)
 {
+	// TODO: floating point exceptions
+
 	switch(fp80classify(value))
 	{
 	case FP80_SUBNORMAL:
@@ -519,6 +541,8 @@ static inline x87_float80_t x87_float80_round24(x87_float80_t value)
 
 static inline x87_float80_t x87_float80_round53(x87_float80_t value)
 {
+	// TODO: floating point exceptions
+
 	switch(fp80classify(value))
 	{
 	case FP80_SUBNORMAL:
@@ -741,22 +765,32 @@ static inline void x87_signal_interrupt(x86_state_t * emu, int intnum)
 static inline int64_t x87_float80_to_int64(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	// TODO: without float80 support
 #if _SUPPORT_FLOAT80
 	return value.value;
 #else
-	// TODO
+	int64_t result;
+	uint32_t exponent = value.exponent & 0x7FFF;
+	if(exponent > 0x3FFE + 63 + 63)
+		return (uint64_t)-1 << 63; // indefinite
+	else if(exponent > 0x3FFE + 63)
+		result = value.fraction << (exponent - (0x3FFE + 63));
+	else if(exponent == 0x3FFE + 63)
+		result = value.fraction;
+	else if(exponent > 0x3FFE + 63 - 64)
+		result = value.fraction >> (64 - (exponent - (0x3FFE + 63)));
+	else
+		return 0;
+	if((value.exponent & 0x8000) != 0)
+		return -result;
+	else
+		return result;
 #endif
 }
 
 static inline x87_float80_t x87_int64_to_float80(x86_state_t * emu, int64_t value)
 {
 	(void) emu;
-#if _SUPPORT_FLOAT80
-	return x87_float80_make(value);
-#else
 	return x87_float80_make_int64(value);
-#endif
 }
 
 static inline x87_float80_t x87_packed80_to_float80(const uint8_t bytes[10])
@@ -788,8 +822,9 @@ static inline void x87_float80_to_packed80(x87_float80_t value, uint8_t bytes[10
 	int_value = (int64_t)(value.value + 0.5);
 	bytes[0] = value.value < 0 ? 0x80 : 0;
 #else
-	(void)value;
 	// TODO
+	(void)value;
+	int_value = 0;
 #endif
 	if(int_value < 0)
 		int_value = -int_value;
@@ -896,7 +931,6 @@ static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnu
 		// current bank is not stored in the bank array
 		return x87_register_get80(emu, number);
 
-	/* TODO: other fields? (tag) */
 	number = x87_register_number(emu, number);
 	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
 		x87_signal_interrupt(emu, X87_CW_IM);
@@ -1011,6 +1045,9 @@ static inline uint64_t x86_mmx_get(x86_state_t * emu, x86_regnum_t number)
 
 static inline void x86_mmx_set(x86_state_t * emu, x86_regnum_t number, uint64_t value)
 {
+#if _SUPPORT_FLOAT80
+	emu->x87.fpr[number].isfp = false;
+#endif
 	emu->x87.fpr[number].exponent = 0xFFFF;
 	emu->x87.fpr[number].mmx.q[0] = value;
 }
@@ -1018,11 +1055,12 @@ static inline void x86_mmx_set(x86_state_t * emu, x86_regnum_t number, uint64_t 
 static inline x87_float80_t x87_f2xm1(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	(void) value;
 #if _SUPPORT_FLOAT80
 	return x87_float80_make(expm1l(log2l(value.value))); // TODO
 #else
 	// TODO
+	(void) value;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1034,6 +1072,8 @@ static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 	return x87_float80_make(fabsl(value.value));
 #else
 	// TODO
+	(void) value;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1087,6 +1127,10 @@ static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x8
 	}
 #else
 	// TODO
+	(void) emu;
+	(void) value1;
+	(void) value2;
+	result = FLOAT80_ZERO;
 #endif
 	return result;
 }
@@ -1099,6 +1143,8 @@ static inline x87_float80_t x87_fchs(x86_state_t * emu, x87_float80_t value)
 	return x87_float80_make(-value.value);
 #else
 	// TODO
+	(void) value;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1128,6 +1174,8 @@ static inline void x87_fcom(x86_state_t * emu, x87_float80_t value1, x87_float80
 	}
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
 #endif
 }
 
@@ -1139,6 +1187,9 @@ static inline x87_float80_t x87_fdiv(x86_state_t * emu, x87_float80_t value1, x8
 	return x87_float80_make(value1.value / value2.value);
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1150,19 +1201,25 @@ static inline x87_float80_t x87_fmul(x86_state_t * emu, x87_float80_t value1, x8
 	return x87_float80_make(value1.value * value2.value);
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
 static inline x87_float80_t x87_fprem(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	(void) emu;
-	(void) value1;
-	(void) value2;
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
+	(void) value1;
+	(void) value2;
 	return x87_float80_make(0.0); // TODO
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1171,10 +1228,14 @@ static inline void x87_fptan(x86_state_t * emu, x87_float80_t value, x87_float80
 	(void) emu;
 	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
+	// TODO: better emulation of FPTAN
 	*result1 = x87_float80_make(1.0);
 	*result2 = x87_float80_make(tanl(value.value));
 #else
 	// TODO
+	(void) value;
+	(void) result1;
+	(void) result2;
 #endif
 }
 
@@ -1186,6 +1247,9 @@ static inline x87_float80_t x87_fpatan(x86_state_t * emu, x87_float80_t value1, 
 	return x87_float80_make(atan2l(value1.value, value2.value));
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1204,6 +1268,9 @@ static inline x87_float80_t x87_fscale(x86_state_t * emu, x87_float80_t value1, 
 	return x87_float80_make(ldexpl(value1.value, x87_float80_to_int64(emu, value2)));
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1215,6 +1282,9 @@ static inline x87_float80_t x87_fsub(x86_state_t * emu, x87_float80_t value1, x8
 	return x87_float80_make(value1.value - value2.value);
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1226,6 +1296,8 @@ static inline x87_float80_t x87_fsqrt(x86_state_t * emu, x87_float80_t value)
 	return x87_float80_make(sqrtl(value.value));
 #else
 	// TODO
+	(void) value;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1286,6 +1358,9 @@ static inline void x87_fxtract(x86_state_t * emu, x87_float80_t value, x87_float
 	*result2 = x87_int64_to_float80(emu, exp);
 #else
 	// TODO
+	(void) value;
+	(void) result1;
+	(void) result2;
 #endif
 }
 
@@ -1297,6 +1372,9 @@ static inline x87_float80_t x87_fyl2x(x86_state_t * emu, x87_float80_t value1, x
 	return x87_float80_make(value2.value * log2l(value1.value));
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 
@@ -1308,6 +1386,9 @@ static inline x87_float80_t x87_fyl2xp1(x86_state_t * emu, x87_float80_t value1,
 	return x87_float80_make(value2.value * log2l(value1.value + 1));
 #else
 	// TODO
+	(void) value1;
+	(void) value2;
+	return FLOAT80_ZERO;
 #endif
 }
 

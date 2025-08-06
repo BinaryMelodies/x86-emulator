@@ -121,6 +121,15 @@ static inline bool x86_dmint_instruction_valid(x86_state_t * emu);
 
 // x87
 
+extern const x87_float80_t FLOAT80_ZERO;
+extern const x87_float80_t FLOAT80_ONE;
+extern const x87_float80_t FLOAT80_PI;
+extern const x87_float80_t FLOAT80_LOG2E;
+extern const x87_float80_t FLOAT80_LOG2_10;
+extern const x87_float80_t FLOAT80_LOG10_2;
+extern const x87_float80_t FLOAT80_LN2;
+
+static inline x87_float80_t x87_float80_make_zero(bool sign);
 #if _SUPPORT_FLOAT80
 static inline x87_float80_t x87_float80_make(float80_t value);
 #endif

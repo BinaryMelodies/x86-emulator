@@ -1487,8 +1487,12 @@ union x86_mmx_t
 	uint16_t w[4];
 	uint32_t l[2];
 	uint64_t q[1];
+#if _FLOAT32_EXACT
 	float32_t s[2];
+#endif
+#if _FLOAT64_EXACT
 	float64_t d[1];
+#endif
 };
 typedef union x86_mmx_t x86_mmx_t;
 
@@ -1526,12 +1530,22 @@ typedef struct x87_float80_t
 #else
 typedef struct x87_float80_t
 {
-	uint16_t exponent;
 	uint64_t fraction;
+	uint16_t exponent;
 } x87_float80_t;
 #endif
 
-/* Represents an x87/MMX register */
+/* Represents an x87/MMX register
+ * Intel CPUs use overlapping registers for the 80-bit floating point registers and the 64-bit vector registers.
+ * The 64-bit MMX registers are mapped to the fractional part of the 80-bit floating point.
+ * We also have to take into consideration whether we use the native float type of the host computer, or simulate 80-bit floats with integers.
+ *
+ * In the case where we use native floats, we keep track of whether the currently contained value was stored as an MMX register or a FPR register,
+ * and the field isfp represents the latest state. We provide functions to let us read the stored value as either type.
+ *
+ * In the case where we simulate 80-bit floating points via integer values, the layout of the FPR and MMX values is assuredly identical,
+ * and the union can access it as either.
+ */
 struct x87_register_t
 {
 #if _SUPPORT_FLOAT80

@@ -949,11 +949,14 @@ static void x87_debug(FILE * file, x86_state_t * emu)
 		int number = x87_register_number(emu, i);
 		x87_float80_t fpr = x87_register_get80(emu, i);
 		x87_convert_from_float80(fpr, &fraction, &exponent, &sign);
-		// TODO: display isfp
 #if _SUPPORT_FLOAT80
-		fprintf(file, "FPR%d/ST(%d)=%Le:%d %04X %016"PRIX64",tag=%d\n", number, i, fpr.value, sign, exponent, fraction, x87_tag_get(emu, number));
+		fprintf(file, "FPR%d/ST(%d)=%Le:%d %04X %016"PRIX64",tag=%d%s\n", number, i, fpr.value, sign, exponent, fraction, x87_tag_get(emu, number),
+			emu->x87.fpr[number].isfp ? " (last accessed as FPR)" : " (last accessed as MMX)");
 #else
-		// TODO
+		char fpr_value[32];
+		// TODO: write to fpr_value
+		fpr_value[0] = '\0';
+		fprintf(file, "FPR%d/ST(%d)=%s:%d %04X %016"PRIX64",tag=%d\n", number, i, fpr_value, sign, exponent, fraction, x87_tag_get(emu, number));
 #endif
 	}
 	fprintf(file, "CW=%04X,SW=%04X,TW=%04X\n", emu->x87.cw, emu->x87.sw, emu->x87.tw);

@@ -955,7 +955,7 @@ static inline uint64_t x86_cyrix_get_mr_msr(x86_state_t * emu, unsigned number)
 		return emu->x87.fpr[number].mmx.q[0];
 	}
 #else
-	return emu->x87.fpr[number].fraction;
+	return emu->x87.fpr[number].f.fraction;
 #endif
 }
 
@@ -975,7 +975,7 @@ static inline void x86_cyrix_set_mr_msr(x86_state_t * emu, unsigned number, uint
 		emu->x87.fpr[number].mmx.q[0] = value;
 	}
 #else
-	emu->x87.fpr[number].fraction = value;
+	emu->x87.fpr[number].f.fraction = value;
 #endif
 }
 

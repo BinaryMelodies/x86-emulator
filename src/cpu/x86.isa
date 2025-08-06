@@ -4718,7 +4718,7 @@ x87_float80_t st[4];
 x87_float80_t tmp;
 for(int j = 0; j < 4; j++)
 {
-	st[j] = x87_float80_make(0.0);
+	st[j] = FLOAT80_ZERO;
 	for(int i = 0; i < 4; i++)
 	{
 		tmp = x87_fmul(emu,
@@ -4853,7 +4853,7 @@ x87_push(emu, $0);
 /* TODO */
 
 @instruction FLD1
-x87_push(emu, x87_float80_make(1.0));
+x87_push(emu, FLOAT80_ONE);
 /* TODO */
 
 @instruction FILD
@@ -4891,27 +4891,27 @@ else
 /* TODO */
 
 @instruction FLDL2E
-x87_push(emu, x87_float80_make(M_LOG2E));
+x87_push(emu, FLOAT80_LOG2E);
 /* TODO */
 
 @instruction FLDL2T
-x87_push(emu, x87_float80_make(M_LOG2E * M_LN10));
+x87_push(emu, FLOAT80_LOG2_10);
 /* TODO */
 
 @instruction FLDLG2
-x87_push(emu, x87_float80_make(M_LOG10E * M_LN2));
+x87_push(emu, FLOAT80_LOG10_2);
 /* TODO */
 
 @instruction FLDLN2
-x87_push(emu, x87_float80_make(M_LN2));
+x87_push(emu, FLOAT80_LN2);
 /* TODO */
 
 @instruction FLDPI
-x87_push(emu, x87_float80_make(M_PI));
+x87_push(emu, FLOAT80_PI);
 /* TODO */
 
 @instruction FLDZ
-x87_push(emu, x87_float80_make(0.0));
+x87_push(emu, FLOAT80_ZERO);
 /* TODO */
 
 @instruction FMUL|cnt=1
@@ -5225,12 +5225,12 @@ $st = x87_fsub(emu, x87_int64_to_float80(emu, $0), $st);
 /* TODO */
 
 @instruction FTST
-x87_fcom(emu, $st, x87_float80_make(0.0));
+x87_fcom(emu, $st, FLOAT80_ZERO);
 /* TODO */
 
 @instruction FTSTP
 @comment Cyrix specific
-x87_fcom(emu, $st, x87_float80_make(0.0));
+x87_fcom(emu, $st, FLOAT80_ZERO);
 x87_pop(emu);
 /* TODO */
 

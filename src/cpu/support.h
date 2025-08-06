@@ -29,38 +29,6 @@ typedef struct
 } int128_t;
 #endif
 
-#if FLT_RADIX == 2
-# if LDBL_MANT_DIG >= 63 && LDBL_MIN_EXP <= -13681 && LDBL_MAX_EXP >= 16384
-#  define _SUPPORT_FLOAT80 1
-typedef long double float80_t;
-#  if LDBL_MANT_DIG == 64
-#   define _FLOAT80_EXACT 1
-#  endif
-# endif
-
-# if DBL_MANT_DIG >= 53 && DBL_MIN_EXP <= -1021 && DBL_MAX_EXP >= 1024
-#  define _SUPPORT_FLOAT64 1
-typedef double float64_t;
-#  if DBL_MANT_DIG == 53
-#   define _FLOAT64_EXACT 1 // casting to float64_t will yield the correct truncated value
-#  endif
-# elif _SUPPORT_FLOAT80
-#  define _SUPPORT_FLOAT64 1
-typedef float80_t float64_t;
-# endif
-
-# if FLT_MANT_DIG >= 24 && FLT_MIN_EXP <= -125 && FLT_MAX_EXP >= 128
-#  define _SUPPORT_FLOAT32 1
-typedef float float32_t;
-#  if FLT_MANT_DIG == 24
-#   define _FLOAT32_EXACT 1 // casting to float32_t will yield the correct truncated value
-#  endif
-# elif _SUPPORT_FLOAT64
-#  define _SUPPORT_FLOAT32 1
-typedef float64_t float32_t;
-# endif
-#endif
-
 #ifdef __SIZEOF_INT128__
 # define _div128(y, z, dxax, x) ((y) = (dxax) / (x), (z) = (dxax) % (x))
 # define _idiv128(y, z, dxax, x) ((y) = (dxax) / (x), (z) = (dxax) % (x))
@@ -151,6 +119,38 @@ static inline void _imul128(int128_t * _z, int64_t x, int64_t y)
 # define _ioverflow128(x) ((_int64)(x).l < 0 ? (x).h != -1 : (x).h != 0)
 # define _low128(x) ((x).l)
 # define _high128(x) ((x).h)
+#endif
+
+#if FLT_RADIX == 2
+# if LDBL_MANT_DIG >= 63 && LDBL_MIN_EXP <= -13681 && LDBL_MAX_EXP >= 16384
+#  define _SUPPORT_FLOAT80 1
+typedef long double float80_t;
+#  if LDBL_MANT_DIG == 64
+#   define _FLOAT80_EXACT 1
+#  endif
+# endif
+
+# if DBL_MANT_DIG >= 53 && DBL_MIN_EXP <= -1021 && DBL_MAX_EXP >= 1024
+#  define _SUPPORT_FLOAT64 1
+typedef double float64_t;
+#  if DBL_MANT_DIG == 53
+#   define _FLOAT64_EXACT 1 // casting to float64_t will yield the correct truncated value
+#  endif
+# elif _SUPPORT_FLOAT80
+#  define _SUPPORT_FLOAT64 1
+typedef float80_t float64_t;
+# endif
+
+# if FLT_MANT_DIG >= 24 && FLT_MIN_EXP <= -125 && FLT_MAX_EXP >= 128
+#  define _SUPPORT_FLOAT32 1
+typedef float float32_t;
+#  if FLT_MANT_DIG == 24
+#   define _FLOAT32_EXACT 1 // casting to float32_t will yield the correct truncated value
+#  endif
+# elif _SUPPORT_FLOAT64
+#  define _SUPPORT_FLOAT32 1
+typedef float64_t float32_t;
+# endif
 #endif
 
 #endif // __SUPPORT_H
