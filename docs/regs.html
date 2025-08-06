@@ -1,0 +1,1975 @@
+<!doctype html>
+<html>
+<head>
+<title>x86 registers</title>
+<style>
+td {
+	text-align: center;
+}
+tt {
+	font-size: larger;
+}
+</style>
+</head>
+<body>
+
+<p>See also <a href='http://sandpile.org'>sandpile.org</a>.</p>
+
+<h1>General purpose registers</h1>
+
+<h2>Overview</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>CPU</td>
+<td>Size</td>
+<td>Number</td>
+<td>Banks</td>
+</tr>
+
+<tr>
+<td>Intel 8086</td>
+<td>16-bit</td>
+<td>8</td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>NEC V25</td>
+<td>16-bit</td>
+<td>8</td>
+<td>8</td>
+</tr>
+
+<tr>
+<td>NEC V55</td>
+<td>16-bit</td>
+<td>8</td>
+<td>16</td>
+</tr>
+
+<tr>
+<td>Intel 80386</td>
+<td>32-bit</td>
+<td>8</td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>x64</td>
+<td>64-bit</td>
+<td>16</td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Intel APX</td>
+<td>64-bit</td>
+<td>32</td>
+<td style='background:gray;'></td>
+</tr>
+</table>
+
+<h2>Register names</h2>
+
+<table align='center' border='1'>
+<tr>
+<td width='72'></td>
+<td width='18'>6<br>3</td>
+<td width='36'>&hellip;</td>
+<td width='18'>5<br>6</td>
+<td width='18'>5<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>4<br>8</td>
+<td width='18'>4<br>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>4<br>0</td>
+<td width='18'>3<br>9</td>
+<td width='36'>&hellip;</td>
+<td width='18'>3<br>2</td>
+<td width='18'>3<br>1</td>
+<td width='36'>&hellip;</td>
+<td width='18'>2<br>4</td>
+<td width='18'>2<br>3</td>
+<td width='36'>&hellip;</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td rowspan='4'>0</td>
+<td colspan='24'>RAX (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EAX (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>AX (Intel)<br>AW (NEC)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='3'>AH</td>
+<td colspan='3'>AL</td>
+</tr>
+
+<tr>
+<td rowspan='4'>1</td>
+<td colspan='24'>RCX (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>ECX (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>CX (Intel)<br>CW (NEC)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='3'>CH</td>
+<td colspan='3'>CL</td>
+</tr>
+
+<tr>
+<td rowspan='4'>2</td>
+<td colspan='24'>RDX (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EDX (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>DX (Intel)<br>DW (NEC)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='3'>DH</td>
+<td colspan='3'>DL</td>
+</tr>
+
+<tr>
+<td rowspan='4'>3</td>
+<td colspan='24'>RBX (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EBX (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>BX (Intel)<br>BW (NEC)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='3'>BH</td>
+<td colspan='3'>BL</td>
+</tr>
+
+<tr>
+<td rowspan='4'>4</td>
+<td colspan='24'>RSP (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>ESP (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>SP</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>SPL (x64)</td>
+</tr>
+
+<tr>
+<td rowspan='4'>5</td>
+<td colspan='24'>RBP (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EBP (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>BP</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>BPL (x64)</td>
+</tr>
+
+<tr>
+<td rowspan='4'>6</td>
+<td colspan='24'>RSI (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>ESI (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>SI (Intel)<br>IX (NEC)</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>SIL (x64)</td>
+</tr>
+
+<tr>
+<td rowspan='4'>7</td>
+<td colspan='24'>RDI (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EDI (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>DI (Intel)<br>IY (NEC)</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>DIL (x64)</td>
+</tr>
+
+<tr>
+<td rowspan='4'>8 (x64)</td>
+<td colspan='24'>R8</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>R8D</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>R8W</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>R8B</td>
+</tr>
+
+<tr>
+<td colspan='25'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='4'>15 (x64)</td>
+<td colspan='24'>R15</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>R15D</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>R15W</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>R15B</td>
+</tr>
+
+<tr>
+<td rowspan='4'>16 (APX)</td>
+<td colspan='24'>R16</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>R16D</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>R16W</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>R16B</td>
+</tr>
+
+<tr>
+<td colspan='25'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='4'>31 (APX)</td>
+<td colspan='24'>R31</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>R31D</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>R31W</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'>R31B</td>
+</tr>
+</table>
+
+<p>Notes</p>
+<ul>
+<li>(386) means it was introduced with the Intel 80386 and supported by all later 32/64-bit CPUs.</li>
+<li>(x64) means it was introduced with the x86-64 instruction set.
+<br>Note that some fields have existed on prior CPUs as well, but they were not directly accessible (e.g. SPL).</li>
+<li>(APX) means it was introduced with the Intel APX.</li>
+<li>(Intel) signifies the Intel name for the register, this is the default.</li>
+<li>(NEC) signifies the NEC name for the register.</li>
+</ul>
+
+<h1>Special registers</h1>
+
+<table align='center' border='1'>
+<tr>
+<td width='72'></td>
+<td width='18'>6<br>3</td>
+<td width='36'>&hellip;</td>
+<td width='18'>5<br>6</td>
+<td width='18'>5<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>4<br>8</td>
+<td width='18'>4<br>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>4<br>0</td>
+<td width='18'>3<br>9</td>
+<td width='36'>&hellip;</td>
+<td width='18'>3<br>2</td>
+<td width='18'>3<br>1</td>
+<td width='36'>&hellip;</td>
+<td width='18'>2<br>4</td>
+<td width='18'>2<br>3</td>
+<td width='36'>&hellip;</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td rowspan='3'>IP</td>
+<td colspan='24'>RIP (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EIP (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>IP (Intel)<br>PC (NEC)</td>
+</tr>
+
+<tr>
+<td rowspan='12'>FLAGS</td>
+<td colspan='24'>RFLAGS (x64)</td>
+</tr>
+<tr>
+<td colspan='12' style='background:gray;'></td>
+<td colspan='12'>EFLAGS (386)</td>
+</tr>
+<tr>
+<td colspan='18' style='background:gray;'></td>
+<td colspan='6'>FLAGS (Intel)<br>PSW (NEC)</td>
+</tr>
+<tr>
+<td colspan='21' style='background:gray;'></td>
+<td colspan='3'><i>(F)</i></td>
+</tr>
+</table>
+
+<p>Notes</p>
+<ul>
+<li>The low byte of the FLAGS register is accessible via the SAHF/LAHF instructions, but it has no name of its own.
+<br>NEC documents call it PSW.</li>
+<li>x86-64 provides access to EIP/RIP via relative addressing modes, but not to IP.</li>
+</ul>
+
+<h1>Segment and table registers</h1>
+
+<h2>Overview of segment registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>CPU</td>
+<td>Encodable</td>
+<td>Available</td>
+<td>Banks</td>
+<td>Base</td>
+<td>Limit</td>
+<td>Attributes</td>
+</tr>
+
+<tr>
+<td>Intel 8086</td>
+<td>4</td>
+<td>0-3</td>
+<td style='background:gray;'></td>
+<td style='background:lightgray;'>implicit</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>NEC V25</td>
+<td>4</td> <!-- TODO: it is assumed the high bit of the 8-bit register number is ignored on the V25 as well -->
+<td>0-3</td>
+<td>8</td>
+<td style='background:lightgray;'>implicit</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>NEC V55</td>
+<td>8</td>
+<td>0-3, 6, 7</td>
+<td>16</td>
+<td style='background:lightgray;'>implicit</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Intel 80286</td>
+<td>4</td>
+<td>0-3</td>
+<td style='background:gray;'></td>
+<td>24-bit</td>
+<td>16-bit</td>
+<td>8-bit</td>
+</tr>
+
+<tr>
+<td>Intel 80386</td>
+<td>8</td>
+<td>0-5</td>
+<td style='background:gray;'></td>
+<td>32-bit</td>
+<td>20-bit (&ll; 12)<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup></td>
+<td>12-bit</td>
+</tr>
+
+<tr>
+<td>x86-64</td>
+<td>8</td>
+<td>0-5</td>
+<td style='background:gray;'></td>
+<td>64-bit<br>or ignored</td>
+<td>20-bit (&ll; 12)<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup><br>or ignored</td>
+<td>12-bit</td>
+</tr>
+</table>
+
+<p>Notes</p>
+
+<ul>
+<li>(&ll; 12) denotes that the value can either be taken with or without the 12 bit shift, depending on the G attribute flag.</li>
+<li><sup>+</sup> signifies that the field may be modified by certain special instructions, such as LOADALL or RSM, beyond their usual values.</li>
+</ul>
+
+<h2>Details</h2>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2'>Number</td>
+<td rowspan='2'>Name</td>
+<td rowspan='2'>Selector</td>
+<td colspan='2'>Base</td>
+<td colspan='2'>Limit</td>
+<td rowspan='2'>Attributes</td>
+</tr>
+
+<tr>
+<td>RM shift</td>
+<td>x64</td>
+<td>386</td>
+<td>64-bit</td>
+</tr>
+
+<tr>
+<td>0</td>
+<td>ES (Intel)<br>DS1 (NEC)</td>
+<td>&check;</td>
+<td>4</td>
+<td>ignored</td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>LMSLE</td>
+<td>&check;</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>CS (Intel)<br>PS (NEC)</td>
+<td>&check;</td>
+<td>4</td>
+<td>ignored</td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>ignored</td>
+<td>&check;</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>SS</td>
+<td>&check;</td>
+<td>4</td>
+<td>ignored</td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>LMSLE</td>
+<td>&check;</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td>DS (Intel)<br>DS0 (NEC)</td>
+<td>&check;</td>
+<td>4</td>
+<td>ignored</td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>LMSLE</td>
+<td>&check;</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td>FS (386)</td>
+<td>&check;</td>
+<td>4</td>
+<td>64-bit<sup><a title="The full 64-bit value is accessed via RDFSBASE/WRFSBASE">&diamond;</a></sup></td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>LMSLE</td>
+<td>&check;</td>
+</tr>
+
+<tr>
+<td>5</td>
+<td>GS (386)</td>
+<td>&check;</td>
+<td>4</td>
+<td>64-bit<sup><a title="The full 64-bit value is accessed via RDGSBASE/WRGSBASE">&diamond;</a></sup></td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>ignored</td>
+<td>&check;</td>
+</tr>
+
+<td>6</td>
+<td>DS3 (V55)</td>
+<td>&check;</td>
+<td>8</td>
+<td style='background:gray;'></td>
+<td colspan='2' style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<td>7</td>
+<td>DS2 (V55)</td>
+<td>&check;</td>
+<td>8</td>
+<td style='background:gray;'></td>
+<td colspan='2' style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>GDTR (286)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td>64-bit</td>
+<td>16-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup></td>
+<td>checked</td>
+<td style='background:gray;'><sup><a title="May be modified as a full 12-bit value with certain instructions">+</a></sup></td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>IDTR (286)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td>64-bit</td>
+<td>16-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup></td>
+<td>checked</td>
+<td style='background:gray;'><sup><a title="May be modified as a full 12-bit value with certain instructions">+</a></sup></td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>LDTR (286)</td>
+<td>&check;</td>
+<td style='background:gray;'></td>
+<td>64-bit</td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>checked</td>
+<td>&check;</td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>TR (286)</td>
+<td>&check;</td>
+<td style='background:gray;'></td>
+<td>64-bit</td>
+<td>20-bit<sup><a title="May be modified as a full 32-bit value with certain instructions">+</a></sup> (&ll; 12)</td>
+<td>checked</td>
+<td>&check;</td>
+</tr>
+</table>
+
+<p>Notes</p>
+
+<ul>
+<li>(&ll; 12) denotes that the value can either be taken with or without the 12 bit shift, depending on the G attribute flag.</li>
+<li>In real mode, the segment base is calculated by shifting the selector value by a specific number of bits, usually 4.</li>
+<li>In 64-bit mode, the segment base is often ignored and treated as 0.
+<br>For these registers, the segment base is not expanded from 32 bits to 64 bits.</li>
+<li>In 64-bit, the limit of most segments are ignored, however when the LMSLE feature is enabled, the limit value is added to <sub>x</sub>FFFFFFFF00000000 to get the actual limit.
+<br>This is only available on certain AMD CPUs.</li>
+<li><sup>&diamond;</sup> signifies that the full field is not accessible with typical selector loading, a special instruction (WRFSBASE/WRGSBASE) is required.</li>
+<li><sup>+</sup> signifies that the field may be modified beyond their usual values by certain special instructions, such as LOADALL or RSM.</li>
+<li>(Intel) signifies the Intel name for the register, this is the default.</li>
+<li>(NEC) signifies the NEC name for the register.</li>
+<li>(286) means it was introduced with the Intel 80386 and supported by all later CPUs.</li>
+<li>(386) means it was introduced with the Intel 80386 and supported by all later 32/64-bit CPUs.</li>
+<li>(V55) means it was introduced with the NEC V55.</li>
+</ul>
+
+<h2>Real mode segment base calculation</h2>
+
+<table align='center' border='1'>
+<tr>
+<td></td>
+<td width='18'>3<br>1</td>
+<td width='18'>3<br>0</td>
+<td width='18'>2<br>9</td>
+<td width='18'>2<br>8</td>
+<td width='18'>2<br>7</td>
+<td width='18'>2<br>6</td>
+<td width='18'>2<br>5</td>
+<td width='18'>2<br>4</td>
+<td width='18'>2<br>3</td>
+<td width='18'>2<br>2</td>
+<td width='18'>2<br>1</td>
+<td width='18'>2<br>0</td>
+<td width='18'>1<br>9</td>
+<td width='18'>1<br>8</td>
+<td width='18'>1<br>7</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='18'>1<br>4</td>
+<td width='18'>1<br>3</td>
+<td width='18'>1<br>2</td>
+<td width='18'>1<br>1</td>
+<td width='18'>1<br>0</td>
+<td width='18'>9</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='18'>6</td>
+<td width='18'>5</td>
+<td width='18'>4</td>
+<td width='18'>3</td>
+<td width='18'>2</td>
+<td width='18'>1</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td>ES, CS, SS, DS, FS, GS</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='16'>Selector</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+</tr>
+
+<tr>
+<td>DS2, DS3 (NEC V55 only)</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='16'>Selector</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+</tr>
+</table>
+
+<h2>Protected mode segment limit calculation</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>EFER.LMSLE</td>
+<td width='36'>G</td>
+<td width='18'>6<br>3</td>
+<td width='72'>&hellip;</td>
+<td width='18'>3<br>2</td>
+<td width='18'>3<br>1</td>
+<td width='72'>&hellip;</td>
+<td width='18'>2<br>0</td>
+<td width='18'>1<br>9</td>
+<td width='72'>&hellip;</td>
+<td width='18'>1<br>2</td>
+<td width='18'>1<br>1</td>
+<td width='72'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td>0</td>
+<td>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='6'>Descriptor limit value</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>0</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='6'>Descriptor limit value</td>
+</tr>
+
+<tr>
+<td>0</td>
+<td>1</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='6'>Descriptor limit value</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td style='background:lightgray;'>1</td>
+<td colspan='6'>Descriptor limit value</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+</tr>
+</table>
+
+<h2>Instructions</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>Number</td>
+<td>Name</td>
+<td>Prefix</td>
+<td>L<i>X</i>S</td>
+<td>PUSH</td>
+<td>POP</td>
+<td>Load</td>
+<td>Store</td>
+</tr>
+
+<tr>
+<td>0</td>
+<td>ES (Intel)<br>DS1 (NEC)</td>
+<td><tt>26</tt><br>(src)</td>
+<td><tt>C4</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td><tt>06</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td><tt>07</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td colspan='2'>MOV</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>CS (Intel)<br>PS (NEC)</td>
+<td><tt>2E</tt><br>(src)</td>
+<td style='background:gray;'></td>
+<td><tt>0E</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td>(8086) <tt>0F</tt></td>
+<td>(8086) MOV
+<br>JMP<sup>FAR</sup>
+<br>CALL<sup>FAR</sup>
+<br>RET<sup>FAR</sup>
+<br>INT
+<br>IRET</td>
+<td>MOV
+<br>CALL<sup>FAR</sup></td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>SS</td>
+<td><tt>36</tt><br>(src)</td>
+<td>(386) <tt>0F B2</tt></td>
+<td><tt>16</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td><tt>17</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td colspan='2'>MOV</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td>DS (Intel)<br>DS0 (NEC)</td>
+<td><tt>3E</tt><br>(src)</td>
+<td><tt>C5</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td><tt>1E</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td><tt>1F</tt><sup><a title="Not supported in 64-bit mode">!</a></sup></td>
+<td colspan='2'>MOV</td>
+</tr>
+
+<tr>
+<td rowspan='2'>4</td>
+<td rowspan='2'>FS (386)</td>
+<td rowspan='2'><tt>64</tt><br>(src)</td>
+<td rowspan='2'><tt>0F B4</tt></td>
+<td rowspan='2'><tt>0F A0</tt></td>
+<td rowspan='2'><tt>0F A1</tt></td>
+<td colspan='2'>MOV</td>
+</tr>
+
+<tr>
+<td>(64) WRFSBASE</td>
+<td>(64) RDFSBASE</td>
+</tr>
+
+<tr>
+<td rowspan='2'>5</td>
+<td rowspan='2'>GS (386)</td>
+<td rowspan='2'><tt>65</tt><br>(src)</td>
+<td rowspan='2'><tt>0F B5</tt></td>
+<td rowspan='2'><tt>0F A8</tt></td>
+<td rowspan='2'><tt>0F A9</tt></td>
+<td colspan='2'>MOV<br>(64) SWAPGS</td>
+</tr>
+
+<tr>
+<td>(64) WRFSBASE</td>
+<td>(64) RDFSBASE</td>
+</tr>
+
+<td>6</td>
+<td>DS3 (V55)</td>
+<td><tt>D6</tt><br>(dst)</td>
+<td><tt>0F 36</tt></td>
+<td><tt>0F 76</tt></td>
+<td><tt>0F 77</tt></td>
+<td colspan='2'>MOV</td>
+</tr>
+
+<td>7</td>
+<td>DS2 (V55)</td>
+<td><tt>63</tt><br>(src)</td>
+<td><tt>0F 3E</tt></td>
+<td><tt>0F 7E</tt></td>
+<td><tt>0F 7F</tt></td>
+<td colspan='2'>MOV</td>
+</tr>
+
+<td style='background:gray;'></td>
+<td>IRAM (V55)</td>
+<td><tt>F1</tt><br>(dst)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td colspan='2' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>GDTR (286)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td>LGDT</td>
+<td>SGDT</td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>IDTR (286)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td>LIDT</td>
+<td>SIDT</td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>LDTR (286)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td>LLDT</td>
+<td>SLDT</td>
+</tr>
+
+<tr>
+<td style='background:gray;'></td>
+<td>TR (286)</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td>LTR</td>
+<td>STR</td>
+</tr>
+</table>
+
+<p>Notes</p>
+<ul>
+<li>(8086) means it is only supported on the Intel 8086/8088.</li>
+<li>(286) means it was introduced with the Intel 80386 and supported by all later CPUs.</li>
+<li>(386) means it was introduced with the Intel 80386 and supported by all later 32/64-bit CPUs.</li>
+<li>(V55) means it was introduced with the NEC V55.</li>
+<li>(64) signifies the behavior in 64-bit mode, most segment bases and limits are ignored.</li>
+<li><sup>!</sup> signifies that this feature is unavailable in 64-bit mode.</li>
+<li><sup>FAR</sup> means the far variants of the instruction.</li>
+<li>(Intel) signifies the Intel name for the register, this is the default.</li>
+<li>(NEC) signifies the NEC name for the register.</li>
+<li>(src) and (dst) signify whether this applies to the source or destination operand for a string instruction.
+<br>Note that only V55 uses (dst).</li>
+</ul>
+
+<h1>Floating-point and vector registers</h1>
+
+<h2>Overview of registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2'>CPU</td>
+<td colspan='3'>x87</td>
+<td colspan='2'>SSE</td>
+</tr>
+
+<tr>
+<td>Number</td>
+<td>Floating point</td>
+<td>Vector size</td>
+<td>Number</td>
+<td>Vector size</td>
+</tr>
+
+<tr>
+<td>Intel 8087</td>
+<td>8</td>
+<td>80</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Intel Pentium MMX</td>
+<td>8</td>
+<td>80</td>
+<td>64</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Intel Pentium 3<br>SSE</td>
+<td>8</td>
+<td>80</td>
+<td>64</td>
+<td>8</td>
+<td>128</td>
+</tr>
+
+<tr>
+<td>AMD K8<br>x86-64</td>
+<td>8</td>
+<td>80</td>
+<td>64</td>
+<td>16</td>
+<td>128</td>
+</tr>
+
+<tr>
+<td>AVX</td>
+<td>8</td>
+<td>80</td>
+<td>64</td>
+<td>16</td>
+<td>256</td>
+</tr>
+
+<tr>
+<td>AVX-512</td>
+<td>8</td>
+<td>80</td>
+<td>64</td>
+<td>32</td>
+<td>512</td>
+</tr>
+</table>
+
+<h2>Floating-point registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td width='72'></td>
+<td width='18'>7<br>9</td>
+<td width='36'>&hellip;</td>
+<td width='18'>6<br>4</td>
+<td width='18'>6<br>3</td>
+<td width='36'>&hellip;</td>
+<td width='18'>4<br>8</td>
+<td width='18'>4<br>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>3<br>2</td>
+<td width='18'>3<br>1</td>
+<td width='36'>&hellip;</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td rowspan='2'>0</td>
+<td colspan='18'>ST(<i>-top</i>)</td>
+</tr>
+
+<tr>
+<td colspan='3' style='background:gray;'></td>
+<td colspan='12'>MM0</td>
+</tr>
+
+<tr>
+<td rowspan='2'>1</td>
+<td colspan='18'>ST(<i>1-top</i>)</td>
+</tr>
+
+<tr>
+<td colspan='3' style='background:gray;'></td>
+<td colspan='12'>MM1</td>
+</tr>
+
+<tr>
+<td colspan='18'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='2'>7</td>
+<td colspan='18'>ST(<i>7-top</i>)</td>
+</tr>
+
+<tr>
+<td colspan='3' style='background:gray;'></td>
+<td colspan='12'>MM7</td>
+</tr>
+
+<table>
+
+<h2>Vector registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td width='18'></td>
+<td width='18'>5<br>1<br>1</td>
+<td width='108'>&hellip;</td>
+<td width='18'>3<br>8<br>4</td>
+<td width='18'>3<br>8<br>3</td>
+<td width='108'>&hellip;</td>
+<td width='18'>2<br>5<br>6</td>
+<td width='18'>2<br>5<br>5</td>
+<td width='108'>&hellip;</td>
+<td width='18'>1<br>2<br>8</td>
+<td width='18'>1<br>2<br>7</td>
+<td width='108'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td rowspan='3'>0</td>
+<td colspan='12'>ZMM0 (AVX-512)</td>
+</tr>
+
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>YMM0 (AVX)</td>
+</tr>
+
+<tr>
+<td colspan='9' style='background:gray;'></td>
+<td colspan='3'>XMM0</td>
+</tr>
+
+<tr>
+<td colspan='25'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='3'>7</td>
+<td colspan='12'>ZMM7 (AVX-512)</td>
+</tr>
+
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>YMM7 (AVX)</td>
+</tr>
+
+<tr>
+<td colspan='9' style='background:gray;'></td>
+<td colspan='3'>XMM7</td>
+</tr>
+
+<tr>
+<td rowspan='3'>8 (x86-64)</td>
+<td colspan='12'>ZMM8 (AVX-512)</td>
+</tr>
+
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>YMM8 (AVX)</td>
+</tr>
+
+<tr>
+<td colspan='9' style='background:gray;'></td>
+<td colspan='3'>XMM8</td>
+</tr>
+
+<tr>
+<td colspan='25'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='3'>15 (x86-64)</td>
+<td colspan='12'>ZMM15 (AVX-512)</td>
+</tr>
+
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>YMM15 (AVX)</td>
+</tr>
+
+<tr>
+<td colspan='9' style='background:gray;'></td>
+<td colspan='3'>XMM15</td>
+</tr>
+
+<tr>
+<td rowspan='3'>16 (AVX-512)</td>
+<td colspan='12'>ZMM16</td>
+</tr>
+
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>YMM16</td>
+</tr>
+
+<tr>
+<td colspan='9' style='background:gray;'></td>
+<td colspan='3'>XMM16</td>
+</tr>
+
+<tr>
+<td colspan='25'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='3'>31 (AVX-512)</td>
+<td colspan='12'>ZMM31</td>
+</tr>
+
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>YMM31</td>
+</tr>
+
+<tr>
+<td colspan='9' style='background:gray;'></td>
+<td colspan='3'>XMM31</td>
+</tr>
+<table>
+
+<h2>Control registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>Name</td>
+<td>CPU</td>
+<td>Size</td>
+</tr>
+
+<tr>
+<td>CW</td>
+<td>Intel 8087</td>
+<td>16-bit</td>
+</tr>
+
+<tr>
+<td>SW</td>
+<td>Intel 8087</td>
+<td>16-bit</td>
+</tr>
+
+<tr>
+<td>TW</td>
+<td>Intel 8087</td>
+<td>16-bit</td>
+</tr>
+
+<tr>
+<td>MXCSR</td>
+<td>Intel Pentium 3<br>SSE</td>
+<td>32-bit</td>
+</tr>
+</table>
+
+<h2>Exception registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2'>Name</td>
+<td colspan='5'>Size</td>
+</tr>
+
+<tr>
+<td>8087<br>287 RM</td>
+<td>µPD72091<br>µPD72191</td>
+<td>287 PM</td>
+<td>387</td>
+<td>x86-64</td>
+</tr>
+
+<tr>
+<td>FIP</td>
+<td colspan='2'>20-bit</td>
+<td>16-bit</td>
+<td>32-bit</td>
+<td>64-bit</td>
+</tr>
+
+<tr>
+<td>FCS</td>
+<td colspan='2' style='background:gray;'></td>
+<td colspan='3'>16-bit</td>
+</tr>
+
+<tr>
+<td>FDP</td>
+<td colspan='2'>20-bit</td>
+<td>16-bit</td>
+<td>32-bit</td>
+<td>64-bit</td>
+</tr>
+
+<tr>
+<td>FDS</td>
+<td colspan='2' style='background:gray;'></td>
+<td colspan='3'>16-bit</td>
+</tr>
+
+<tr>
+<td>FOP</td>
+<td>11-bit</td>
+<td>?</td> <!-- TODO: since NEC chips also offer 66/67 as coprocessor instructions, aside from D8-DF, it is assumed the FOP register will be wider, however no documentation on this has been found -->
+<td colspan='3'>11-bit</td>
+</tr>
+</table>
+
+<h1>Control, debug, test registers</h1>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2'>CPU</td>
+<td colspan='3'>CR</td>
+<td colspan='3'>DR</td>
+<td colspan='3'>TR</td>
+</tr>
+
+<tr>
+<td>Encodable</td>
+<td>Available</td>
+<td>Size</td>
+<td>Encodable</td>
+<td>Available</td>
+<td>Size</td>
+<td>Encodable</td>
+<td>Available</td>
+<td>Size</td>
+</tr>
+
+<tr>
+<td>Intel 80286</td>
+<td style='background:gray;'></td>
+<td>0</td>
+<td>16-bit</td>
+<td colspan='3' style='background:gray;'></td>
+<td colspan='3' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Intel 80386</td>
+<td>8</td>
+<td>0, 2, 3</td>
+<td>32-bit</td>
+<td>8</td>
+<td>0-3, 4=6, 5=7</td>
+<td>32-bit</td>
+<td>8</td>
+<td>6, 7</td>
+<td>32-bit</td>
+</tr>
+
+<tr>
+<td>Intel 80486</td>
+<td>8</td>
+<td>0, 2-4</td>
+<td>32-bit</td>
+<td>8</td>
+<td>0-3, 4=6, 5=7</td>
+<td>32-bit</td>
+<td>8</td>
+<td>2-4, 6, 7</td>
+<td>32-bit</td>
+</tr>
+
+<tr>
+<td>Intel Pentium</td>
+<td>8</td>
+<td>0, 2-4</td>
+<td>32-bit</td>
+<td>8</td>
+<td>0-3, 4=6, 5=7</td>
+<td>32-bit</td>
+<td style='background:gray;'></td>
+<td>1-7, (8), 9-12</td>
+<td>64-bit</td>
+</tr>
+
+<tr>
+<td>Geode GX2/GX, LX</td>
+<td>8</td>
+<td>0, 2-4</td>
+<td>32-bit</td>
+<td>8</td>
+<td>0-3, 4=6, 5=7</td>
+<td>32-bit</td>
+<td>8</td>
+<td>0-7</td>
+<td>32-bit</td>
+</tr>
+
+<tr>
+<td>x86-64</td>
+<td>16</td>
+<td>0, 2-4, 8</td>
+<td>64-bit</td>
+<td>16</td>
+<td>0-3, 4=6, 5=7</td>
+<td>64-bit</td>
+<td colspan='3' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Intel APX</td>
+<td>32</td>
+<td>0, 2-4, 8</td>
+<td>64-bit</td>
+<td>32</td>
+<td>0-3, 4=6, 5=7</td>
+<td>64-bit</td>
+<td colspan='3' style='background:gray;'></td>
+</tr>
+</table>
+
+<p>Notes</p>
+<ul>
+<li>Intel Pentium provides 11 test registers, but they are accessed as Model-Specific Registers via RDMSR/WRMSR.</li>
+<li>Test register 8 is only available on stepping A.</li>
+</ul>
+
+<h2>Control registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>Name</td>
+<td>CPU</td>
+</tr>
+
+<tr>
+<td>MSW (286, 16-bit)<br>CR0</td>
+<td>80286</td>
+</tr>
+
+<tr>
+<td>CR2</td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>CR3</td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>CR4</td>
+<td>80486</td>
+</tr>
+
+<tr>
+<td>CR8</td>
+<td>x86-64</td>
+</tr>
+</table>
+
+<h2>Debug registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>Name</td>
+<td>CPU</td>
+</tr>
+
+<tr>
+<td>DR0</td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>DR1</td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>DR2</td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>DR3</td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>DR6<br><i>(DR4)</i></td>
+<td>80386</td>
+</tr>
+
+<tr>
+<td>DR7<br><i>(DR5)</i></td>
+<td>80386</td>
+</tr>
+</table>
+
+<h2>Test registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td>TR number</td>
+<td>MSR number</td>
+<td>Intel 80386</td>
+<td>Intel 80486</td>
+<td>Intel Pentium</td>
+<td>Cyrix 5x86</td>
+<td>IDT WinChip</td>
+<td>AMD K6</td>
+<td>Geode GX2/GX</td>
+</tr>
+
+<tr>
+<td colspan='2'>Access mode</td>
+<td>as TR</td>
+<td>as TR</td>
+<td>as MSR</td>
+<td>as TR</td>
+<td>as MSR</td>
+<td>as MSR</td>
+<td>as TR</td>
+</tr>
+
+<tr>
+<td>0</td>
+<td colspan='7' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>00000002</td>
+<td colspan='2' style='background:gray;'></td>
+<td>&check;</td>
+<td>*</td>
+<td>&check;</td>
+<td style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>00000004</td>
+<td colspan='2' style='background:gray;'></td>
+<td>&check;</td>
+<td>*</td>
+<td colspan='2' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td>00000005</td>
+<td style='background:gray;'></td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td colspan='2' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td>00000006</td>
+<td style='background:gray;'></td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td colspan='2' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>5</td>
+<td>00000007</td>
+<td style='background:gray;'></td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td colspan='2' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>6</td>
+<td>00000008</td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td colspan='2' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>7</td>
+<td>00000009</td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td>&check;</td>
+<td colspan='2' style='background:gray;'></td>
+<td>*</td>
+</tr>
+
+<tr>
+<td>8</td>
+<td>0000000A</td>
+<td colspan='2' style='background:gray;'></td>
+<td>A-step only</td> <!-- according to Ralf Brown's interrupt list -->
+<td colspan='4' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>9</td>
+<td>0000000B</td>
+<td colspan='2' style='background:gray;'></td>
+<td>&check;</td>
+<td colspan='4' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>10</td>
+<td>0000000C</td>
+<td colspan='2' style='background:gray;'></td>
+<td>&check;</td>
+<td colspan='4' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>11</td>
+<td>0000000D</td>
+<td colspan='2' style='background:gray;'></td>
+<td>&check;</td>
+<td colspan='4' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>12</td>
+<td>0000000E</td>
+<td colspan='2' style='background:gray;'></td>
+<td>&check;</td>
+<td style='background:gray;'></td>
+<td>&check;</td>
+<td>&check;</td>
+<td style='background:gray;'></td>
+</tr>
+</table>
+
+<p>Notes</p>
+
+<ul>
+<li>Test registers are accessed via the MOV TR instruction on certain CPUs, and via the RDMSR/WRMSR instructions on others. The names and formats of these registers are similar, which is why they are paired up in this table.</li>
+<li>The Cyrix 5x86 test registers TR1 and TR2 have different functionality from the Intel Pentium TR1 and TR2. This is marked with the * symbol in table.</li>
+<li>Geode GX2 test registers have no special functionality.</li>
+</ul>
+
+<h2>Other registers</h2>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2'>Name</td>
+<td colspan='2'>Count</td>
+<td rowspan='2'>Size</td>
+<td rowspan='2'>Symbol</td>
+<td rowspan='2'>Introduced</td>
+</tr>
+
+<tr>
+<td>Encodable</td>
+<td>Available</td>
+</tr>
+
+<tr>
+<td>Model specific registers</td>
+<td>2<sup>32</sup></td>
+<td>&hellip;</td>
+<td>64-bit</td>
+<td>&hellip;</td>
+<td>Intel Pentium</td>
+</tr>
+
+<tr>
+<td>Extended control registers</td>
+<td>2<sup>32</sup></td>
+<td>1</td>
+<td>64-bit</td>
+<td>XCR0</td>
+<td>Penryn (Intel)<br>XSAVE</td>
+</tr>
+
+<tr>
+<td>Mask registers</td>
+<td colspan='2'>8</td>
+<td>64-bit</td>
+<td>K0-K7</td>
+<td>AVX-512</td>
+</tr>
+
+<tr>
+<td>Bound registers</td>
+<td>8</td>
+<td>4</td>
+<td>128-bit</td>
+<td>BND0-BND3</td>
+<td>Intel MPX</td>
+</tr>
+
+<tr>
+<td>Tile registers</td>
+<td colspan='2'>8</td>
+<td>8196-bit</td>
+<td>TMM0-TMM7</td>
+<td>Intel AMX</td>
+</tr>
+</table>
+
+<h3>Some model-specific registers</h3>
+
+<table align='center' border='1'>
+<tr>
+<td>Name</td>
+<td>Symbol</td>
+<td>Address</td>
+<td>Introduced</td>
+</tr>
+
+<tr>
+<td>Time stamp counter</td>
+<td>TSC</td>
+<td><sub>x</sub>00000010</td>
+<td>Intel Pentium</td>
+</tr>
+
+<tr>
+<td colspan='2'>SYSENTER_CS</td>
+<td><sub>x</sub>00000174</td>
+<td rowspan='3'>Intel Pentium II<br>AMD K7<br>NSC Geode GX2<br>VIA C3 "Nehemiah"</td>
+</tr>
+
+<tr>
+<td colspan='2'>SYSENTER_ESP</td>
+<td><sub>x</sub>00000175</td>
+</tr>
+
+<tr>
+<td colspan='2'>SYSENTER_EIP</td>
+<td><sub>x</sub>00000176</td>
+</tr>
+
+<tr>
+<td>Extended feature enable register</td>
+<td>EFER</td>
+<td><sub>x</sub>C0000080</td>
+<td>AMD K6<br>x86-64</td>
+</tr>
+
+<tr>
+<td>SYSCALL/SYSRET target address register</td>
+<td>STAR</td>
+<td><sub>x</sub>C0000081</td>
+<td>AMD K6<br>x86-64</td>
+</tr>
+
+<tr>
+<td>Long STAR</td>
+<td>LSTAR</td>
+<td><sub>x</sub>C0000082</td>
+<td>x86-64</td>
+</tr>
+
+<tr>
+<td>Compatibility STAR</td>
+<td>CSTAR</td>
+<td><sub>x</sub>C0000083</td>
+<td>x86-64</td>
+</tr>
+
+<tr>
+<td>SYSCALL flag mask</td>
+<td>SFMASK</td>
+<td><sub>x</sub>C0000084</td>
+<td>x86-64</td>
+</tr>
+
+<tr>
+<td>FS base</td>
+<td>FS_BASE</td>
+<td><sub>x</sub>C0000100</td>
+<td>x86-64</td>
+</tr>
+
+<tr>
+<td>GS base</td>
+<td>GS_BASE</td>
+<td><sub>x</sub>C0000101</td>
+<td>x86-64</td>
+</tr>
+
+<tr>
+<td>Kernel GS base</td>
+<td>KERNEL_GS_BASE</td>
+<td><sub>x</sub>C0000102</td>
+<td>x86-64</td>
+</tr>
+</table>
+
+<h1>Intel 8089 registers</h1>
+
+<p>Note: The Intel 8089 was a coprocessor intended to be used with an Intel 8086/8088, somewhat similarly to the Intel 8087. Unlike the latter, the Intel 8089 architecture was never updated or incorporated into later CPU designs. For the sake of completeness, its register repertoire is included here.</p>
+
+<p>The Intel 8089 has 2 channels, each with its own set of registers.</p>
+
+<table align='center' border='1'>
+<tr>
+<td width='18'>R</td>
+<td width='18'>P</td>
+<td width='18'>M</td>
+<td width='36'>Name</td>
+<td width='18'>T<br>A<br>G</td>
+<td width='18'>1<br>9</td>
+<td width='18'>1<br>8</td>
+<td width='18'>1<br>7</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='18'>1<br>4</td>
+<td width='18'>1<br>3</td>
+<td width='18'>1<br>2</td>
+<td width='18'>1<br>1</td>
+<td width='18'>1<br>0</td>
+<td width='18'>9</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='18'>6</td>
+<td width='18'>5</td>
+<td width='18'>4</td>
+<td width='18'>3</td>
+<td width='18'>2</td>
+<td width='18'>1</td>
+<td width='18'>0</td>
+<td width='72'>per-channel</td>
+</tr>
+
+<tr>
+<td colspan='3'>0</td>
+<td>GA</td>
+<td>t</td>
+<td colspan='20'>General Pointer A</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td colspan='3'>1</td>
+<td>GB</td>
+<td>t</td>
+<td colspan='20'>General Pointer B</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td colspan='3'>2</td>
+<td>GC</td>
+<td>t</td>
+<td colspan='20'>General Pointer C</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td colspan='2' style='background:gray;'></td>
+<td>BC</td>
+<td style='background:gray;'></td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='16'>Byte Count</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td colspan='2' style='background:gray;'></td>
+<td>3</td>
+<td>PP</td>
+<td style='background:gray;'></td>
+<td colspan='20'>Parameter block Pointer</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td colspan='2'>4</td>
+<td style='background:gray;'></td>
+<td>TP</td>
+<td>t</td>
+<td colspan='20'>Task block Program pointer</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>5</td>
+<td colspan='2' style='background:gray;'></td>
+<td>IX</td>
+<td style='background:gray;'></td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='16'>Index</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td rowspan='2'>6</td>
+<td rowspan='2' colspan='2' style='background:gray;'></td>
+<td rowspan='2'>CC</td>
+<td rowspan='2' style='background:gray;'></td>
+<td rowspan='2' colspan='4' style='background:gray;'></td>
+<td colspan='16'>Channel Control</td>
+<td rowspan='2'>yes</td>
+</tr>
+
+<tr>
+<td colspan='2'>F</td>
+<td colspan='1'><small>TR</small></td>
+<td colspan='2'>SYN</td>
+<td colspan='1'>S</td>
+<td colspan='1'>L</td>
+<td colspan='1'>C</td>
+<td colspan='1'><small>TS</small></td>
+<td colspan='2'>TX</td>
+<td colspan='2'>TBC</td>
+<td colspan='3'>TSH</td>
+</tr>
+
+<tr>
+<td>7</td>
+<td colspan='2' style='background:gray;'></td>
+<td>MC</td>
+<td style='background:gray;'></td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='8'>Mask</td>
+<td colspan='8'>Compare</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td rowspan='2' colspan='3' style='background:gray;'></td>
+<td rowspan='2'>PSW</td>
+<td rowspan='2' style='background:gray;'></td>
+<td rowspan='2' colspan='12' style='background:gray;'></td>
+<td colspan='8'>Program Status Word</td>
+<td rowspan='2'>yes</td>
+</tr>
+
+<tr>
+<td colspan='1'>P</td>
+<td colspan='1'><small>XF</small></td>
+<td colspan='1'>B</td>
+<td colspan='1'><small>IS</small></td>
+<td colspan='1'><small>IC</small></td>
+<td colspan='1'><small>TB</small></td>
+<td colspan='1'>S</td>
+<td colspan='1'>D</td>
+</tr>
+
+<tr>
+<td colspan='3' style='background:gray;'></td>
+<td>CP</td>
+<td style='background:gray;'></td>
+<td colspan='20'>Channel control Pointer</td>
+<td style='background:gray;'>no</td>
+</tr>
+</table>
+
+</body>
+</html>
