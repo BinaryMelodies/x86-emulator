@@ -66,6 +66,7 @@ enum x86_cpu_type_t
 	X86_CPU_586 = X86_CPU_INTEL,
 	X86_CPU_AMD, // AMD CPUs
 	X86_CPU_CYRIX, // Cyrix CPUs and derivatives
+	X86_CPU_WINCHIP, // Centaur WinChip
 	X86_CPU_VIA, // Centaur/VIA/Zhaoxin CPUs
 	X86_CPU_EXTENDED, // experimental emulator extensions
 };
@@ -1320,6 +1321,7 @@ struct x86_cpu_traits_t
 	bool cpuid; // CPUID available
 	bool rdpmc; // RDPMC available
 	bool multibyte_nop; // NOP Eb available
+	bool smint; // SMINT instruction available at 0F 7E (as opposed to 0F 38)
 	bool sse_non_simd; // SSE, non-SIMD instructions
 	bool sse_simd; // SSE, SIMD instructions
 	bool l10m; // Larrabee and KNF specific

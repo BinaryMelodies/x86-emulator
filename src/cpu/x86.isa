@@ -142,15 +142,20 @@
   modes:
   - 64
 
-# Cyrix processors and derivatives, including National Semiconductor, VIA and the AMD Geode line
+# Cyrix processors and derivatives, including National Semiconductor and the AMD Geode line
 - id: cyrix
   predecessors:
   - 586
 
-# Centaur Technologies/IDT and VIA/Zhaoxin processors
-- id: via
+# IDT WinChip processors from Centaur Technologies
+- id: winchip
   predecessors:
   - 586
+
+# Centaur Technologies/VIA/Zhaoxin processors
+- id: via
+  predecessors:
+  - winchip
   modes:
   - 64
 
@@ -230,6 +235,7 @@ RDSEED	CPUID.EAX=00000007.ECX=00000000:EBX.18
 RDSHR	rdshr
 SEP	CPUID.EAX=00000001:EDX.11
 SMAP	CPUID.EAX=00000007.ECX=00000000:EBX.20
+SMINT_PREMMX	smint
 SSE_NON_SIMD	sse_non_simd, CPUID.EAX=00000001:EDX.25 "SSE"
 SSE_SIMD	sse_simd, CPUID.EAX=00000001:EDX.25 "SSE"
 SSE2	CPUID.EAX=00000001:EDX.26
@@ -946,7 +952,7 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 #0F7D	v55	MRDEC	-	# v55pi
 0F7D	!64,cyrix+,ext	RSTS	M10
 0F7E	v55,ext	PUSH	DS2
-0F7E	cyrix+	SMINT		feature:	!MMX
+0F7E	cyrix+	SMINT		feature:	SMINT_PREMMX,!MMX
 0F7E	586+	MOVD	Ed, Pd	feature:	MMX
 0F7F	v55,ext	POP	DS2
 0F7F	586+	MOVQ	Qq, Pq	feature:	MMX
@@ -7705,12 +7711,20 @@ if(($a & 0x08) != 0)
   variant: cx486slce
   smmformat: cx486slce
 
+- id: cx486s
+  description: Cyrix Cx486SLC/e
+  vendor: cyrix
+  class: cyrix
+  variant: cx486slce
+  features: $cx486slce, smint_premmx
+  smmformat: cx486slce
+
 - id: cx5x86
   description: Cyrix 5x86
   vendor: cyrix
   class: cyrix
   variant: 5x86
-  features: $cx486slce, cpuid
+  features: $cx486s, cpuid
   family: 4
   aliases: 5x86, cx5x86
   smmformat: m1
@@ -7839,7 +7853,7 @@ if(($a & 0x08) != 0)
 - id: wc6
   description: Centaur/IDT WinChip C6
   vendor: centaur
-  class: via
+  class: winchip
 # Note: CX8 is sometimes not reported
   features: cpuid, fpu, tsc, msr, cx8, mmx, rdpmc
   family: 5
@@ -7852,7 +7866,7 @@ if(($a & 0x08) != 0)
 - id: wc2
   description: Centaur/IDT WinChip 2
   vendor: centaur
-  class: via
+  class: winchip
 # Note: CX8 is sometimes not reported
   features: $wc6, 3dnow
   family: 5
@@ -7866,7 +7880,7 @@ if(($a & 0x08) != 0)
 - id: wc3
   description: Centaur/IDT WinChip 3
   vendor: centaur
-  class: via
+  class: winchip
 # Note: CX8 is sometimes not reported
   features: $wc2
   family: 5
