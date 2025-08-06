@@ -516,7 +516,7 @@ enum
 	X86_R_TR5 = 0x00000007, // Pentium
 	X86_R_TR6 = 0x00000008, // Pentium
 	X86_R_TR7 = 0x00000009, // Pentium
-	X86_R_TR8 = 0x0000000A, // Pentium
+	X86_R_TR8 = 0x0000000A, // Pentium A stepping
 	X86_R_TR9 = 0x0000000B, // Pentium
 	X86_R_TR10 = 0x0000000C, // Pentium
 	X86_R_TR11 = 0x0000000D, // Pentium
@@ -532,11 +532,21 @@ enum
 	X86_R_SMBASE = 0x0000009E,
 	X86_R_PERFCTR0 = 0x000000C1, // Pentium Pro/II/III, Geode GX+, VIA C3+
 	X86_R_PERFCTR1 = 0x000000C2, // Pentium Pro/II/III, Geode GX+, VIA C3+
+	X86_R_MTRRCAP = 0x000000FE,
 	X86_R_FCR_WINCHIP = 0x00000107, // WinChip, VIA moved it to 0x00001107
 	X86_R_FCR1_WINCHIP = 0x00000108, // WinChip, VIA moved it to 0x00001108
 	X86_R_FCR2_WINCHIP = 0x00000109, // WinChip, VIA moved it to 0x00001109
 	X86_R_FCR3_WINCHIP = 0x0000010A, // WinChip C2+
+	X86_R_MCR0 = 0x00000110, // WinChip
+	X86_R_MCR1 = 0x00000111, // WinChip
+	X86_R_MCR2 = 0x00000112, // WinChip
+	X86_R_MCR3 = 0x00000113, // WinChip
+	X86_R_MCR4 = 0x00000114, // WinChip
+	X86_R_MCR5 = 0x00000115, // WinChip
+	X86_R_MCR6 = 0x00000116, // WinChip
+	X86_R_MCR7 = 0x00000117, // WinChip
 	X86_R_BBL_CR_CTL3 = 0x0000011E, // Pentium II/III, VIA C3+
+	X86_R_MCR_CTRL = 0x00000120, // WinChip
 	X86_R_SYSENTER_CS = 0x00000174,
 	X86_R_SYSENTER_ESP = 0x00000175,
 	X86_R_SYSENTER_EIP = 0x00000176,
@@ -556,6 +566,8 @@ enum
 	X86_R_FCR = 0x00001107, // VIA C3+
 	X86_R_FCR1 = 0x00001108, // VIA C3+
 	X86_R_FCR2 = 0x00001109, // VIA C3+
+	X86_R_LONGHAUL = 0x0000110A, // VIA ?
+	X86_R_RNG = 0x0000110B, // VIA ?
 	X86_R_GX2_PCR = 0x00001250, // Geode GX2+
 	X86_R_SMM_CTL = 0x00001301, // Geode GX2+
 	X86_R_DMI_CTL = 0x00001302, // Geode GX2+
@@ -569,6 +581,7 @@ enum
 	X86_R_CSTAR = 0xC0000083,
 	X86_R_SF_MASK = 0xC0000084,
 	X86_R_UWCCR = 0xC0000085, // K6-III
+	X86_R_EPMR = 0xC0000086, // K6-III+
 	X86_R_PSOR = 0xC0000087, // K6-III
 	X86_R_PFIR = 0xC0000088, // K6-III
 	X86_R_L2AAR = 0xC0000089, // K6-III
@@ -2289,6 +2302,8 @@ struct x86_state_t
 	// k6-3
 	/* UC/WC cacheability control register */
 	uint64_t msr_uwccr;
+	/* Enhanced power management register */
+	uint64_t msr_epmr;
 	/* Processor state observability register */
 	uint64_t msr_psor;
 	/* Page flush/invalidate register */
@@ -2301,9 +2316,16 @@ struct x86_state_t
 	uint64_t cyrix_test_address;
 	uint64_t cyrix_command_status;
 
-	// winchip
+	// WinChip
 	/* Feature control registers */
 	uint64_t msr_fcr, msr_fcr1, msr_fcr2, msr_fcr3;
+	/* Memory configuration registers */
+	uint64_t msr_mcr[8];
+	/* Memory configuration control register */
+	uint64_t msr_mcr_ctrl;
+
+	// VIA
+	uint64_t msr_longhaul, msr_rng;
 
 	// x86-64
 	/* Kernel GS base MSR */

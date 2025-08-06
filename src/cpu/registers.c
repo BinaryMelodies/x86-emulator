@@ -922,75 +922,278 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	switch(index)
 	{
 	// Intel
+	case X86_R_MC_ADDR:
+	case X86_R_MC_TYPE:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+		case X86_CPU_AMD:
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
 	case X86_R_TR1:
-		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5; // TODO: or WinChip
-	//case X86_R_MSR_TEST_DATA: // Cyrix
-		// TODO
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) == (X86_ID_INTEL_PENTIUM >> 8);
+		case X86_CPU_EXTENDED:
+		case X86_CPU_WINCHIP:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_MSR_TEST_DATA: // Cyrix
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) >= (X86_ID_CYRIX_6X86MX >> 8);
+		default:
+			return false;
+		}
+
 	case X86_R_TR2:
 	//case X86_R_MSR_TEST_ADDRESS:
 	case X86_R_TR3:
 	//case X86_R_MSR_COMMAND_STATUS:
-		if(emu->cpu_type == X86_CPU_CYRIX)
-			return false; // TODO
-		else
-			return x86_cpuid_get_family_id(&emu->cpu_traits) == 5;
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) == (X86_ID_INTEL_PENTIUM >> 8);
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) >= (X86_ID_CYRIX_6X86MX >> 8);
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
 	case X86_R_TR4:
 	case X86_R_TR5:
 	case X86_R_TR6:
 	case X86_R_TR7:
-	case X86_R_TR8:
 	case X86_R_TR9:
 	case X86_R_TR10:
 	case X86_R_TR11:
-		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5;
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) == (X86_ID_INTEL_PENTIUM >> 8);
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_TR8:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) == X86_ID_INTEL_PENTIUM_STEPPING_A;
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
 	case X86_R_TR12:
-		return x86_cpuid_get_family_id(&emu->cpu_traits) == 5; // TODO: or AMD k6 only or WinChip
-	//case X86_R_CESR:
-		// TODO
-	//case X86_R_CTR0:
-		// TODO
-	//case X86_R_CTR1:
-		// TODO
-	//case X86_R_APIC_BASE:
-		// TODO
-	//case X86_R_EBL_CR_POWERON:
-		// TODO
-	//case X86_R_K5_AAR:
-		// TODO
-	//case X86_R_K5_HWCR:
-		// TODO
-	//case X86_R_SMBASE:
-		// TODO
-	//case X86_R_PERFCTR0:
-		// TODO
-	//case X86_R_PERFCTR1:
-		// TODO
-	//case X86_R_FCR_WINCHIP:
-		// TODO
-	//case X86_R_FCR1_WINCHIP:
-		// TODO
-	//case X86_R_FCR2_WINCHIP:
-		// TODO
-	//case X86_R_FCR3_WINCHIP:
-		// TODO
-	//case X86_R_BBL_CR_CTL3:
-		// TODO
-	//case X86_R_TSC:
-		// TODO
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) == (X86_ID_INTEL_PENTIUM >> 8);
+		case X86_CPU_WINCHIP:
+		case X86_CPU_EXTENDED:
+			return true;
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K6
+				&& x86_cpuid_get_family_model_id(&emu->cpu_traits) < X86_ID_AMD_K7; // TODO: unknown if K7 supports it
+		default:
+			return false;
+		}
+
+	case X86_R_TSC:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+		case X86_CPU_AMD:
+		case X86_CPU_WINCHIP:
+		case X86_CPU_EXTENDED:
+			return true;
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_GXM; // including X86_ID_CYRIX_6X86MX;
+		default:
+			return false;
+		}
+
+	case X86_R_CESR:
+	case X86_R_CTR0:
+	case X86_R_CTR1:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) == (X86_ID_INTEL_PENTIUM >> 8);
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_id(&emu->cpu_traits) >= (X86_ID_CYRIX_6X86MX >> 8);
+		case X86_CPU_WINCHIP:
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_APIC_BASE:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_INTEL_PENTIUM_PRO;
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K8;
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_EBL_CR_POWERON:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_INTEL_PENTIUM_PRO;
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K8;
+		case X86_CPU_VIA:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_VIA_C3;
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_K5_AAR:
+	case X86_R_K5_HWCR:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_AMD:
+			return X86_ID_AMD_K5 <= x86_cpuid_get_family_model_id(&emu->cpu_traits)
+				&& x86_cpuid_get_family_model_id(&emu->cpu_traits) < X86_ID_AMD_K6;
+		default:
+			return false;
+		}
+
+	case X86_R_SMBASE:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return true; // TODO: check IA32_VMX_MISC[15]
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_PERFCTR0:
+	case X86_R_PERFCTR1:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_INTEL_PENTIUM_PRO; // TODO: check CPUID
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_GX2
+				|| x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_LX;
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_FCR_WINCHIP:
+	case X86_R_FCR1_WINCHIP:
+	case X86_R_FCR2_WINCHIP:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_WINCHIP:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_FCR3_WINCHIP:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_WINCHIP:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_WINCHIP2;
+		default:
+			return false;
+		}
+
+	case X86_R_MCR0:
+	case X86_R_MCR1:
+	case X86_R_MCR2:
+	case X86_R_MCR3:
+	case X86_R_MCR4:
+	case X86_R_MCR5:
+	case X86_R_MCR6:
+	case X86_R_MCR7:
+	case X86_R_MCR_CTRL:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_WINCHIP:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_BBL_CR_CTL3:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_INTEL_PENTIUM_PRO;
+		case X86_CPU_VIA:
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
 	case X86_R_SYSENTER_CS:
 	case X86_R_SYSENTER_ESP:
 	case X86_R_SYSENTER_EIP:
 		return (emu->cpu_traits.cpuid1.edx & X86_CPUID1_EDX_SEP) != 0;
-	//case X86_R_MCG_CAP:
-		// TODO
-	//case X86_R_MCG_STATUS:
-		// TODO
-	//case X86_R_MCG_CTL:
-		// TODO
-	//case X86_R_PERFEVTSEL0:
-		// TODO
-	//case X86_R_PERFEVTSEL1:
-		// TODO
+
+	case X86_R_MCG_CAP:
+	case X86_R_MCG_STATUS:
+	case X86_R_MCG_CTL: // TODO: check IA32_MCG_CAP[8]
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_INTEL_PENTIUM_PRO;
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K8;
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
+	case X86_R_PERFEVTSEL0:
+	case X86_R_PERFEVTSEL1:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_INTEL:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_INTEL_PENTIUM_PRO; // TODO: check CPUID
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_GX2
+				|| x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_LX;
+		case X86_CPU_VIA:
+		case X86_CPU_EXTENDED:
+			return true;
+		default:
+			return false;
+		}
+
 	//case X86_R_DEBUGCTL:
 		// TODO
 	//case X86_R_LASTBRANCH_TOS:
@@ -1007,11 +1210,19 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 		// TODO
 	case X86_R_BNDCFGS:
 		return (emu->cpu_traits.cpuid7_0.ebx & X86_CPUID7_0_EBX_MPX) != 0;
-	//case X86_R_FCR:
+	case X86_R_FCR:
+	case X86_R_FCR1:
+	case X86_R_FCR2:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_VIA:
+			return true;
+		default:
+			return false;
+		}
+	//case X86_R_LONGHAUL:
 		// TODO
-	//case X86_R_FCR1:
-		// TODO
-	//case X86_R_FCR2:
+	//case X86_R_RNG:
 		// TODO
 
 	// Cyrix
@@ -1022,7 +1233,14 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	case X86_R_DMM_HDR:
 	case X86_R_SMM_BASE:
 	case X86_R_DMM_BASE:
-		return emu->cpu_type == X86_CPU_CYRIX && X86_CPU_CYRIX_GX2 <= emu->cpu_traits.cpu_subtype && emu->cpu_traits.cpu_subtype <= X86_CPU_CYRIX_LX;
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_CYRIX:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_GX2
+				|| x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_CYRIX_LX;
+		default:
+			return false;
+		}
 
 	// AMD
 	case X86_R_EFER:
@@ -1035,9 +1253,6 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 			return (emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_NX | X86_CPUID_EXT1_EDX_LM)) != 0;
 		}
 	case X86_R_STAR:
-	case X86_R_LSTAR:
-	case X86_R_CSTAR:
-	case X86_R_SF_MASK:
 		if(emu->cpu_type == X86_CPU_AMD)
 		{
 			return (emu->cpu_traits.cpuid_ext1.edx & (X86_CPUID_EXT1_EDX_SYSCALL_K6 | X86_CPUID_EXT1_EDX_SYSCALL)) != 0;
@@ -1046,14 +1261,39 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 		{
 			return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 		}
-	//case X86_R_UWCCR:
-		// TODO
-	//case X86_R_PSOR:
-		// TODO
-	//case X86_R_PFIR:
-		// TODO
-	//case X86_R_L2AAR:
-		// TODO
+	case X86_R_LSTAR:
+	case X86_R_CSTAR:
+	case X86_R_SF_MASK:
+		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
+	case X86_R_UWCCR:
+	case X86_R_PSOR:
+	case X86_R_PFIR:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K6_2
+				&& x86_cpuid_get_family_model_id(&emu->cpu_traits) < X86_ID_AMD_K7; // TODO: unknown if K7 supports it
+		default:
+			return false;
+		}
+	case X86_R_EPMR:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K6_III_PLUS
+				&& x86_cpuid_get_family_model_id(&emu->cpu_traits) < X86_ID_AMD_K7; // TODO: unknown if K7 supports it
+		default:
+			return false;
+		}
+	case X86_R_L2AAR:
+		switch(emu->cpu_type)
+		{
+		case X86_CPU_AMD:
+			return x86_cpuid_get_family_model_id(&emu->cpu_traits) >= X86_ID_AMD_K6_III
+				&& x86_cpuid_get_family_model_id(&emu->cpu_traits) < X86_ID_AMD_K7; // TODO: unknown if K7 supports it
+		default:
+			return false;
+		}
 	case X86_R_FS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 	case X86_R_GS_BASE:
@@ -1061,7 +1301,7 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	case X86_R_KERNEL_GS_BASE:
 		return (emu->cpu_traits.cpuid_ext1.edx & X86_CPUID_EXT1_EDX_LM) != 0;
 	//case X86_R_TSC_AUX:
-		// TODO
+		// TODO: check CPUID
 	default:
 		return false;
 	}
@@ -1139,8 +1379,26 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->msr_fcr2;
 	case X86_R_FCR3_WINCHIP:
 		return emu->msr_fcr3;
+	case X86_R_MCR0:
+		return emu->msr_mcr[0];
+	case X86_R_MCR1:
+		return emu->msr_mcr[1];
+	case X86_R_MCR2:
+		return emu->msr_mcr[2];
+	case X86_R_MCR3:
+		return emu->msr_mcr[3];
+	case X86_R_MCR4:
+		return emu->msr_mcr[4];
+	case X86_R_MCR5:
+		return emu->msr_mcr[5];
+	case X86_R_MCR6:
+		return emu->msr_mcr[6];
+	case X86_R_MCR7:
+		return emu->msr_mcr[7];
 	case X86_R_BBL_CR_CTL3:
 		return emu->msr_bbl_cr_ctl3;
+	case X86_R_MCR_CTRL:
+		return emu->msr_mcr_ctrl;
 	case X86_R_SYSENTER_CS:
 		return emu->sysenter_cs;
 	case X86_R_SYSENTER_ESP:
@@ -1179,6 +1437,10 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->msr_fcr1;
 	case X86_R_FCR2:
 		return emu->msr_fcr2;
+	case X86_R_LONGHAUL:
+		return emu->msr_longhaul;
+	case X86_R_RNG:
+		return emu->msr_rng;
 
 	// Cyrix
 	case X86_R_GX2_PCR:
@@ -1213,6 +1475,8 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->msr_psor;
 	case X86_R_PFIR:
 		return emu->msr_pfir;
+	case X86_R_EPMR:
+		return emu->msr_epmr;
 	case X86_R_L2AAR:
 		return emu->msr_l2aar;
 	case X86_R_FS_BASE:
@@ -1344,9 +1608,46 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		// TODO
 		emu->msr_fcr3 = value;
 		break;
+
+	case X86_R_MCR0:
+		// TODO
+		emu->msr_mcr[0] = value;
+		break;
+	case X86_R_MCR1:
+		// TODO
+		emu->msr_mcr[1] = value;
+		break;
+	case X86_R_MCR2:
+		// TODO
+		emu->msr_mcr[2] = value;
+		break;
+	case X86_R_MCR3:
+		// TODO
+		emu->msr_mcr[3] = value;
+		break;
+	case X86_R_MCR4:
+		// TODO
+		emu->msr_mcr[4] = value;
+		break;
+	case X86_R_MCR5:
+		// TODO
+		emu->msr_mcr[5] = value;
+		break;
+	case X86_R_MCR6:
+		// TODO
+		emu->msr_mcr[6] = value;
+		break;
+	case X86_R_MCR7:
+		// TODO
+		emu->msr_mcr[7] = value;
+		break;
 	case X86_R_BBL_CR_CTL3:
 		// TODO
 		emu->msr_bbl_cr_ctl3 = value;
+		break;
+	case X86_R_MCR_CTRL:
+		// TODO
+		emu->msr_mcr_ctrl = value;
 		break;
 	case X86_R_SYSENTER_CS:
 		emu->sysenter_cs = value = value;
@@ -1423,6 +1724,14 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		// TODO
 		emu->msr_fcr2 = value;
 		break;
+	case X86_R_LONGHAUL:
+		// TODO
+		emu->msr_longhaul = value;
+		break;
+	case X86_R_RNG:
+		// TODO
+		emu->msr_rng = value;
+		break;
 
 	// Cyrix
 		break;
@@ -1489,6 +1798,10 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_PFIR:
 		// TODO
 		emu->msr_pfir = value;
+		break;
+	case X86_R_EPMR:
+		// TODO
+		emu->msr_epmr = value;
 		break;
 	case X86_R_L2AAR:
 		// TODO

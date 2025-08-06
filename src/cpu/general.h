@@ -240,6 +240,46 @@ static inline uint8_t x86_cpuid_get_family_id(x86_cpu_traits_t * traits)
 	return id;
 }
 
+static inline uint8_t x86_cpuid_get_model_id(x86_cpu_traits_t * traits)
+{
+	uint8_t id = (traits->cpuid1.eax >> 8) & 0x0F;
+	uint8_t model = (traits->cpuid1.eax >> 4) & 0x0F;
+	if(id == 0x06 || id == 0x0F)
+		model |= (traits->cpuid1.eax >> 12) & 0xF0;
+	return model;
+}
+
+static inline uint16_t x86_cpuid_get_family_model_id(x86_cpu_traits_t * traits)
+{
+	return (x86_cpuid_get_family_id(traits) << 8) | x86_cpuid_get_model_id(traits);
+}
+
+enum
+{
+	X86_ID_INTEL_PENTIUM_STEPPING_A = 0x0500,
+	X86_ID_INTEL_PENTIUM = 0x0501,
+	X86_ID_INTEL_PENTIUM_PRO = 0x0601,
+
+	X86_ID_AMD_K5 = 0x0500,
+	X86_ID_AMD_K6 = 0x0506,
+	X86_ID_AMD_K6_2 = 0x0508,
+	X86_ID_AMD_K6_III = 0x0509,
+	X86_ID_AMD_K6_III_PLUS = 0x050D,
+	X86_ID_AMD_K7 = 0x0601,
+	X86_ID_AMD_K8 = 0x0F04,
+
+	X86_ID_CYRIX_GXM = 0x0504,
+	X86_ID_CYRIX_GX2 = 0x0505,
+	X86_ID_CYRIX_LX = 0x050A,
+	X86_ID_CYRIX_6X86MX = 0x0600,
+
+	X86_ID_WINCHIP_C6 = 0x0504,
+	X86_ID_WINCHIP2 = 0x0508,
+	X86_ID_WINCHIP3 = 0x0509,
+
+	X86_ID_VIA_C3 = 0x0607,
+};
+
 static inline noreturn void x86_v60_exception(x86_state_t * emu, int exception)
 {
 	// TODO
