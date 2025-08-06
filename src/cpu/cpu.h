@@ -903,6 +903,9 @@ enum
 	// Geode GX2/LX, gx2_pcr
 	X86_GX2_PCR_INV_3DNOW = 0x0002,
 
+	// WinChip
+	X86_FCR_EMOVTR = 0x40000000,
+
 	// x87 tag word values, 3 bit bitfields in emu->x87.tw
 	X87_TAG_VALID = 0,
 	X87_TAG_ZERO = 1,

@@ -843,33 +843,54 @@ static inline void x86_debug_register_set64(x86_state_t * emu, int number, uint6
 
 // Test registers
 
+static inline bool x86_test_register_is_valid(x86_state_t * emu, int number)
+{
+	switch(emu->cpu_type)
+	{
+	case X86_CPU_386:
+		if(emu->cpu_traits.cpu_subtype == X86_CPU_386_376)
+			return false;
+
+		return 6 <= number && number <= 7;
+
+	case X86_CPU_486:
+		return 2 <= number && number <= 7;
+
+	case X86_CPU_CYRIX:
+		if(emu->cpu_traits.cpu_subtype < X86_CPU_CYRIX_5X86)
+		{
+			return 2 <= number && number <= 7;
+				x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
+		}
+		else if(emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_GX2 || emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_LX)
+		{
+			return true;
+		}
+		else
+		{
+			// Note: unsure about Cyrix III, MediaGX, GXm, GX1
+			return 1 <= number && number <= 7;
+		}
+	case X86_CPU_EXTENDED:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static inline uint32_t x86_test_register_get32(x86_state_t * emu, int number)
 {
-	if(emu->cpu_type == X86_CPU_386 && emu->cpu_traits.cpu_subtype == X86_CPU_386_376)
+	if(!x86_test_register_is_valid(emu, number))
 		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 
-	// TODO: which flags are allowed
-	switch(number)
-	{
-	case 3:
-	case 4:
-	case 5:
-		if(emu->cpu_type < X86_CPU_486)
-			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
-		break;
-	case 6:
-	case 7:
-		break;
-	default:
-		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
-	}
+	// TODO: what flags are allowed
 	return emu->tr386[number];
 }
 
 // TODO: according to Wikipedia, 386 has undocumented TR4/TR5, Cyrix 5x86+ has TR1/TR2, Geode GX2 and AMD (not NatSemi) GX has all 8, WinChip behaves as NOP
 static inline void x86_test_register_set32(x86_state_t * emu, int number, uint32_t value)
 {
-	if(emu->cpu_type == X86_CPU_386 && emu->cpu_traits.cpu_subtype == X86_CPU_386_376)
+	if(!x86_test_register_is_valid(emu, number))
 		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 
 	// TODO: what happens on invalid flags
@@ -877,14 +898,9 @@ static inline void x86_test_register_set32(x86_state_t * emu, int number, uint32
 	{
 	case 3:
 	case 5:
-		if(emu->cpu_type < X86_CPU_486)
-			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 		break;
 	case 4:
-		if(emu->cpu_type < X86_CPU_486)
-			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
-		else
-			value &= 0xFFFFFFF8;
+		value &= 0xFFFFFFF8;
 		break;
 	case 6:
 		value &= 0xFFFFFFE1;
@@ -895,8 +911,6 @@ static inline void x86_test_register_set32(x86_state_t * emu, int number, uint32
 		else
 			value &= 0xFFFFFF9C;
 		break;
-	default:
-		x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0);
 	}
 	emu->tr386[number] = value;
 }

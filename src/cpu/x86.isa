@@ -826,10 +826,10 @@ FF/7	186+	UD	E	# Note: the E operand is only required for parsing purposes
 0F22	nec+	SUB4S
 0F22	386+	MOV	Cy, Ry
 0F23	386+	MOV	Dy, Ry
-0F24	386,486,cyrix+,ext	MOV	Ry, Ty
+0F24	386,486,cyrix+,winchip,ext	MOV	Ry, Ty
 0F25	v25+	MOVSPA
 0F26	nec+	CMP4S
-0F26	386,486,cyrix+,ext	MOV	Ty, Ry
+0F26	386,486,cyrix+,winchip,ext	MOV	Ty, Ry
 #0F27
 
 0F28	nec+	ROL4	Eb
@@ -3138,6 +3138,30 @@ $0.$O = $1.$O;
 if(emu->cpu_type == X86_CPU_8086 || emu->cpu_type == X86_CPU_186
 		|| x86_segment_get_number(emu, _reg) == X86_R_SS)
 	emu->emulation_result = X86_RESULT(X86_RESULT_INHIBIT_INTERRUPTS, 0);
+
+@instruction MOV|op0=ty
+if(emu->cpu_type == X86_CPU_WINCHIP)
+{
+	if((emu->msr_fcr & X86_FCR_EMOVTR) != 0)
+		UNDEFINED();
+	// nop
+}
+else
+{
+	$0.$O = $1.$O;
+}
+
+@instruction MOV|op1=ty
+if(emu->cpu_type == X86_CPU_WINCHIP)
+{
+	if((emu->msr_fcr & X86_FCR_EMOVTR) != 0)
+		UNDEFINED();
+	// nop
+}
+else
+{
+	$0.$O = $1.$O;
+}
 
 @instruction MOV
 $0.$O = $1.$O;
