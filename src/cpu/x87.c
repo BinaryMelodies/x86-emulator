@@ -163,17 +163,22 @@ static inline x87_float80_t x87_float80_make_8087(float80_t value)
 }
 #endif
 
-#if _SUPPORT_FLOAT80
-x87_float80_t x87_make_unnormal(x87_float80_t x87value, uint16_t exponent)
+static inline x87_float80_t x87_float80_reduce_precision(x87_float80_t value, unsigned bits);
+
+static inline x87_float80_t x87_make_unnormal(x87_float80_t x87value, uint16_t exponent)
 {
-	if(x87value.exponent < exponent)
+	if(x87value.exponent < exponent && x87value.exponent != 0)
 	{
-		// TODO: clear lowest (exponent - actual_exponent) bits
+#if _SUPPORT_FLOAT80
+		// clear lowest (exponent - actual_exponent) bits
+		x87value = x87_float80_reduce_precision(x87value, 64 - (exponent - x87value.exponent));
+#else
+		x87value.fraction >>= (exponent - x87value.exponent);
+#endif
 		x87value.exponent = exponent;
 	}
 	return x87value;
 }
-#endif
 
 static inline int fp80classify(x87_float80_t x87value)
 {
@@ -463,6 +468,26 @@ static inline x87_float80_t x87_convert64_to_float(uint64_t value)
 	sign = (value & 0x8000000000000000) != 0;
 
 	return x87_convert_to_float80(fraction, exponent, sign);
+}
+
+static inline x87_float80_t x87_float80_reduce_precision(x87_float80_t value, unsigned bits)
+{
+	int exp;
+	switch(fp80classify(value))
+	{
+	case FP80_SUBNORMAL:
+	case FP80_NORMAL:
+	case FP80_PSEUDO_SUBNORMAL:
+	case FP80_UNNORMAL:
+#if _SUPPORT_FLOAT80
+		float80_t tmp = truncl(ldexpl(frexpl(value.value, &exp), bits));
+		value.value = ldexpl(tmp, exp - bits);
+#else
+		value.fraction &= -1 << (64 - bits);
+#endif
+		break;
+	}
+	return value;
 }
 
 static inline x87_float80_t x87_float80_round24(x87_float80_t value)
