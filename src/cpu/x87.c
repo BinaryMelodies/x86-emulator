@@ -979,8 +979,7 @@ static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x8
 {
 	x87_float80_t result;
 
-	(void) emu;
-	// TODO: precision
+	// TODO: exceptions
 #if _SUPPORT_FLOAT80
 	if(emu->x87.fpu_type < X87_FPU_387)
 	{

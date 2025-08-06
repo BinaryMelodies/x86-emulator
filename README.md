@@ -3,7 +3,10 @@
 
 THIS PROJECT IS EXPERIMENTAL, UNTESTED AND UNFINISHED, USE AT YOUR OWN RISKS
 
-The source code is provided as-is, in the hopes it will be useful for some
+The source code is provided as-is, in the hopes it will be useful for some.
+It is principally of educational and research purposes.
+It is based on information available online, from manuals and second sources.
+See acknowledgements for further details.
 
 # A comprehensive and accurate x86 emulator
 
