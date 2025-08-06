@@ -917,6 +917,108 @@ static inline void x86_test_register_set32(x86_state_t * emu, int number, uint32
 
 // Model specific registers
 
+static inline uint64_t x86_cyrix_get_sel_msr(x86_state_t * emu, x86_segnum_t segment)
+{
+	return emu->sr[segment].selector | ((emu->sr[segment].access & 0x00F0FF00) << 4);
+}
+
+static inline void x86_cyrix_set_sel_msr(x86_state_t * emu, x86_segnum_t segment, uint64_t value)
+{
+	emu->sr[segment].selector = value;
+	emu->sr[segment].access = (value >> 4) & 0x00F0FF00;
+}
+
+static inline uint64_t x86_cyrix_get_base_msr(x86_state_t * emu, x86_segnum_t segment)
+{
+	return emu->sr[segment].base | ((uint64_t)emu->sr[segment].access << 32);
+}
+
+static inline void x86_cyrix_set_base_msr(x86_state_t * emu, x86_segnum_t segment, uint64_t value)
+{
+	emu->sr[segment].base = value;
+	emu->sr[segment].limit = value >> 32;
+}
+
+static inline uint64_t x86_cyrix_get_mr_msr(x86_state_t * emu, unsigned number)
+{
+#if _SUPPORT_FLOAT80
+	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	{
+		uint64_t fraction;
+		uint16_t exponent;
+		bool sign;
+		x87_convert_from_float80(emu->x87.fpr[number].f, &fraction, &exponent, &sign);
+		return fraction;
+	}
+	else
+	{
+		return emu->x87.fpr[number].mmx.q[0];
+	}
+#else
+	return emu->x87.fpr[number].fraction;
+#endif
+}
+
+static inline void x86_cyrix_set_mr_msr(x86_state_t * emu, unsigned number, uint64_t value)
+{
+#if _SUPPORT_FLOAT80
+	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	{
+		uint64_t fraction;
+		uint16_t exponent;
+		bool sign;
+		x87_convert_from_float80(emu->x87.fpr[number].f, &fraction, &exponent, &sign);
+		emu->x87.fpr[number].f = x87_convert_to_float80(value, exponent, sign);
+	}
+	else
+	{
+		emu->x87.fpr[number].mmx.q[0] = value;
+	}
+#else
+	emu->x87.fpr[number].fraction = value;
+#endif
+}
+
+static inline uint64_t x86_cyrix_get_er_msr(x86_state_t * emu, unsigned number)
+{
+#if _SUPPORT_FLOAT80
+	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	{
+		uint64_t fraction;
+		uint16_t exponent;
+		bool sign;
+		x87_convert_from_float80(emu->x87.fpr[number].f, &fraction, &exponent, &sign);
+		return exponent | (sign ? 0x8000 : 0);
+	}
+	else
+	{
+		return emu->x87.fpr[number].exponent;
+	}
+#else
+	return emu->x87.fpr[number].exponent;
+#endif
+}
+
+static inline void x86_cyrix_set_er_msr(x86_state_t * emu, unsigned number, uint64_t value)
+{
+#if _SUPPORT_FLOAT80
+	if(emu->x87.bank[emu->x87.current_bank].fpr[number].isfp)
+	{
+		uint64_t fraction;
+		uint16_t exponent;
+		bool sign;
+		x87_convert_from_float80(emu->x87.fpr[number].f, &fraction, &exponent, &sign);
+		emu->x87.fpr[number].f = x87_convert_to_float80(fraction, value & 0x7FFF, (value & 0x8000) != 0);
+	}
+	else
+	{
+		emu->x87.fpr[number].exponent = value;
+	}
+#else
+	emu->x87.fpr[number].exponent = value;
+#endif
+}
+
 static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 {
 	switch(index)
@@ -1229,10 +1331,91 @@ static inline bool x86_msr_is_valid(x86_state_t * emu, uint32_t index)
 	case X86_R_GX2_PCR:
 	case X86_R_SMM_CTL:
 	case X86_R_DMI_CTL:
+	case X86_R_GX2_ES_SEL:
+	case X86_R_GX2_CS_SEL:
+	case X86_R_GX2_SS_SEL:
+	case X86_R_GX2_DS_SEL:
+	case X86_R_GX2_FS_SEL:
+	case X86_R_GX2_GS_SEL:
+	case X86_R_GX2_LDT_SEL:
+	case X86_R_GX2_TM_SEL:
+	case X86_R_GX2_TSS_SEL:
+	case X86_R_GX2_IDT_SEL:
+	case X86_R_GX2_GDT_SEL:
 	case X86_R_SMM_HDR:
 	case X86_R_DMM_HDR:
+	case X86_R_GX2_ES_BASE:
+	case X86_R_GX2_CS_BASE:
+	case X86_R_GX2_SS_BASE:
+	case X86_R_GX2_DS_BASE:
+	case X86_R_GX2_FS_BASE:
+	case X86_R_GX2_GS_BASE:
+	case X86_R_GX2_LDT_BASE:
+	case X86_R_GX2_TM_BASE:
+	case X86_R_GX2_TSS_BASE:
+	case X86_R_GX2_IDT_BASE:
+	case X86_R_GX2_GDT_BASE:
 	case X86_R_SMM_BASE:
 	case X86_R_DMM_BASE:
+	case X86_R_GX2_DR1_DR0:
+	case X86_R_GX2_DR3_DR2:
+	case X86_R_GX2_DR7_DR6:
+	case X86_R_GX2_FPENV_CS:
+	case X86_R_GX2_FPENV_IP:
+	case X86_R_GX2_FPENV_DS:
+	case X86_R_GX2_FPENV_DP:
+	case X86_R_GX2_FPENV_OP:
+	case X86_R_GX2_GR_EAX:
+	case X86_R_GX2_GR_ECX:
+	case X86_R_GX2_GR_EDX:
+	case X86_R_GX2_GR_EBX:
+	case X86_R_GX2_GR_ESP:
+	case X86_R_GX2_GR_EBP:
+	case X86_R_GX2_GR_ESI:
+	case X86_R_GX2_GR_EDI:
+	case X86_R_GX2_EFLAG:
+	case X86_R_GX2_CR0:
+	case X86_R_GX2_CR1:
+	case X86_R_GX2_CR2:
+	case X86_R_GX2_CR3:
+	case X86_R_GX2_CR4:
+	case X86_R_GX2_FPU_CW:
+	case X86_R_GX2_FPU_SW:
+	case X86_R_GX2_FPU_TW:
+	//case X86_R_GX2_FPU_BUSY: // TODO: unimplemented
+	case X86_R_GX2_FPU_MAP:
+	case X86_R_GX2_FPU_MR0:
+	case X86_R_GX2_FPU_ER0:
+	case X86_R_GX2_FPU_MR1:
+	case X86_R_GX2_FPU_ER1:
+	case X86_R_GX2_FPU_MR2:
+	case X86_R_GX2_FPU_ER2:
+	case X86_R_GX2_FPU_MR3:
+	case X86_R_GX2_FPU_ER3:
+	case X86_R_GX2_FPU_MR4:
+	case X86_R_GX2_FPU_ER4:
+	case X86_R_GX2_FPU_MR5:
+	case X86_R_GX2_FPU_ER5:
+	case X86_R_GX2_FPU_MR6:
+	case X86_R_GX2_FPU_ER6:
+	case X86_R_GX2_FPU_MR7:
+	case X86_R_GX2_FPU_ER7:
+	//case X86_R_GX2_FPU_MR8: // TODO: unimplemented
+	//case X86_R_GX2_FPU_ER8:
+	//case X86_R_GX2_FPU_MR9:
+	//case X86_R_GX2_FPU_ER9:
+	//case X86_R_GX2_FPU_MR10:
+	//case X86_R_GX2_FPU_ER10:
+	//case X86_R_GX2_FPU_MR11:
+	//case X86_R_GX2_FPU_ER11:
+	//case X86_R_GX2_FPU_MR12:
+	//case X86_R_GX2_FPU_ER12:
+	//case X86_R_GX2_FPU_MR13:
+	//case X86_R_GX2_FPU_ER13:
+	//case X86_R_GX2_FPU_MR14:
+	//case X86_R_GX2_FPU_ER14:
+	//case X86_R_GX2_FPU_MR15:
+	//case X86_R_GX2_FPU_ER15:
 		switch(emu->cpu_type)
 		{
 		case X86_CPU_CYRIX:
@@ -1449,14 +1632,159 @@ static inline uint64_t x86_msr_get(x86_state_t * emu, uint32_t index)
 		return emu->smm_ctl;
 	case X86_R_DMI_CTL:
 		return emu->dmi_ctl;
+	case X86_R_GX2_ES_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_ES);
+	case X86_R_GX2_CS_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_CS);
+	case X86_R_GX2_SS_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_SS);
+	case X86_R_GX2_DS_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_DS);
+	case X86_R_GX2_FS_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_FS);
+	case X86_R_GX2_GS_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_GS);
+	case X86_R_GX2_LDT_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_LDTR);
+	case X86_R_GX2_TM_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_TM_SEG);
+	case X86_R_GX2_TSS_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_TR);
+	case X86_R_GX2_IDT_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_IDTR);
+	case X86_R_GX2_GDT_SEL:
+		return x86_cyrix_get_sel_msr(emu, X86_R_GDTR);
 	case X86_R_SMM_HDR:
 		return emu->smm_hdr;
 	case X86_R_DMM_HDR:
 		return emu->dmm_hdr;
+	case X86_R_GX2_ES_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_ES);
+	case X86_R_GX2_CS_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_CS);
+	case X86_R_GX2_SS_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_SS);
+	case X86_R_GX2_DS_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_DS);
+	case X86_R_GX2_FS_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_FS);
+	case X86_R_GX2_GS_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_GS);
+	case X86_R_GX2_LDT_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_LDTR);
+	case X86_R_GX2_TM_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_TM_SEG);
+	case X86_R_GX2_TSS_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_TR);
+	case X86_R_GX2_IDT_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_IDTR);
+	case X86_R_GX2_GDT_BASE:
+		return x86_cyrix_get_base_msr(emu, X86_R_GDTR);
 	case X86_R_SMM_BASE:
 		return emu->smm.base | ((uint64_t)emu->smm.limit << 32);
 	case X86_R_DMM_BASE:
 		return emu->dmm.base | ((uint64_t)emu->dmm.limit << 32);
+	case X86_R_GX2_DR1_DR0:
+		return emu->dr[0] | ((uint64_t)emu->dr[1] << 32);
+	case X86_R_GX2_DR3_DR2:
+		return emu->dr[2] | ((uint64_t)emu->dr[3] << 32);
+	case X86_R_GX2_DR7_DR6:
+		return emu->dr[6] | ((uint64_t)emu->dr[7] << 32);
+	case X86_R_GX2_FPENV_CS:
+		return emu->x87.fcs;
+	case X86_R_GX2_FPENV_IP:
+		return emu->x87.fip;
+	case X86_R_GX2_FPENV_DS:
+		return emu->x87.fds;
+	case X86_R_GX2_FPENV_DP:
+		return emu->x87.fdp;
+	case X86_R_GX2_FPENV_OP:
+		return emu->x87.fop;
+	case X86_R_GX2_GR_EAX:
+		return emu->gpr[X86_R_AX];
+	case X86_R_GX2_GR_ECX:
+		return emu->gpr[X86_R_CX];
+	case X86_R_GX2_GR_EDX:
+		return emu->gpr[X86_R_DX];
+	case X86_R_GX2_GR_EBX:
+		return emu->gpr[X86_R_BX];
+	case X86_R_GX2_GR_ESP:
+		return emu->gpr[X86_R_SP];
+	case X86_R_GX2_GR_EBP:
+		return emu->gpr[X86_R_BP];
+	case X86_R_GX2_GR_ESI:
+		return emu->gpr[X86_R_SI];
+	case X86_R_GX2_GR_EDI:
+		return emu->gpr[X86_R_DI];
+	case X86_R_GX2_EFLAG:
+		return x86_flags_get32(emu);
+	case X86_R_GX2_CR0:
+		return emu->cr[0];
+	case X86_R_GX2_CR1:
+		return emu->cr[1];
+	case X86_R_GX2_CR2:
+		return emu->cr[2];
+	case X86_R_GX2_CR3:
+		return emu->cr[3];
+	case X86_R_GX2_CR4:
+		return emu->cr[4];
+	case X86_R_GX2_FPU_CW:
+		return emu->x87.cw;
+	case X86_R_GX2_FPU_SW:
+		return emu->x87.sw;
+	case X86_R_GX2_FPU_TW:
+		return emu->x87.tw;
+	//case X86_R_GX2_FPU_BUSY: // TODO
+	case X86_R_GX2_FPU_MAP:
+		return 0x0000000076543210;
+	case X86_R_GX2_FPU_MR0:
+		return x86_cyrix_get_mr_msr(emu, 0);
+	case X86_R_GX2_FPU_ER0:
+		return x86_cyrix_get_er_msr(emu, 0);
+	case X86_R_GX2_FPU_MR1:
+		return x86_cyrix_get_mr_msr(emu, 1);
+	case X86_R_GX2_FPU_ER1:
+		return x86_cyrix_get_er_msr(emu, 1);
+	case X86_R_GX2_FPU_MR2:
+		return x86_cyrix_get_mr_msr(emu, 2);
+	case X86_R_GX2_FPU_ER2:
+		return x86_cyrix_get_er_msr(emu, 2);
+	case X86_R_GX2_FPU_MR3:
+		return x86_cyrix_get_mr_msr(emu, 3);
+	case X86_R_GX2_FPU_ER3:
+		return x86_cyrix_get_er_msr(emu, 3);
+	case X86_R_GX2_FPU_MR4:
+		return x86_cyrix_get_mr_msr(emu, 4);
+	case X86_R_GX2_FPU_ER4:
+		return x86_cyrix_get_er_msr(emu, 4);
+	case X86_R_GX2_FPU_MR5:
+		return x86_cyrix_get_mr_msr(emu, 5);
+	case X86_R_GX2_FPU_ER5:
+		return x86_cyrix_get_er_msr(emu, 5);
+	case X86_R_GX2_FPU_MR6:
+		return x86_cyrix_get_mr_msr(emu, 6);
+	case X86_R_GX2_FPU_ER6:
+		return x86_cyrix_get_er_msr(emu, 6);
+	case X86_R_GX2_FPU_MR7:
+		return x86_cyrix_get_mr_msr(emu, 7);
+	case X86_R_GX2_FPU_ER7:
+		return x86_cyrix_get_er_msr(emu, 7);
+	//case X86_R_GX2_FPU_MR8: // TODO: unimplemented
+	//case X86_R_GX2_FPU_ER8:
+	//case X86_R_GX2_FPU_MR9:
+	//case X86_R_GX2_FPU_ER9:
+	//case X86_R_GX2_FPU_MR10:
+	//case X86_R_GX2_FPU_ER10:
+	//case X86_R_GX2_FPU_MR11:
+	//case X86_R_GX2_FPU_ER11:
+	//case X86_R_GX2_FPU_MR12:
+	//case X86_R_GX2_FPU_ER12:
+	//case X86_R_GX2_FPU_MR13:
+	//case X86_R_GX2_FPU_ER13:
+	//case X86_R_GX2_FPU_MR14:
+	//case X86_R_GX2_FPU_ER14:
+	//case X86_R_GX2_FPU_MR15:
+	//case X86_R_GX2_FPU_ER15:
 
 	// AMD
 	case X86_R_EFER:
@@ -1744,11 +2072,77 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 	case X86_R_DMI_CTL:
 		emu->dmi_ctl = value;
 		break;
+	case X86_R_GX2_ES_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_ES, value);
+		break;
+	case X86_R_GX2_CS_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_CS, value);
+		break;
+	case X86_R_GX2_SS_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_SS, value);
+		break;
+	case X86_R_GX2_DS_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_DS, value);
+		break;
+	case X86_R_GX2_FS_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_FS, value);
+		break;
+	case X86_R_GX2_GS_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_GS, value);
+		break;
+	case X86_R_GX2_LDT_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_LDTR, value);
+		break;
+	case X86_R_GX2_TM_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_TM_SEG, value);
+		break;
+	case X86_R_GX2_TSS_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_TR, value);
+		break;
+	case X86_R_GX2_IDT_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_IDTR, value);
+		break;
+	case X86_R_GX2_GDT_SEL:
+		x86_cyrix_set_sel_msr(emu, X86_R_GDTR, value);
+		break;
 	case X86_R_SMM_HDR:
 		emu->smm_hdr = value;
 		break;
 	case X86_R_DMM_HDR:
 		emu->dmm_hdr = value;
+		break;
+	case X86_R_GX2_ES_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_ES, value);
+		break;
+	case X86_R_GX2_CS_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_CS, value);
+		break;
+	case X86_R_GX2_SS_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_SS, value);
+		break;
+	case X86_R_GX2_DS_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_DS, value);
+		break;
+	case X86_R_GX2_FS_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_FS, value);
+		break;
+	case X86_R_GX2_GS_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_GS, value);
+		break;
+	case X86_R_GX2_LDT_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_LDTR, value);
+		break;
+	case X86_R_GX2_TM_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_TM_SEG, value);
+		break;
+	case X86_R_GX2_TSS_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_TR, value);
+		break;
+	case X86_R_GX2_IDT_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_IDTR, value);
+		break;
+	case X86_R_GX2_GDT_BASE:
+		x86_cyrix_set_base_msr(emu, X86_R_GDTR, value);
 		break;
 	case X86_R_SMM_BASE:
 		emu->smm.base = value;
@@ -1758,6 +2152,152 @@ static inline void x86_msr_set(x86_state_t * emu, uint32_t index, uint64_t value
 		emu->dmm.base = value;
 		emu->dmm.limit = value >> 32;
 		break;
+	case X86_R_GX2_DR1_DR0:
+		emu->dr[0] = value;
+		emu->dr[1] = value >> 32;
+		break;
+	case X86_R_GX2_DR3_DR2:
+		emu->dr[2] = value;
+		emu->dr[3] = value >> 32;
+		break;
+	case X86_R_GX2_DR7_DR6:
+		emu->dr[6] = value;
+		emu->dr[7] = value >> 32;
+		break;
+	case X86_R_GX2_FPENV_CS:
+		emu->x87.fcs = value;
+		break;
+	case X86_R_GX2_FPENV_IP:
+		emu->x87.fip = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_FPENV_DS:
+		emu->x87.fds = value;
+		break;
+	case X86_R_GX2_FPENV_DP:
+		emu->x87.fdp = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_FPENV_OP:
+		emu->x87.fop = 0xB800 | (value & 0x07FF);
+		break;
+	case X86_R_GX2_GR_EAX:
+		emu->gpr[X86_R_AX] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_ECX:
+		emu->gpr[X86_R_CX] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_EDX:
+		emu->gpr[X86_R_DX] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_EBX:
+		emu->gpr[X86_R_BX] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_ESP:
+		emu->gpr[X86_R_SP] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_EBP:
+		emu->gpr[X86_R_BP] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_ESI:
+		emu->gpr[X86_R_SI] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_GR_EDI:
+		emu->gpr[X86_R_DI] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_EFLAG:
+		x86_flags_set32(emu, value);
+		break;
+	case X86_R_GX2_CR0:
+		emu->cr[0] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_CR1:
+		emu->cr[1] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_CR2:
+		emu->cr[2] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_CR3:
+		emu->cr[3] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_CR4:
+		emu->cr[4] = value & 0xFFFFFFFF;
+		break;
+	case X86_R_GX2_FPU_CW:
+		emu->x87.cw = value;
+		break;
+	case X86_R_GX2_FPU_SW:
+		emu->x87.sw = value;
+		break;
+	case X86_R_GX2_FPU_TW:
+		emu->x87.tw = value;
+		break;
+	//case X86_R_GX2_FPU_BUSY: // TODO
+	case X86_R_GX2_FPU_MAP:
+		x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
+		break;
+	case X86_R_GX2_FPU_MR0:
+		x86_cyrix_set_mr_msr(emu, 0, value);
+		break;
+	case X86_R_GX2_FPU_ER0:
+		x86_cyrix_set_er_msr(emu, 0, value);
+		break;
+	case X86_R_GX2_FPU_MR1:
+		x86_cyrix_set_mr_msr(emu, 1, value);
+		break;
+	case X86_R_GX2_FPU_ER1:
+		x86_cyrix_set_er_msr(emu, 1, value);
+		break;
+	case X86_R_GX2_FPU_MR2:
+		x86_cyrix_set_mr_msr(emu, 2, value);
+		break;
+	case X86_R_GX2_FPU_ER2:
+		x86_cyrix_set_er_msr(emu, 2, value);
+		break;
+	case X86_R_GX2_FPU_MR3:
+		x86_cyrix_set_mr_msr(emu, 3, value);
+		break;
+	case X86_R_GX2_FPU_ER3:
+		x86_cyrix_set_er_msr(emu, 3, value);
+		break;
+	case X86_R_GX2_FPU_MR4:
+		x86_cyrix_set_mr_msr(emu, 4, value);
+		break;
+	case X86_R_GX2_FPU_ER4:
+		x86_cyrix_set_er_msr(emu, 4, value);
+		break;
+	case X86_R_GX2_FPU_MR5:
+		x86_cyrix_set_mr_msr(emu, 5, value);
+		break;
+	case X86_R_GX2_FPU_ER5:
+		x86_cyrix_set_er_msr(emu, 5, value);
+		break;
+	case X86_R_GX2_FPU_MR6:
+		x86_cyrix_set_mr_msr(emu, 6, value);
+		break;
+	case X86_R_GX2_FPU_ER6:
+		x86_cyrix_set_er_msr(emu, 6, value);
+		break;
+	case X86_R_GX2_FPU_MR7:
+		x86_cyrix_set_mr_msr(emu, 7, value);
+		break;
+	case X86_R_GX2_FPU_ER7:
+		x86_cyrix_set_er_msr(emu, 7, value);
+		break;
+	//case X86_R_GX2_FPU_MR8: // TODO: unimplemented
+	//case X86_R_GX2_FPU_ER8:
+	//case X86_R_GX2_FPU_MR9:
+	//case X86_R_GX2_FPU_ER9:
+	//case X86_R_GX2_FPU_MR10:
+	//case X86_R_GX2_FPU_ER10:
+	//case X86_R_GX2_FPU_MR11:
+	//case X86_R_GX2_FPU_ER11:
+	//case X86_R_GX2_FPU_MR12:
+	//case X86_R_GX2_FPU_ER12:
+	//case X86_R_GX2_FPU_MR13:
+	//case X86_R_GX2_FPU_ER13:
+	//case X86_R_GX2_FPU_MR14:
+	//case X86_R_GX2_FPU_ER14:
+	//case X86_R_GX2_FPU_MR15:
+	//case X86_R_GX2_FPU_ER15:
 
 	// AMD
 		break;

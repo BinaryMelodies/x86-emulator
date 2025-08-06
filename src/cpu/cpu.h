@@ -274,6 +274,7 @@ enum x86_segnum_t
 #endif
 	/* Phantom register to use with 8087/80287/80387 emulation */
 	X86_R_FDS = X86_SR_COUNT + X86_TABLEREG_COUNT,
+	X86_R_TM_SEG = X86_R_FDS, // Geode GX2 temporary segment
 	/* V55 segment prefix for internal RAM */
 	X86_R_IRAM,
 };
@@ -571,10 +572,91 @@ enum
 	X86_R_GX2_PCR = 0x00001250, // Geode GX2+
 	X86_R_SMM_CTL = 0x00001301, // Geode GX2+
 	X86_R_DMI_CTL = 0x00001302, // Geode GX2+
+	X86_R_GX2_ES_SEL = 0x00001320, // Geode GX2+
+	X86_R_GX2_CS_SEL = 0x00001321, // Geode GX2+
+	X86_R_GX2_SS_SEL = 0x00001322, // Geode GX2+
+	X86_R_GX2_DS_SEL = 0x00001323, // Geode GX2+
+	X86_R_GX2_FS_SEL = 0x00001324, // Geode GX2+
+	X86_R_GX2_GS_SEL = 0x00001325, // Geode GX2+
+	X86_R_GX2_LDT_SEL = 0x00001326, // Geode GX2+
+	X86_R_GX2_TM_SEL = 0x00001327, // Geode GX2+
+	X86_R_GX2_TSS_SEL = 0x00001328, // Geode GX2+
+	X86_R_GX2_IDT_SEL = 0x00001329, // Geode GX2+
+	X86_R_GX2_GDT_SEL = 0x0000132A, // Geode GX2+
 	X86_R_SMM_HDR = 0x0000132B, // Geode GX2+
 	X86_R_DMM_HDR = 0x0000132C, // Geode GX2+
+	X86_R_GX2_ES_BASE = 0x00001330, // Geode GX2+
+	X86_R_GX2_CS_BASE = 0x00001331, // Geode GX2+
+	X86_R_GX2_SS_BASE = 0x00001332, // Geode GX2+
+	X86_R_GX2_DS_BASE = 0x00001333, // Geode GX2+
+	X86_R_GX2_FS_BASE = 0x00001334, // Geode GX2+
+	X86_R_GX2_GS_BASE = 0x00001335, // Geode GX2+
+	X86_R_GX2_LDT_BASE = 0x00001336, // Geode GX2+
+	X86_R_GX2_TM_BASE = 0x00001337, // Geode GX2+
+	X86_R_GX2_TSS_BASE = 0x00001338, // Geode GX2+
+	X86_R_GX2_IDT_BASE = 0x00001339, // Geode GX2+
+	X86_R_GX2_GDT_BASE = 0x0000133A, // Geode GX2+
 	X86_R_SMM_BASE = 0x0000133B, // Geode GX2+
 	X86_R_DMM_BASE = 0x0000133C, // Geode GX2+
+	X86_R_GX2_DR1_DR0 = 0x00001340, // Geode GX2+
+	X86_R_GX2_DR3_DR2 = 0x00001341, // Geode GX2+
+	X86_R_GX2_DR7_DR6 = 0x00001343, // Geode GX2+
+	X86_R_GX2_FPENV_CS = 0x00001370, // Geode GX2+
+	X86_R_GX2_FPENV_IP = 0x00001371, // Geode GX2+
+	X86_R_GX2_FPENV_DS = 0x00001372, // Geode GX2+
+	X86_R_GX2_FPENV_DP = 0x00001373, // Geode GX2+
+	X86_R_GX2_FPENV_OP = 0x00001374, // Geode GX2+
+	X86_R_GX2_GR_EAX = 0x00001408, // Geode GX2+
+	X86_R_GX2_GR_ECX = 0x00001409, // Geode GX2+
+	X86_R_GX2_GR_EDX = 0x0000140A, // Geode GX2+
+	X86_R_GX2_GR_EBX = 0x0000140B, // Geode GX2+
+	X86_R_GX2_GR_ESP = 0x0000140C, // Geode GX2+
+	X86_R_GX2_GR_EBP = 0x0000140D, // Geode GX2+
+	X86_R_GX2_GR_ESI = 0x0000140E, // Geode GX2+
+	X86_R_GX2_GR_EDI = 0x0000140F, // Geode GX2+
+	X86_R_GX2_EFLAG = 0x00001418, // Geode GX2+
+	X86_R_GX2_CR0 = 0x00001420, // Geode GX2+
+	X86_R_GX2_CR1 = 0x00001881, // Geode GX2+
+	X86_R_GX2_CR2 = 0x00001882, // Geode GX2+
+	X86_R_GX2_CR3 = 0x00001883, // Geode GX2+
+	X86_R_GX2_CR4 = 0x00001884, // Geode GX2+
+	X86_R_GX2_FPU_CW = 0x00001A10, // Geode GX2+
+	X86_R_GX2_FPU_SW = 0x00001A11, // Geode GX2+
+	X86_R_GX2_FPU_TW = 0x00001A12, // Geode GX2+
+	X86_R_GX2_FPU_BUSY = 0x00001A13, // Geode GX2+
+	X86_R_GX2_FPU_MAP = 0x00001A14, // Geode GX2+
+	X86_R_GX2_FPU_MR0 = 0x00001A40, // Geode GX2+
+	X86_R_GX2_FPU_ER0 = 0x00001A41, // Geode GX2+
+	X86_R_GX2_FPU_MR1 = 0x00001A42, // Geode GX2+
+	X86_R_GX2_FPU_ER1 = 0x00001A43, // Geode GX2+
+	X86_R_GX2_FPU_MR2 = 0x00001A44, // Geode GX2+
+	X86_R_GX2_FPU_ER2 = 0x00001A45, // Geode GX2+
+	X86_R_GX2_FPU_MR3 = 0x00001A46, // Geode GX2+
+	X86_R_GX2_FPU_ER3 = 0x00001A47, // Geode GX2+
+	X86_R_GX2_FPU_MR4 = 0x00001A48, // Geode GX2+
+	X86_R_GX2_FPU_ER4 = 0x00001A49, // Geode GX2+
+	X86_R_GX2_FPU_MR5 = 0x00001A4A, // Geode GX2+
+	X86_R_GX2_FPU_ER5 = 0x00001A4B, // Geode GX2+
+	X86_R_GX2_FPU_MR6 = 0x00001A4C, // Geode GX2+
+	X86_R_GX2_FPU_ER6 = 0x00001A4D, // Geode GX2+
+	X86_R_GX2_FPU_MR7 = 0x00001A4E, // Geode GX2+
+	X86_R_GX2_FPU_ER7 = 0x00001A4F, // Geode GX2+
+	X86_R_GX2_FPU_MR8 = 0x00001A50, // Geode GX2+
+	X86_R_GX2_FPU_ER8 = 0x00001A51, // Geode GX2+
+	X86_R_GX2_FPU_MR9 = 0x00001A52, // Geode GX2+
+	X86_R_GX2_FPU_ER9 = 0x00001A53, // Geode GX2+
+	X86_R_GX2_FPU_MR10 = 0x00001A54, // Geode GX2+
+	X86_R_GX2_FPU_ER10 = 0x00001A55, // Geode GX2+
+	X86_R_GX2_FPU_MR11 = 0x00001A56, // Geode GX2+
+	X86_R_GX2_FPU_ER11 = 0x00001A57, // Geode GX2+
+	X86_R_GX2_FPU_MR12 = 0x00001A58, // Geode GX2+
+	X86_R_GX2_FPU_ER12 = 0x00001A59, // Geode GX2+
+	X86_R_GX2_FPU_MR13 = 0x00001A5A, // Geode GX2+
+	X86_R_GX2_FPU_ER13 = 0x00001A5B, // Geode GX2+
+	X86_R_GX2_FPU_MR14 = 0x00001A5C, // Geode GX2+
+	X86_R_GX2_FPU_ER14 = 0x00001A5D, // Geode GX2+
+	X86_R_GX2_FPU_MR15 = 0x00001A5E, // Geode GX2+
+	X86_R_GX2_FPU_ER15 = 0x00001A5F, // Geode GX2+
 	X86_R_EFER = 0xC0000080,
 	X86_R_STAR = 0xC0000081,
 	X86_R_LSTAR = 0xC0000082,
@@ -1183,6 +1265,7 @@ struct x86_segment_t
 	uint16_t selector;
 	uaddr_t base;
 	uint32_t limit;
+	// only bits in 0x00F0FF00 are used
 	uint32_t access;
 };
 typedef struct x86_segment_t x86_segment_t;
@@ -1641,11 +1724,16 @@ struct x87_state_t
 	x87_fpu_subtype_t fpu_subtype;
 
 	/* IIT 3c87 organizes registers into 4 banks, but not the status or tag words */
-	struct
+	union
 	{
+		struct
+		{
+			/* Registers with their absolute indexes instead of TOP relative indexes */
+			x87_register_t fpr[8];
+		} bank[4];
 		/* Registers with their absolute indexes instead of TOP relative indexes */
 		x87_register_t fpr[8];
-	} bank[4];
+	};
 	/* IIT 3c87 current bank number */
 	unsigned current_bank;
 
@@ -2063,6 +2151,7 @@ struct x86_state_t
 	*/
 	union
 	{
+		// all segment registers, all table registers, plus an extra slot for an internal register
 		x86_segment_t sr[X86_SR_COUNT + X86_TABLEREG_COUNT + 1];
 		struct
 		{
