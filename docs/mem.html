@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+<title>Address space sizes</title>
+<style>
+td {
+	text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>Address space sizes</h1>
+
+<table align='center' border='1'>
+<tr>
+<td></td>
+<td>Segmented</td>
+<td>Virtual</td>
+<td>Physical</td>
+<td>Segmentation</td>
+<td>Paging</td>
+</tr>
+
+<tr>
+<td>(Datapoint 2200 Version I)</td>
+<td colspan='3'>13</td>
+<td colspan='2' style='background:gray';></td>
+</tr>
+
+<tr>
+<td>(Datapoint 2200 Version II)<br>(Intel 8008)</td>
+<td colspan='3'>14</td>
+<td colspan='2' style='background:gray';></td>
+</tr>
+
+<tr>
+<td>(Intel 8080)<br>(Zilog Z80)</td>
+<td colspan='3'>16</td>
+<td colspan='2' style='background:gray';></td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td>Intel 8086</td>
+<td>16:16</td>
+<td colspan='2'>20</td>
+<td>seg &times; 16 + off</td>
+<td style='background:gray';></td>
+</tr>
+
+<tr>
+<td>NEC V33/V53</td>
+<td>16:16</td>
+<td>20</td>
+<td>24</td>
+<td>seg &times; 16 + off</td>
+<td>6+14</td>
+</tr>
+
+<tr>
+<td>NEC V55</td>
+<td>16:16</td>
+<td colspan='2'>24</td>
+<td>seg &times; 16 + off<br>seg &times; 256 + off</td>
+<td style='background:gray';></td>
+</tr>
+
+<tr>
+<td>Intel 80286</td>
+<td>16:16</td>
+<td colspan='2'>24</td>
+<td>seg &times; 16 + off<br>seg.base + off</td>
+<td style='background:gray';></td>
+</tr>
+
+<tr>
+<td>Intel 80386</td>
+<td>16:32</td>
+<td colspan='2'>32</td>
+<td>seg &times; 16 + off<br>seg.base + off</td>
+<td>10+10+12</td>
+</tr>
+
+<tr>
+<td>PAE<br>Intel Pentium Pro<br>AMD Athlon</td>
+<td>16:32</td>
+<td>32</td>
+<td>36<br>up to 52</td>
+<td>seg &times; 16 + off<br>seg.base + off</td>
+<td>2+9+9+12</td>
+</tr>
+
+<tr>
+<td>x86-64</td>
+<td>16:64</td>
+<td>48<br>up to 64</td>
+<td>40<br>up to 52</td>
+<td>seg &times; 16 + off<br>seg.base + off</td>
+<td>9+9+9+9+12</td>
+</tr>
+</table>
+
+<p>The segmented address space consists of a 16-bit segment value and an offset value.
+These are used to calculate the virtual address.
+In real mode, the 16-bit segmented value is multiplied by 16 and the offset value is added to it.
+This is then truncated to fit the virtual address space limits.
+The NEC V55 offers two special segment registers DS2 and DS3 whose values are multiplied by 256 instead of 16, providing access to a larger address space.
+In protected mode, the 16-bit segment value provides an index for a table entry that contains the actual base address to be added to the offset value.
+Long mode offers a similar scheme.</p>
+
+<p>The virtual address space is remapped to physical addresses based on page table structures.
+The virtual address is divided up into sequences of bits and each but the least significant portion is used to access an entry in a paging table.
+This results in a physical page, and the last portion of the virtual address provides an offset within that page.
+Most of these architectures provide various paging schemes, the first one available at introduction is included in this table.</p>
+
+<p>While the virtual address space and physical address space have theoretical upper bounds, most of the time the implementation does not provide access to the entire address space.
+In these cases, the table entry contains two lines, the first one containing the initial implementation, the second one the theoretical upper limit using the available schemes.</p>
+
+<p>A handful of 8-bit processors are also included in the table for comparison and an overview of the evolution of address space sizes.</p>
+
+</body>
+</html>
