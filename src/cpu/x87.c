@@ -82,7 +82,7 @@ static inline x87_float80_t x87_float80_make_int64(int64_t value)
 	x87_float80_t result;
 	if(value == 0)
 	{
-		result = x87_float80_make_zero(false);
+		result = FLOAT80_ZERO;
 	}
 	else
 	{
