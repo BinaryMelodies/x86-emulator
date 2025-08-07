@@ -1,0 +1,1069 @@
+<!doctype html>
+<html>
+<head>
+<title>Register correspondence</title>
+<style>
+td {
+	text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>8080/8086 register correspondence</h1>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2' width='18'></td>
+<td colspan='6'>8086</td>
+<td colspan='6'>8080/Z80</td>
+</tr>
+
+<tr>
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6'>PSW/AF</td>
+</tr>
+<tr>
+<td colspan='3'>AL</td>
+<td colspan='3'>(FLAGS)</td>
+<td colspan='3'>A</td>
+<td colspan='3'>-/F</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>CX/CW</td>
+<td colspan='6'>B/BC</td>
+</tr>
+<tr>
+<td colspan='3'>CH</td>
+<td colspan='3'>CL</td>
+<td colspan='3'>B</td>
+<td colspan='3'>C</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>DX/DW</td>
+<td colspan='6'>D/DE</td>
+</tr>
+<tr>
+<td colspan='3'>DH</td>
+<td colspan='3'>DL</td>
+<td colspan='3'>D</td>
+<td colspan='3'>E</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>BX/BW</td>
+<td colspan='6'>H/HL</td>
+</tr>
+<tr>
+<td colspan='3'>BH</td>
+<td colspan='3'>BL</td>
+<td colspan='3'>H</td>
+<td colspan='3'>L</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>SP or BP</td>
+<td colspan='6'>SP</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>SI/IX</td>
+<td colspan='6'>-/IX</td>
+</tr>
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='3'>-/IXH</td>
+<td colspan='3'>-/IXL</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>DI/IY</td>
+<td colspan='6'>-/IY</td>
+</tr>
+<tr>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='3'>-/IYH</td>
+<td colspan='3'>-/IYL</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='3'>-/I</td>
+<td colspan='3'>-/R</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>IP/PC</td>
+<td colspan='6'>PC</td>
+</tr>
+</table>
+
+<p>Notes</p>
+<ul>
+<li>The names on the left are Intel/NEC names, the names on the right are Intel 8080/Zilog Z80 names, and - if it is unavailable</li>
+<li>The 8080/Z80 SP register corresponds conceptually to the 8086 SP register. However, in V20 8080 emulation mode, SP is reserved for system interrupts (which are handled in 8086 native mode) and BP serves the purpose of the 8080/Z80 SP registers.</li>
+<li>The identification between the Z80 IX/IY registers and the 8086 SI/DI registers has been verified for the NEC µPD9002 emulation mode.</li>
+<li>The Z80 I and R registers have similar functionality to the 80286 IDTR and Pentium TSC registers, respectively.</li>
+</ul>
+
+<h1>Z80/Z8000 register correspondence</h1>
+
+<p>Note: These are the default mappings for two translators, and as such only two possible correspondences.</p>
+
+<table align='center' border='1'>
+<tr>
+<td rowspan='2' width='18'></td>
+<td colspan='6'>8080/Z80</td>
+<td colspan='6'>Z8000<br>Zilog TRANS8000</td>
+<td colspan='6'>Z8000<br>AMC TRANZ</td>
+</tr>
+
+<tr>
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+
+<td width='18'>1<br>5</td>
+<td width='36'>&hellip;</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='36'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>PSW/AF</td>
+<td colspan='6'>R0</td>
+<td colspan='6' style='background:gray;'></td>
+</tr>
+<tr>
+<td colspan='3'>A</td>
+<td colspan='3'>-/F</td>
+<td colspan='3'>RH0</td>
+<td colspan='3'>RL0</td>
+<td colspan='3'>RL0</td>
+<td colspan='3'>RH0</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>B/BC</td>
+<td colspan='6'>R1</td>
+<td colspan='6'>R1</td>
+</tr>
+<tr>
+<td colspan='3'>B</td>
+<td colspan='3'>C</td>
+<td colspan='3'>R1H</td>
+<td colspan='3'>R1L</td>
+<td colspan='3'>R1H</td>
+<td colspan='3'>R1L</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>D/DE</td>
+<td colspan='6'>R2</td>
+<td colspan='6'>R2</td>
+</tr>
+<tr>
+<td colspan='3'>D</td>
+<td colspan='3'>E</td>
+<td colspan='3'>R2H</td>
+<td colspan='3'>R2L</td>
+<td colspan='3'>R2H</td>
+<td colspan='3'>R2L</td>
+</tr>
+
+<tr>
+<td rowspan='2'></td>
+<td colspan='6'>H/HL</td>
+<td colspan='6'>R3</td>
+<td colspan='6'>R3</td>
+</tr>
+<tr>
+<td colspan='3'>H</td>
+<td colspan='3'>L</td>
+<td colspan='3'>R3H</td>
+<td colspan='3'>R3L</td>
+<td colspan='3'>R3H</td>
+<td colspan='3'>R3L</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>SP</td>
+<td colspan='6'>R15</td>
+<td colspan='6'>R15</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>-/IX</td>
+<td colspan='6'>R6</td>
+<td colspan='6'>R13</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>-/IY</td>
+<td colspan='6'>R7</td>
+<td colspan='6'>R14</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='3'>-/I</td>
+<td colspan='3'>-/R</td>
+<td colspan='6' style='background:gray;'></td>
+<td colspan='6' style='background:gray;'></td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>-/AF'</td>
+<td colspan='6'>R8</td>
+<td colspan='3'>R8 low</td>
+<td colspan='3'>R8 high</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>-/BC'</td>
+<td colspan='6'>R9</td>
+<td colspan='6'>R9</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>-/DE'</td>
+<td colspan='6'>R10</td>
+<td colspan='6'>R10</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan='6'>-/HL'</td>
+<td colspan='6'>R11</td>
+<td colspan='6'>R11</td>
+</tr>
+</table>
+
+<br>
+
+<p>Note: The flags are listed in the positions as they appear on the Z8000.</p>
+
+<table align='center' border='1'>
+<tr>
+<td></td>
+<td width='18'>7</td>
+<td width='18'>6</td>
+<td width='18'>5</td>
+<td width='18'>4</td>
+<td width='18'>3</td>
+<td width='18'>2</td>
+<td width='18'>1</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td>Z8000 FCW</td>
+<td>C</td>
+<td>Z</td>
+<td>S</td>
+<td>P<br>/<br>V</td>
+<td>D<br>A</td>
+<td>H</td>
+<td style='background:lightgray;'>0</td>
+<td style='background:lightgray;'>0</td>
+</tr>
+
+<tr>
+<td>8080</td>
+<td>C</td>
+<td>Z</td>
+<td>S</td>
+<td>P</td>
+<td style='background:gray;'></td>
+<td>A<br>C</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+<tr>
+<td>Z80</td>
+<td>C</td>
+<td>Z</td>
+<td>S</td>
+<td>P<br>/<br>V</td>
+<td>N</td>
+<td>H</td>
+<td style='background:gray;'></td>
+<td style='background:gray;'></td>
+</tr>
+
+</table>
+
+<h1>8086/V60 register correspondence</h1>
+
+<table align='center' border='1'>
+<tr>
+<td width='72'>V60</td>
+<td width='18'>3<br>1</td>
+<td width='72'>&hellip;</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='72'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td>R0</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>AW (AX)</td>
+</tr>
+
+<tr>
+<td>R1</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>CW (CX)</td>
+</tr>
+
+<tr>
+<td>R2</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>DW (DX)</td>
+</tr>
+
+<tr>
+<td>R3</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>BW (BX)</td>
+</tr>
+
+<tr>
+<td>R4</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>SP</td>
+</tr>
+
+<tr>
+<td>R5</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>BP</td>
+</tr>
+
+<tr>
+<td>R6</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>IX (SI)</td>
+</tr>
+
+<tr>
+<td>R7</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>IY (DI)</td>
+</tr>
+
+<tr>
+<td>R8</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>DS1 (ES)</td>
+</tr>
+
+<tr>
+<td>R9</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>PS (CS)</td>
+</tr>
+
+<tr>
+<td>R10</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>SS</td>
+</tr>
+
+<tr>
+<td>R11</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>DS0 (DS)</td>
+</tr>
+
+<tr>
+<td>R12</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='7'>&vellip;</td>
+</tr>
+
+<tr>
+<td>R28</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>R29 (AP)</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>R30 (FP)</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>R31 (SP)</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>PC</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>PC (IP)</td>
+</tr>
+
+<tr>
+<td>PSW</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>PSW2</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>PSW (FLAGS)</td>
+</tr>
+</table>
+
+<h1>386/IA-64 register correspondence</h1>
+
+<table align='center' border='1'>
+<tr>
+<td width='72'>IA-64</td>
+<td width='18'>8<br>1</td>
+<td width='18'>8<br>0</td>
+<td width='72'>&hellip;</td>
+<td width='18'>6<br>4</td>
+<td width='18'>6<br>3</td>
+<td width='72'>&hellip;</td>
+<td width='18'>4<br>8</td>
+<td width='18'>4<br>7</td>
+<td width='72'>&hellip;</td>
+<td width='18'>3<br>2</td>
+<td width='18'>3<br>1</td>
+<td width='72'>&hellip;</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='72'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td colspan='17'>General registers</td>
+</tr>
+
+<tr>
+<td>GR0</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'>0</td>
+</tr>
+
+<tr>
+<td>GR1</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>GR7</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>GR8</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>EAX</td>
+</tr>
+
+<tr>
+<td>GR9</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>ECX</td>
+</tr>
+
+<tr>
+<td>GR10</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>EDX</td>
+</tr>
+
+<tr>
+<td>GR11</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>EBX</td>
+</tr>
+
+<tr>
+<td>GR12</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>ESP</td>
+</tr>
+
+<tr>
+<td>GR13</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>EBP</td>
+</tr>
+
+<tr>
+<td>GR14</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>ESI</td>
+</tr>
+
+<tr>
+<td>GR15</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>EDI</td>
+</tr>
+
+<tr>
+<td>GR16</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3'>GS selector</td>
+<td colspan='3'>FS selector</td>
+<td colspan='3'>ES selector</td>
+<td colspan='3'>DS selector</td>
+</tr>
+
+<tr>
+<td>GR17</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3'>TR selector</td>
+<td colspan='3'>LDTR selector</td>
+<td colspan='3'>SS selector</td>
+<td colspan='3'>CS selector</td>
+</tr>
+
+<tr>
+<td>GR18</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>GR23</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>GR24</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>ES descriptor</td>
+</tr>
+
+<tr>
+<td>GR25</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>GR26</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>GR27</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>DS descriptor</td>
+</tr>
+
+<tr>
+<td>GR28</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>FS descriptor</td>
+</tr>
+
+<tr>
+<td>GR29</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>GS descriptor</td>
+</tr>
+
+<tr>
+<td>GR30</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>LDTR descriptor</td>
+</tr>
+
+<tr>
+<td>GR31</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>GDTR descriptor</td>
+</tr>
+
+<tr>
+<td>GR32</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>GR127</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>Floating-point registers</td>
+</tr>
+
+<tr>
+<td>FR0</td>
+<td colspan='16' style='background:lightgray;'>+0.0</td>
+</tr>
+
+<tr>
+<td>FR1</td>
+<td colspan='16' style='background:lightgray;'>+1.0</td>
+</tr>
+
+<tr>
+<td>FR2</td>
+<td colspan='16' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>FR7</td>
+<td colspan='16' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td rowspan='2'>FR8</td>
+<td colspan='16'>FP0</td>
+</tr>
+
+<tr>
+<td style='background:lightgray;'>1</td>
+<td colspan='3' style='background:lightgray;'>0x1FFFF</td>
+<td colspan='12'>MM0</td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td rowspan='2'>FR15</td>
+<td colspan='16'>FP7</td>
+</tr>
+
+<tr>
+<td style='background:lightgray;'>1</td>
+<td colspan='3' style='background:lightgray;'>0x1FFFF</td>
+<td colspan='12'>MM7</td>
+</tr>
+
+<tr>
+<td>FR16</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='3' style='background:lightgray;'>0x1003E</td>
+<td colspan='12'>XMM0[0:63]</td>
+</tr>
+
+<tr>
+<td>FR17</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='3' style='background:lightgray;'>0x1003E</td>
+<td colspan='12'>XMM0[64:128]</td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>FR30</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='3' style='background:lightgray;'>0x1003E</td>
+<td colspan='12'>XMM7[0:63]</td>
+</tr>
+
+<tr>
+<td>FR31</td>
+<td style='background:lightgray;'>0</td>
+<td colspan='3' style='background:lightgray;'>0x1003E</td>
+<td colspan='12'>XMM7[64:128]</td>
+</tr>
+
+<tr>
+<td>FR32</td>
+<td colspan='16' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>FR127</td>
+<td colspan='16' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>Application registers</td>
+</tr>
+
+<tr>
+<td>AR0</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>AR20</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>AR21<br>FCR</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3'>MXCSR[7:15]</td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='3'>FCW</td>
+</tr>
+
+<tr>
+<td>AR22</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>AR23</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>AR24<br>EFLAG</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>EFLAG</td>
+</tr>
+
+<tr>
+<td>AR25<br>CSD</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>CS descriptor</td>
+</tr>
+
+<tr>
+<td>AR26<br>SSD</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>SS descriptor</td>
+</tr>
+
+<tr>
+<td>AR27<br>CFLG</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6'>CR4</td>
+<td colspan='6'>CR0</td>
+</tr>
+
+<tr>
+<td>AR28<br>FSR</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3'>MXCSR[0:5]</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>FTW</td>
+<td colspan='3'>FSW</td>
+</tr>
+
+<tr>
+<td>AR29<br>FIR</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3'>FOP[0:10]</td>
+<td colspan='3'>FCS</td>
+<td colspan='6'>FIP</td>
+</tr>
+
+<tr>
+<td>AR30<br>FDR</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>FDS</td>
+<td colspan='6'>FDP</td>
+</tr>
+
+<tr>
+<td>AR31</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>AR43</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>AR44<br>ITC</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12'>TSC</td>
+</tr>
+
+<tr>
+<td>AR45</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>&vellip;</td>
+</tr>
+
+<tr>
+<td>AR127</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='12' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='17'>Other registers</td>
+</tr>
+
+<tr>
+<td>IP</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='6' style='background:lightgray;'></td>
+<td colspan='6'>CS.base + EIP</td>
+</tr>
+
+<tr>
+<td>PSR</td>
+<td colspan='4' style='background:gray;'></td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>CPL[0:1]</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+</table>
+
+<h1>386/VIA Alternate Instruction Set register correspondence</h1>
+
+<table align='center' border='1'>
+<tr>
+<td width='72'>AIS</td>
+<td width='18'>3<br>1</td>
+<td width='72'>&hellip;</td>
+<td width='18'>1<br>6</td>
+<td width='18'>1<br>5</td>
+<td width='72'>&hellip;</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td colspan='7'>General registers</td>
+</tr>
+
+<tr>
+<td>R0</td>
+<td colspan='6' style='background:lightgray;'>0</td>
+</tr>
+
+<tr>
+<td>R1</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='7'>&vellip;</td>
+</tr>
+
+<tr>
+<td>R7</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>R8</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>ES</td>
+</tr>
+
+<tr>
+<td>R9</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>CS</td>
+</tr>
+
+<tr>
+<td>R10</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>SS</td>
+</tr>
+
+<tr>
+<td>R11</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>DS</td>
+</tr>
+
+<tr>
+<td>R12</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>FS</td>
+</tr>
+
+<tr>
+<td>R13</td>
+<td colspan='3' style='background:lightgray;'></td>
+<td colspan='3'>GS</td>
+</tr>
+
+<tr>
+<td>R14</td>
+<td colspan='3'>TR</td>
+<td colspan='3'>LDTR</td>
+</tr>
+
+<tr>
+<td>R15</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td>R16</td>
+<td colspan='6'>EAX</td>
+</tr>
+
+<tr>
+<td>R17</td>
+<td colspan='6'>ECX</td>
+</tr>
+
+<tr>
+<td>R18</td>
+<td colspan='6'>EDX</td>
+</tr>
+
+<tr>
+<td>R19</td>
+<td colspan='6'>EBX</td>
+</tr>
+
+<tr>
+<td>R20</td>
+<td colspan='6'>ESP</td>
+</tr>
+
+<tr>
+<td>R21</td>
+<td colspan='6'>EBP</td>
+</tr>
+
+<tr>
+<td>R22</td>
+<td colspan='6'>ESI</td>
+</tr>
+
+<tr>
+<td>R23</td>
+<td colspan='6'>EDI</td>
+</tr>
+
+<tr>
+<td>R24</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+
+<tr>
+<td colspan='7'>&vellip;</td>
+</tr>
+
+<tr>
+<td>R31</td>
+<td colspan='6' style='background:lightgray;'></td>
+</tr>
+</table>
+
+<p>Note: The floating point registers FPR0-FPR7 are mapped to FP0-FP7 among the 32 registers FP0-FP31.</p>
+
+</body>
+</html>
