@@ -466,7 +466,8 @@ def read_data(filename):
 				instruction_name = line[13:].strip()
 				instructions_raw[instruction_name] = [num + 2, filename, ""]
 			elif line.startswith('@comment '):
-				continue
+				if section_name == '@instruction':
+					instructions_raw[instruction_name][0] += 1
 			elif line.rstrip() in {'@instructionset', '@architectures', '@features', '@processors'}:
 				section_name = line.rstrip()
 			elif section_name == '@instruction':
