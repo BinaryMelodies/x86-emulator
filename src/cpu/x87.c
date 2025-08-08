@@ -850,6 +850,11 @@ static inline void x87_signal_exception(x86_state_t * emu, int intnum)
 			emu->x87.cw |= X87_SW_IR; // same position as the X87_SW_ES flag
 			x87_trigger_interrupt(emu);
 		}
+		else
+		{
+			// later FPUs only trigger the interrupt when encountering an x87 instruction or WAIT
+			longjmp(emu->exc[emu->fetch_mode], 1);
+		}
 	}
 }
 
@@ -973,16 +978,26 @@ static inline unsigned x87_register_number(x86_state_t * emu, x86_regnum_t numbe
 	return (x87_get_sw_top(emu) + number) & 7;
 }
 
-static inline int x87_tag_get(x86_state_t * emu, int number)
+static inline int x87_tag_get_direct(x86_state_t * emu, int number)
 {
 	number &= 7;
 	return (emu->x87.tw >> (number * 2)) & 3;
 }
 
-static inline void x87_tag_set(x86_state_t * emu, int number, int tag)
+static inline void x87_tag_set_direct(x86_state_t * emu, int number, int tag)
 {
 	number &= 7;
 	emu->x87.tw = (emu->x87.tw & ~(3 << (number * 2))) | ((tag & 3) << (number * 2));
+}
+
+static inline int x87_tag_get(x86_state_t * emu, int number)
+{
+	return x87_tag_get_direct(emu, x87_register_number(emu, number));
+}
+
+static inline void x87_tag_set(x86_state_t * emu, int number, int tag)
+{
+	x87_tag_set_direct(emu, x87_register_number(emu, number), tag);
 }
 
 static inline x87_float80_t x87_restrict_precision(x86_state_t * emu, x87_float80_t value)
@@ -1028,25 +1043,52 @@ static inline void x87_set_register_bank(x86_state_t * emu, unsigned bank_number
 	x87_load_register_bank(emu);
 }
 
-static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t number)
+static inline x87_register_t * x87_register(x86_state_t * emu, x86_regnum_t number)
 {
-	number = x87_register_number(emu, number);
-	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
-		x87_signal_stack_underflow(emu);
+	return &emu->x87.fpr[x87_register_number(emu, number)];
+}
 
+static inline x87_register_t * x87_register_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number)
+{
+	return &emu->x87.bank[bank_number].fpr[x87_register_number(emu, number)];
+}
+
+static inline x87_float80_t x87_register_get80_no_exception_check(x86_state_t * emu, x86_regnum_t number)
+{
 #if _SUPPORT_FLOAT80
-	if(emu->x87.fpr[number].isfp)
+	if(x87_register(emu, number)->isfp)
 	{
-		return emu->x87.fpr[number].f;
+		return x87_register(emu, number)->f;
 	}
 	else
 	{
 		// stored as MMX register, convert it to floating point representation on the fly
-		uint16_t exponent = emu->x87.fpr[number].exponent;
-		return x87_convert_to_float80(emu->x87.fpr[number].mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
+		uint16_t exponent = x87_register(emu, number)->exponent;
+		return x87_convert_to_float80(x87_register(emu, number)->mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
 	}
 #else
-	return emu->x87.fpr[number].f;
+	return x87_register(emu, number)->f;
+#endif
+}
+
+static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t number)
+{
+	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
+		x87_signal_stack_underflow(emu);
+
+#if _SUPPORT_FLOAT80
+	if(x87_register(emu, number)->isfp)
+	{
+		return x87_register(emu, number)->f;
+	}
+	else
+	{
+		// stored as MMX register, convert it to floating point representation on the fly
+		uint16_t exponent = x87_register(emu, number)->exponent;
+		return x87_convert_to_float80(x87_register(emu, number)->mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
+	}
+#else
+	return x87_register(emu, number)->f;
 #endif
 }
 
@@ -1056,48 +1098,45 @@ static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnu
 		// current bank is not stored in the bank array
 		return x87_register_get80(emu, number);
 
-	number = x87_register_number(emu, number);
 	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
 		x87_signal_stack_underflow(emu);
 
 #if _SUPPORT_FLOAT80
-	if(emu->x87.bank[bank_number].fpr[number].isfp)
+	if(x87_register_bank(emu, number, bank_number)->isfp)
 	{
-		return emu->x87.bank[bank_number].fpr[number].f;
+		return x87_register_bank(emu, number, bank_number)->f;
 	}
 	else
 	{
 		// stored as MMX register, convert it to floating point representation on the fly
-		uint16_t exponent = emu->x87.bank[bank_number].fpr[number].exponent;
-		return x87_convert_to_float80(emu->x87.bank[bank_number].fpr[number].mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
+		uint16_t exponent = x87_register_bank(emu, number, bank_number)->exponent;
+		return x87_convert_to_float80(x87_register_bank(emu, number, bank_number)->mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
 	}
 #else
-	return emu->x87.bank[bank_number].fpr[number].f;
+	return x87_register_bank(emu, number, bank_number)->f;
 #endif
 }
 
 static inline void x87_register_tag(x86_state_t * emu, x86_regnum_t number)
 {
-	number = x87_register_number(emu, number);
 #if _SUPPORT_FLOAT80
-	if(!emu->x87.fpr[number].isfp)
+	if(!x87_register(emu, number)->isfp)
 		// stored as MMX register, convert it to floating point representation on the fly
-		x87_tag_set(emu, number, x87_determine_tag_nonfp(emu, emu->x87.fpr[number].mmx.q[0], emu->x87.fpr[number].exponent));
+		x87_tag_set(emu, number, x87_determine_tag_nonfp(emu, x87_register(emu, number)->mmx.q[0], x87_register(emu, number)->exponent));
 	else
 #endif
-		x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
+		x87_tag_set(emu, number, x87_determine_tag(emu, x87_register(emu, number)->f));
 }
 
 static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, x87_float80_t value)
 {
 	value = x87_restrict_precision(emu, value);
-	number = x87_register_number(emu, number);
 #if _SUPPORT_FLOAT80
 	// store as floating point register
-	emu->x87.fpr[number].isfp = true;
+	x87_register(emu, number)->isfp = true;
 #endif
-	emu->x87.fpr[number].f = value;
-	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
+	x87_register(emu, number)->f = value;
+	x87_tag_set(emu, number, x87_determine_tag(emu, x87_register(emu, number)->f));
 }
 
 static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number, x87_float80_t value)
@@ -1113,15 +1152,14 @@ static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t numbe
 	number = x87_register_number(emu, number);
 #if _SUPPORT_FLOAT80
 	// store as floating point register
-	emu->x87.bank[bank_number].fpr[number].isfp = true;
+	x87_register_bank(emu, number, bank_number)->isfp = true;
 #endif
-	emu->x87.bank[bank_number].fpr[number].f = value;
-	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.bank[bank_number].fpr[number].f));
+	x87_register_bank(emu, number, bank_number)->f = value;
+	x87_tag_set(emu, number, x87_determine_tag(emu, x87_register_bank(emu, number, bank_number)->f));
 }
 
 static inline void x87_register_free(x86_state_t * emu, x86_regnum_t number)
 {
-	number = x87_register_number(emu, number);
 	x87_tag_set(emu, number, X87_TAG_EMPTY);
 }
 
@@ -1531,11 +1569,10 @@ static inline void x87_state_restore_registers(x86_state_t * emu, x86_segnum_t s
 	{
 		x87_float80_t fpr = x87_memory_segmented_read80fp(emu, segment, x86_offset, offset + 10 * i);
 
-		int number = x87_register_number(emu, i);
 #if _SUPPORT_FLOAT80
-		emu->x87.fpr[number].isfp = true;
+		x87_register(emu, i)->isfp = true;
 #endif
-		emu->x87.fpr[number].f = fpr;
+		x87_register(emu, i)->f = fpr;
 		if(emu->x87.fpu_type >= X87_FPU_387)
 		{
 			// TODO: also for environment_restore
@@ -1739,11 +1776,11 @@ static inline void x87_state_restore_extended_common(x86_state_t * emu, x86_segn
 	{
 		x87_float80_t fpr = x86_memory_segmented_read80fp(emu, segment, offset + 10 * i);
 
-		int number = x87_register_number(emu, i);
 #if _SUPPORT_FLOAT80
-		emu->x87.fpr[number].isfp = true;
+		x87_register(emu, i)->isfp = true;
 #endif
-		emu->x87.fpr[number].f = fpr;
+		x87_register(emu, i)->f = fpr;
+		int number = x87_register_number(emu, i);
 		if((abridged_tw & (1 << number)) != 0)
 			x87_tag_set(emu, i, X87_TAG_EMPTY);
 		else

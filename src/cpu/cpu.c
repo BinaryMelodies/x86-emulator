@@ -941,13 +941,14 @@ static void x87_debug(FILE * file, x86_state_t * emu)
 		fprintf(file, "[FPU]\tProtected mode\n");
 	else
 		fprintf(file, "[FPU]\tReal mode\n");
+	// TODO: if banks are supported, display bank values
 	for(int i = 0; i < 8; i++)
 	{
 		uint64_t fraction;
 		uint16_t exponent;
 		bool sign;
 		int number = x87_register_number(emu, i);
-		x87_float80_t fpr = x87_register_get80(emu, i);
+		x87_float80_t fpr = x87_register_get80_no_exception_check(emu, i);
 		x87_convert_from_float80(fpr, &fraction, &exponent, &sign);
 #if _SUPPORT_FLOAT80
 		fprintf(file, "FPR%d/ST(%d)=%Le:%d %04X %016"PRIX64",tag=%d%s\n", number, i, fpr.value, sign, exponent, fraction, x87_tag_get(emu, number),
