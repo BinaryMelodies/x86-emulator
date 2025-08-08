@@ -4849,12 +4849,10 @@ x87_register_free(emu, _reg);
 x87_set_sw_top(emu, x87_get_sw_top(emu) + 1);
 
 @instruction FLD
-x87_push(emu, $0);
-/* TODO */
+x87_push(emu, x87_check_subnormal_8087(emu, $0));
 
 @instruction FLD1
 x87_push(emu, FLOAT80_ONE);
-/* TODO */
 
 @instruction FILD
 x87_push(emu, x87_int64_to_float80(emu, $0));
@@ -4892,27 +4890,21 @@ else
 
 @instruction FLDL2E
 x87_push(emu, FLOAT80_LOG2E);
-/* TODO */
 
 @instruction FLDL2T
 x87_push(emu, FLOAT80_LOG2_10);
-/* TODO */
 
 @instruction FLDLG2
 x87_push(emu, FLOAT80_LOG10_2);
-/* TODO */
 
 @instruction FLDLN2
 x87_push(emu, FLOAT80_LN2);
-/* TODO */
 
 @instruction FLDPI
 x87_push(emu, FLOAT80_PI);
-/* TODO */
 
 @instruction FLDZ
 x87_push(emu, FLOAT80_ZERO);
-/* TODO */
 
 @instruction FMUL|cnt=1
 $st = x87_fmul(emu, $st, $0);

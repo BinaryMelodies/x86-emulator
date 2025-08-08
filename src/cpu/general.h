@@ -144,6 +144,8 @@ static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t n
 static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number);
 static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number, x87_float80_t value);
 
+static inline x87_float80_t x87_check_subnormal_8087(x86_state_t * emu, x87_float80_t value);
+
 static inline void x87_environment_save_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
 static inline void x87_environment_restore_real_mode16(x86_state_t * emu, x86_segnum_t segment, uoff_t offset);
 

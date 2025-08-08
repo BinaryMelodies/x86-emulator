@@ -196,6 +196,15 @@ static inline x87_float80_t x87_make_unnormal(x87_float80_t x87value, uint16_t e
 	return x87value;
 }
 
+static inline bool signbit80(x87_float80_t x87value)
+{
+#if _SUPPORT_FLOAT80
+	return signbit(x87value.value);
+#else
+	return x87value.exponent & 0x8000;
+#endif
+}
+
 static inline int fp80classify(x87_float80_t x87value)
 {
 #if _SUPPORT_FLOAT80
@@ -283,6 +292,11 @@ static inline bool isnan80(x87_float80_t x87value)
 	return fp80classify(x87value) == FP80_NAN_QUIET || fp80classify(x87value) == FP80_NAN_SIGNALING || fp80classify(x87value) == FP80_PSEUDO_NAN;
 }
 
+static inline bool issubnormal80(x87_float80_t x87value)
+{
+	return fp80classify(x87value) == FP80_SUBNORMAL; // TODO: what about pseudo-subnormals?
+}
+
 static inline unsigned x87_determine_tag(x86_state_t * emu, x87_float80_t x87value)
 {
 	switch(fp80classify(x87value))
@@ -355,7 +369,6 @@ static inline void x87_convert_from_float80(x87_float80_t x87value, uint64_t * f
 {
 #if _SUPPORT_FLOAT80
 	int exp;
-	*sign = signbit(x87value.value);
 	switch(fpclassify(x87value.value))
 	{
 	case FP_NAN:
@@ -407,8 +420,8 @@ static inline void x87_convert_from_float80(x87_float80_t x87value, uint64_t * f
 #else
 	*fraction = x87value.fraction;
 	*exponent = x87value.exponent & 0x7FFF;
-	*sign = x87value.exponent & 0x8000;
 #endif
+	*sign = signbit80(x87value);
 }
 
 static inline x87_float80_t x87_convert_to_float80(uint64_t fraction, uint16_t exponent, bool sign)
@@ -469,6 +482,9 @@ static inline int x87_get_std_rounding_mode(x86_state_t * emu)
 }
 #endif
 
+static inline void x87_signal_exception(x86_state_t * emu, int intnum);
+
+// used for accessing memory
 static inline x87_float80_t x87_convert32_to_float(x86_state_t * emu, uint32_t value)
 {
 	uint64_t fraction;
@@ -489,7 +505,8 @@ static inline x87_float80_t x87_convert32_to_float(x86_state_t * emu, uint32_t v
 		else
 		{
 			// subnormal
-			// TODO: raise denormal exception
+			x87_signal_exception(emu, X87_SW_DE);
+
 			if(emu->x87.fpu_type < X87_FPU_387)
 			{
 				// load as unnormal
@@ -509,22 +526,30 @@ static inline x87_float80_t x87_convert32_to_float(x86_state_t * emu, uint32_t v
 	}
 	else
 	{
-		fraction = ((uint64_t)(value & 0x007FFFFF) << 40) | 0x8000000000000000;
+		fraction = value & 0x007FFFFF;
 		if(exponent == 0xFF)
 		{
 			// infinite and NaNs
+			if(emu->x87.fpu_type >= X87_FPU_387 && fraction != 0 && (fraction & 0x00400000))
+			{
+				// signalling NaN
+				x87_signal_exception(emu, X87_SW_IE);
+			}
+
 			exponent = 0x7FFF;
 		}
 		else
 		{
 			exponent += 127 - 16383;
 		}
+		fraction = (fraction << 40) | 0x8000000000000000;
 	}
 	sign = (value & 0x80000000) != 0;
 
 	return x87_convert_to_float80(fraction, exponent, sign);
 }
 
+// used for accessing memory
 static inline x87_float80_t x87_convert64_to_float(x86_state_t * emu, uint64_t value)
 {
 	uint64_t fraction;
@@ -543,7 +568,8 @@ static inline x87_float80_t x87_convert64_to_float(x86_state_t * emu, uint64_t v
 		else
 		{
 			// subnormal
-			// TODO: raise denormal exception
+			x87_signal_exception(emu, X87_SW_DE);
+
 			if(emu->x87.fpu_type < X87_FPU_387)
 			{
 				// load as unnormal
@@ -563,16 +589,23 @@ static inline x87_float80_t x87_convert64_to_float(x86_state_t * emu, uint64_t v
 	}
 	else
 	{
-		fraction = ((value & 0x000FFFFFFFFFFFFF) << 11) | 0x8000000000000000;
+		fraction = value & 0x000FFFFFFFFFFFFF;
 		if(exponent == 0x7FF)
 		{
 			// infinite and NaNs
+			if(emu->x87.fpu_type >= X87_FPU_387 && fraction != 0 && (fraction & 0x0008000000000000))
+			{
+				// signalling NaN
+				x87_signal_exception(emu, X87_SW_IE);
+			}
+
 			exponent = 0x7FFF;
 		}
 		else
 		{
 			exponent += 1023 - 16383;
 		}
+		fraction = (fraction << 11) | 0x8000000000000000;
 	}
 	sign = (value & 0x8000000000000000) != 0;
 
@@ -865,7 +898,7 @@ static inline void x87_signal_stack_overflow(x86_state_t * emu)
 		emu->x87.sw |= X87_SW_SF;
 		emu->x87.sw |= X87_SW_C1;
 	}
-	x87_signal_exception(emu, X87_CW_IM);
+	x87_signal_exception(emu, X87_SW_IE);
 }
 
 static inline void x87_signal_stack_underflow(x86_state_t * emu)
@@ -875,7 +908,7 @@ static inline void x87_signal_stack_underflow(x86_state_t * emu)
 		emu->x87.sw |= X87_SW_SF;
 		emu->x87.sw &= ~X87_SW_C1;
 	}
-	x87_signal_exception(emu, X87_CW_IM);
+	x87_signal_exception(emu, X87_SW_IE);
 }
 
 static inline int64_t x87_float80_to_int64(x86_state_t * emu, x87_float80_t value)
@@ -1226,6 +1259,39 @@ static inline x87_float80_t x87_f2xm1(x86_state_t * emu, x87_float80_t value)
 #endif
 }
 
+static inline x87_float80_t x87_check_subnormal(x86_state_t * emu, x87_float80_t value)
+{
+	if(issubnormal80(value))
+		x87_signal_exception(emu, X87_SW_DE);
+	return value;
+}
+
+// used for FLD
+static inline x87_float80_t x87_check_subnormal_8087(x86_state_t * emu, x87_float80_t value)
+{
+	if(emu->x87.fpu_type < X87_FPU_387)
+	{
+		if(issubnormal80(value))
+			x87_signal_exception(emu, X87_SW_DE);
+	}
+	return value;
+}
+
+static inline x87_float80_t x87_check_invalid(x86_state_t * emu, x87_float80_t value)
+{
+	bool invalid;
+
+	if(emu->x87.fpu_type < X87_FPU_387)
+		invalid = isnan80(value);
+	else
+		invalid = fp80classify(value) == FP80_NAN_SIGNALING;
+
+	if(invalid)
+		x87_signal_exception(emu, X87_SW_IE);
+
+	return value;
+}
+
 static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
@@ -1242,6 +1308,15 @@ static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
 {
 	x87_float80_t result;
+
+	x87_check_subnormal_8087(emu, value1);
+	x87_check_subnormal_8087(emu, value2);
+
+	x87_check_invalid(emu, value1);
+	x87_check_invalid(emu, value2);
+
+	x87_check_subnormal(emu, value1);
+	x87_check_subnormal(emu, value2);
 
 	// TODO: exceptions
 #if _SUPPORT_FLOAT80
@@ -1467,7 +1542,10 @@ static inline void x87_fxam(x86_state_t * emu, x87_float80_t value, bool is_empt
 {
 	if(is_empty)
 	{
-		emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C0);
+		if(emu->x87.fpu_type < X87_FPU_387)
+			emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C0);
+		else
+			emu->x87.sw &= ~(X87_SW_C3 | X87_SW_C2 | X87_SW_C0);
 	}
 	else
 	{
@@ -1484,7 +1562,7 @@ static inline void x87_fxam(x86_state_t * emu, x87_float80_t value, bool is_empt
 			break;
 		case FP80_INFINITE:
 		case FP80_PSEUDO_INFINITE:
-			emu->x87.sw &= ~(X87_SW_C3);
+			emu->x87.sw &= ~X87_SW_C3;
 			emu->x87.sw |= X87_SW_C2 | X87_SW_C0;
 			break;
 		case FP80_ZERO:
@@ -1499,15 +1577,12 @@ static inline void x87_fxam(x86_state_t * emu, x87_float80_t value, bool is_empt
 			emu->x87.sw |= X87_SW_C2;
 			break;
 		}
-#if _SUPPORT_FLOAT80
-		if(signbit(value.value))
-			emu->x87.sw |= X87_SW_C1;
-		else
-			emu->x87.sw &= ~X87_SW_C1;
-#else
-		// TODO
-#endif
 	}
+
+	if(signbit80(value))
+		emu->x87.sw |= X87_SW_C1;
+	else
+		emu->x87.sw &= ~X87_SW_C1;
 }
 
 static inline void x87_fxtract(x86_state_t * emu, x87_float80_t value, x87_float80_t * result1, x87_float80_t * result2)
