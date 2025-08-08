@@ -297,6 +297,22 @@ static inline bool issubnormal80(x87_float80_t x87value)
 	return fp80classify(x87value) == FP80_SUBNORMAL; // TODO: what about pseudo-subnormals?
 }
 
+static inline x87_float80_t make_quiet_nan(x87_float80_t x87value)
+{
+	// Note: this assumes that x87value is a NaN
+	x87value.fraction &= 0x4000000000000000U;
+	return x87value;
+}
+
+static inline x87_float80_t x87_make_quiet_nan(x86_state_t * emu, x87_float80_t x87value)
+{
+	if(emu->x87.fpu_type < X87_FPU_387)
+		// 8087/287 do not convert NaNs into quiet NaNs
+		return x87value;
+	else
+		return make_quiet_nan(x87value);
+}
+
 static inline unsigned x87_determine_tag(x86_state_t * emu, x87_float80_t x87value)
 {
 	switch(fp80classify(x87value))
@@ -1318,10 +1334,10 @@ static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x8
 	x87_check_subnormal(emu, value1);
 	x87_check_subnormal(emu, value2);
 
-	// TODO: exceptions
 #if _SUPPORT_FLOAT80
 	if(emu->x87.fpu_type < X87_FPU_387)
 	{
+		// 8087/287 converts subnormals to unnormal
 		if(fp80classify(value1) == FP80_SUBNORMAL)
 			value1 = x87_float80_make_8087(value1.value);
 		if(fp80classify(value2) == FP80_SUBNORMAL)
@@ -1329,39 +1345,61 @@ static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x8
 
 		if(isinf80(value1) && isinf80(value2) && (emu->x87.cw & X87_CW_IC) == 0)
 		{
-			result = x87_float80_make_indefinite();
-		}
-		else if(isnan80(value1) && isnan80(value2))
-		{
-			if(value1.fraction > value2.fraction)
-				result = value1;
-			else
-				result = value2;
-		}
-		else if(isnan80(value1))
-		{
-			result = value1;
-		}
-		else if(isnan80(value2))
-		{
-			result = value2;
-		}
-		else
-		{
-			fesetround(x87_get_std_rounding_mode(emu));
-			result = x87_restrict_precision(emu, x87_float80_make_8087(value1.value + value2.value));
+			// infinity control makes inf + inf invalid
+			x87_signal_exception(emu, X87_SW_IE);
 
-			if(fp80classify(value1) == FP80_UNNORMAL || fp80classify(value2) == FP80_UNNORMAL)
-			{
-				result = x87_make_unnormal(result, min(value1.exponent, value2.exponent));
-			}
+			return x87_float80_make_indefinite();
+		}
+	}
+
+	if(isnan80(value1) && isnan80(value2))
+	{
+		// takes NaN of greater magnitude
+		// on 387 and later, quiet NaNs override signaling NaNs, but since quiet NaNs have greater magnitude, this works out the same way
+		if(value1.fraction > value2.fraction)
+			return x87_make_quiet_nan(emu, value1);
+		else
+			return x87_make_quiet_nan(emu, value2);
+	}
+	else if(isnan80(value1))
+	{
+		return x87_make_quiet_nan(emu, value1);
+	}
+	else if(isnan80(value2))
+	{
+		return x87_make_quiet_nan(emu, value2);
+	}
+
+	fesetround(x87_get_std_rounding_mode(emu));
+	feclearexcept(FE_ALL_EXCEPT);
+
+	if(emu->x87.fpu_type < X87_FPU_387)
+	{
+		result = x87_restrict_precision(emu, x87_float80_make_8087(value1.value + value2.value));
+
+		if(fp80classify(value1) == FP80_UNNORMAL || fp80classify(value2) == FP80_UNNORMAL)
+		{
+			result = x87_make_unnormal(result, min(value1.exponent, value2.exponent));
 		}
 	}
 	else
 	{
-		fesetround(x87_get_std_rounding_mode(emu));
 		result = x87_restrict_precision(emu, x87_float80_make(value1.value + value2.value));
 	}
+
+	if(fetestexcept(FE_OVERFLOW))
+		// TODO: 8087/287 behaves differently to the IEEE standard
+		// TODO: unmasked response
+		x87_signal_exception(emu, X87_SW_OE);
+
+	if(fetestexcept(FE_UNDERFLOW))
+		// TODO: 8087/287 behaves differently to the IEEE standard
+		// TODO: unmasked response
+		x87_signal_exception(emu, X87_SW_UE);
+
+	if(fetestexcept(FE_INEXACT))
+		x87_signal_exception(emu, X87_SW_PE);
+
 #else
 	// TODO
 	(void) emu;
