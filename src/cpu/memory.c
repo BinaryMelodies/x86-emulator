@@ -954,7 +954,7 @@ static inline x87_float80_t x87_memory_segmented_read32fp(x86_state_t * emu, x86
 {
 	uint32_t result = 0;
 	x87_memory_segmented_read(emu, segment_number, x86_offset, offset, 4, &result);
-	return x87_convert64_to_float(le32toh(result));
+	return x87_convert64_to_float(emu, le32toh(result));
 }
 
 static inline uint64_t x87_memory_segmented_read64(x86_state_t * emu, x86_segnum_t segment_number, uoff_t x86_offset, uoff_t offset)

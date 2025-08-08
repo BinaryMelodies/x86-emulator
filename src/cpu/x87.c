@@ -314,6 +314,43 @@ static inline unsigned x87_determine_tag(x86_state_t * emu, x87_float80_t x87val
 	}
 }
 
+#if _SUPPORT_FLOAT80
+static inline unsigned x87_determine_tag_nonfp(x86_state_t * emu, uint64_t fraction, uint16_t exponent)
+{
+	(void) emu;
+	exponent &= 0x7FFF;
+	if(exponent == 0x7FFF)
+	{
+		//case FP80_NAN_QUIET:
+		//case FP80_NAN_SIGNALING:
+		//case FP80_PSEUDO_NAN:
+		//case FP80_INFINITE:
+		//case FP80_PSEUDO_INFINITE:
+		return X87_TAG_SPECIAL;
+	}
+	else if(exponent == 0)
+	{
+		if(fraction == 0)
+			//case FP80_ZERO:
+			return X87_TAG_ZERO;
+		else
+			//case FP80_SUBNORMAL:
+			//case FP80_PSEUDO_SUBNORMAL:
+			return X87_TAG_SPECIAL;
+	}
+	else
+	{
+		if((fraction & 0x8000000000000000U) == 0)
+			//case FP80_NORMAL:
+			return X87_TAG_VALID;
+		else
+			//case FP80_PSEUDO_ZERO:
+			//case FP80_UNNORMAL:
+			return X87_TAG_SPECIAL;
+	}
+}
+#endif
+
 static inline void x87_convert_from_float80(x87_float80_t x87value, uint64_t * fraction, uint16_t * exponent, bool * sign)
 {
 #if _SUPPORT_FLOAT80
@@ -432,7 +469,7 @@ static inline int x87_get_std_rounding_mode(x86_state_t * emu)
 }
 #endif
 
-static inline x87_float80_t x87_convert32_to_float(uint32_t value)
+static inline x87_float80_t x87_convert32_to_float(x86_state_t * emu, uint32_t value)
 {
 	uint64_t fraction;
 	uint16_t exponent;
@@ -440,48 +477,102 @@ static inline x87_float80_t x87_convert32_to_float(uint32_t value)
 
 	// TODO: floating point exceptions
 
-	fraction = ((uint64_t)(value & 0x007FFFFF) << 40) | 0x8000000000000000;
 	exponent = (value & 0x7F800000) >> 23;
-	if(exponent == 0xFF)
+	if(exponent == 0)
 	{
-		// infinite and NaNs
-		exponent = 0x7FFF;
-	}
-	else if(exponent == 0)
-	{
-		// subnormals and zero
-		exponent = 0;
+		fraction = (uint64_t)(value & 0x007FFFFF);
+		if(fraction == 0)
+		{
+			// zero
+			exponent = 0;
+		}
+		else
+		{
+			// subnormal
+			// TODO: raise denormal exception
+			if(emu->x87.fpu_type < X87_FPU_387)
+			{
+				// load as unnormal
+				exponent = 127 - 16383 + 40;
+			}
+			else
+			{
+				// load as normal
+				exponent = 127 - 16383 + 40;
+				while((fraction & 0x8000000000000000) == 0)
+				{
+					exponent --;
+					fraction <<= 1;
+				}
+			}
+		}
 	}
 	else
 	{
-		exponent += 127 - 16383;
+		fraction = ((uint64_t)(value & 0x007FFFFF) << 40) | 0x8000000000000000;
+		if(exponent == 0xFF)
+		{
+			// infinite and NaNs
+			exponent = 0x7FFF;
+		}
+		else
+		{
+			exponent += 127 - 16383;
+		}
 	}
 	sign = (value & 0x80000000) != 0;
 
 	return x87_convert_to_float80(fraction, exponent, sign);
 }
 
-static inline x87_float80_t x87_convert64_to_float(uint64_t value)
+static inline x87_float80_t x87_convert64_to_float(x86_state_t * emu, uint64_t value)
 {
 	uint64_t fraction;
 	uint16_t exponent;
 	bool sign;
 
-	fraction = ((value & 0x000FFFFFFFFFFFFF) << 11) | 0x8000000000000000;
 	exponent = (value & 0x7FF0000000000000) >> 52;
-	if(exponent == 0x7FF)
+	if(exponent == 0)
 	{
-		// infinite and NaNs
-		exponent = 0x7FFF;
-	}
-	else if(exponent == 0)
-	{
-		// subnormals and zero
-		exponent = 0;
+		fraction = (value & 0x000FFFFFFFFFFFFF) << 11;
+		if(fraction == 0)
+		{
+			// zero
+			exponent = 0;
+		}
+		else
+		{
+			// subnormal
+			// TODO: raise denormal exception
+			if(emu->x87.fpu_type < X87_FPU_387)
+			{
+				// load as unnormal
+				exponent = 1023 - 16383 + 11;
+			}
+			else
+			{
+				// load as normal
+				exponent = 1023 - 16383 + 11;
+				while((fraction & 0x8000000000000000) == 0)
+				{
+					exponent --;
+					fraction <<= 1;
+				}
+			}
+		}
 	}
 	else
 	{
-		exponent += 1023 - 16383;
+		fraction = ((value & 0x000FFFFFFFFFFFFF) << 11) | 0x8000000000000000;
+		if(exponent == 0x7FF)
+		{
+			// infinite and NaNs
+			exponent = 0x7FFF;
+		}
+		else
+		{
+			exponent += 1023 - 16383;
+		}
 	}
 	sign = (value & 0x8000000000000000) != 0;
 
@@ -741,7 +832,7 @@ static inline void x87_trigger_interrupt(x86_state_t * emu)
 	}
 }
 
-static inline void x87_signal_interrupt(x86_state_t * emu, int intnum)
+static inline void x87_signal_exception(x86_state_t * emu, int intnum)
 {
 	emu->x87.sw |= intnum;
 
@@ -760,6 +851,26 @@ static inline void x87_signal_interrupt(x86_state_t * emu, int intnum)
 			x87_trigger_interrupt(emu);
 		}
 	}
+}
+
+static inline void x87_signal_stack_overflow(x86_state_t * emu)
+{
+	if(emu->x87.fpu_type >= X87_FPU_387)
+	{
+		emu->x87.sw |= X87_SW_SF;
+		emu->x87.sw |= X87_SW_C1;
+	}
+	x87_signal_exception(emu, X87_CW_IM);
+}
+
+static inline void x87_signal_stack_underflow(x86_state_t * emu)
+{
+	if(emu->x87.fpu_type >= X87_FPU_387)
+	{
+		emu->x87.sw |= X87_SW_SF;
+		emu->x87.sw &= ~X87_SW_C1;
+	}
+	x87_signal_exception(emu, X87_CW_IM);
 }
 
 static inline int64_t x87_float80_to_int64(x86_state_t * emu, x87_float80_t value)
@@ -818,20 +929,33 @@ static inline x87_float80_t x87_packed80_to_float80(const uint8_t bytes[10])
 static inline void x87_float80_to_packed80(x87_float80_t value, uint8_t bytes[10])
 {
 	int64_t int_value;
+	bool sign;
 #if _SUPPORT_FLOAT80
+	// TODO: infinity and NaN
 	int_value = (int64_t)(value.value + 0.5);
-	bytes[0] = value.value < 0 ? 0x80 : 0;
-#else
-	// TODO
-	(void)value;
-	int_value = 0;
-#endif
 	if(int_value < 0)
 		int_value = -int_value;
+	sign = value.value < 0;
+	bytes[0] |= value.value < 0 ? 0x80 : 0;
+#else
+	sign = value.exponent & 0x8000;
+	value.exponent &= 0x7FFF;
+	if(value.exponent < 0x3FFE + 64)
+	{
+		// TODO: check for rounding errors
+		int_value = value.fraction >> (0x3FFE + 64 - value.exponent); // TODO: check if too much shift
+	}
+	else if(value.exponent > 0x3FFE + 64)
+	{
+		// TODO: check for rounding errors
+		int_value = value.fraction << (value.exponent - (0x3FFE + 64)); // TODO: check if too much shift
+	}
+#endif
 	for(int digit_pair = 0; digit_pair < 9; digit_pair++)
 	{
 		bytes[digit_pair] = (int_value % 10) + (((int_value / 10) % 10) << 4);
 	}
+	bytes[0] |= sign ? 0x80 : 0;
 }
 
 static inline unsigned x87_get_sw_top(x86_state_t * emu)
@@ -908,7 +1032,7 @@ static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t n
 {
 	number = x87_register_number(emu, number);
 	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
-		x87_signal_interrupt(emu, X87_CW_IM);
+		x87_signal_stack_underflow(emu);
 
 #if _SUPPORT_FLOAT80
 	if(emu->x87.fpr[number].isfp)
@@ -917,6 +1041,7 @@ static inline x87_float80_t x87_register_get80(x86_state_t * emu, x86_regnum_t n
 	}
 	else
 	{
+		// stored as MMX register, convert it to floating point representation on the fly
 		uint16_t exponent = emu->x87.fpr[number].exponent;
 		return x87_convert_to_float80(emu->x87.fpr[number].mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
 	}
@@ -933,7 +1058,7 @@ static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnu
 
 	number = x87_register_number(emu, number);
 	if(x87_tag_get(emu, number) == X87_TAG_EMPTY)
-		x87_signal_interrupt(emu, X87_CW_IM);
+		x87_signal_stack_underflow(emu);
 
 #if _SUPPORT_FLOAT80
 	if(emu->x87.bank[bank_number].fpr[number].isfp)
@@ -942,6 +1067,7 @@ static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnu
 	}
 	else
 	{
+		// stored as MMX register, convert it to floating point representation on the fly
 		uint16_t exponent = emu->x87.bank[bank_number].fpr[number].exponent;
 		return x87_convert_to_float80(emu->x87.bank[bank_number].fpr[number].mmx.q[0], exponent & 0x7FFF, (exponent & 0x8000) != 0);
 	}
@@ -953,27 +1079,25 @@ static inline x87_float80_t x87_register_get80_bank(x86_state_t * emu, x86_regnu
 static inline void x87_register_tag(x86_state_t * emu, x86_regnum_t number)
 {
 	number = x87_register_number(emu, number);
-	// TODO: emu->x87.fpr[number].isfp = true;
-	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
-}
-
-static inline void x87_register_set(x86_state_t * emu, x86_regnum_t number, x87_float80_t value)
-{
-	value = x87_restrict_precision(emu, value);
-	number = x87_register_number(emu, number);
 #if _SUPPORT_FLOAT80
-	emu->x87.fpr[number].isfp = true;
+	if(!emu->x87.fpr[number].isfp)
+		// stored as MMX register, convert it to floating point representation on the fly
+		x87_tag_set(emu, number, x87_determine_tag_nonfp(emu, emu->x87.fpr[number].mmx.q[0], emu->x87.fpr[number].exponent));
+	else
 #endif
-	emu->x87.fpr[number].f = value;
-	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
+		x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
 }
 
 static inline void x87_register_set80(x86_state_t * emu, x86_regnum_t number, x87_float80_t value)
 {
-	if(x87_tag_get(emu, number) != X87_TAG_EMPTY)
-		x87_signal_interrupt(emu, X87_CW_IM);
-
-	x87_register_set(emu, number, value);
+	value = x87_restrict_precision(emu, value);
+	number = x87_register_number(emu, number);
+#if _SUPPORT_FLOAT80
+	// store as floating point register
+	emu->x87.fpr[number].isfp = true;
+#endif
+	emu->x87.fpr[number].f = value;
+	x87_tag_set(emu, number, x87_determine_tag(emu, emu->x87.fpr[number].f));
 }
 
 static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t number, unsigned bank_number, x87_float80_t value)
@@ -985,12 +1109,10 @@ static inline void x87_register_set80_bank(x86_state_t * emu, x86_regnum_t numbe
 		return;
 	}
 
-	if(x87_tag_get(emu, number) != X87_TAG_EMPTY)
-		x87_signal_interrupt(emu, X87_CW_IM); // TODO: unsure
-
 	value = x87_restrict_precision(emu, value);
 	number = x87_register_number(emu, number);
 #if _SUPPORT_FLOAT80
+	// store as floating point register
 	emu->x87.bank[bank_number].fpr[number].isfp = true;
 #endif
 	emu->x87.bank[bank_number].fpr[number].f = value;
@@ -1006,7 +1128,7 @@ static inline void x87_register_free(x86_state_t * emu, x86_regnum_t number)
 static inline x87_float80_t x87_pop(x86_state_t * emu)
 {
 	if(x87_tag_get(emu, 0) == X87_TAG_EMPTY)
-		x87_signal_interrupt(emu, X87_CW_IM);
+		x87_signal_stack_underflow(emu);
 
 	x87_float80_t value = x87_register_get80(emu, 0);
 	x87_register_free(emu, 0);
@@ -1017,10 +1139,10 @@ static inline x87_float80_t x87_pop(x86_state_t * emu)
 static inline void x87_push(x86_state_t * emu, x87_float80_t value)
 {
 	if(x87_tag_get(emu, 7) != X87_TAG_EMPTY)
-		x87_signal_interrupt(emu, X87_CW_IM);
+		x87_signal_stack_overflow(emu);
 
 	x87_set_sw_top(emu, x87_get_sw_top(emu) - 1);
-	x87_register_set(emu, 0, value);
+	x87_register_set80(emu, 0, value);
 }
 
 static inline uint64_t x86_mmx_get(x86_state_t * emu, x86_regnum_t number)
@@ -1028,6 +1150,7 @@ static inline uint64_t x86_mmx_get(x86_state_t * emu, x86_regnum_t number)
 #if _SUPPORT_FLOAT80
 	if(emu->x87.fpr[number].isfp)
 	{
+		// stored as floating point register, convert to MMX representation on the fly
 		uint64_t fraction;
 		uint16_t exponent;
 		bool sign;
@@ -1046,6 +1169,7 @@ static inline uint64_t x86_mmx_get(x86_state_t * emu, x86_regnum_t number)
 static inline void x86_mmx_set(x86_state_t * emu, x86_regnum_t number, uint64_t value)
 {
 #if _SUPPORT_FLOAT80
+	// store as MMX register
 	emu->x87.fpr[number].isfp = false;
 #endif
 	emu->x87.fpr[number].exponent = 0xFFFF;
