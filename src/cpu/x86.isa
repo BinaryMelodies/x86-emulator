@@ -4734,7 +4734,7 @@ for(int j = 0; j < 4; j++)
 
 @instruction FABS
 $st = x87_fabs(emu, $st);
-$c0 = 0;
+$c0 = 0; // TODO: did early FPUs did this
 
 @instruction FADD|cnt=1
 $st = x87_fadd(emu, $st, $0);

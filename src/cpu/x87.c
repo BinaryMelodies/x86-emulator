@@ -1311,14 +1311,12 @@ static inline x87_float80_t x87_check_invalid(x86_state_t * emu, x87_float80_t v
 static inline x87_float80_t x87_fabs(x86_state_t * emu, x87_float80_t value)
 {
 	(void) emu;
-	// TODO: precision/rounding
 #if _SUPPORT_FLOAT80
-	return x87_float80_make(fabsl(value.value));
+	value.value = fabsl(value.value);
 #else
-	// TODO
-	(void) value;
-	return FLOAT80_ZERO;
+	value.exponent &= 0x7FFF;
 #endif
+	return value;
 }
 
 static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x87_float80_t value2)
