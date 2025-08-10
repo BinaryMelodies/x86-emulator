@@ -109,6 +109,20 @@ Some information is lacking (for example, segment descriptor cache formats, VIA 
 Very little is known about the NEC µPD9002, the emulator attempts to simulate a full Z80 instruction set.
 Some preliminary code is available for handling the Intel 8086/8088 internal registers, but most of it is not yet implemented.
 
+# Some documents
+
+Here are some basic HTML documents prepared by the author:
+
+* (Timeline of several x86 implementations by vendor)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/history.html]
+* (Address space sizes per generation)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/mem.html]
+* (Evolution of the x86 register set)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/regs.html]
+* (Evolution of the x86 FLAGS register)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/flags.html]
+* (Execution modes among various x86 processors)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/modes.html]
+* (Comparison of the Intel 8087 and Intel 8089 coprocessors)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/coproc.html]
+* (Evolution of the x87 CW and SW registers)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/cw_sw.html]
+* (Overview of Cyrix configuration registers)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/cyrix.html]
+* (Register correspondence between different CPUs)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/othercpu.html]
+
 # Acknowledgements
 
 This project would not have been possible without the resources and amazing work of many people and it was inspired by many of them, including:

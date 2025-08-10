@@ -887,16 +887,16 @@ static inline void x87_signal_exception(x86_state_t * emu, int intnum)
 
 	if(emu->x87.fpu_type >= X87_FPU_287)
 	{
-		emu->x87.cw |= X87_SW_ES;
+		emu->x87.sw |= X87_SW_ES;
 		if(emu->x87.fpu_type == X87_FPU_INTEGRATED)
-			emu->x87.cw |= X87_SW_B;
+			emu->x87.sw |= X87_SW_B;
 	}
 
 	if((emu->x87.cw & intnum) == 0)
 	{
 		if(emu->x87.fpu_type == X87_FPU_8087)
 		{
-			emu->x87.cw |= X87_SW_IR; // same position as the X87_SW_ES flag
+			emu->x87.sw |= X87_SW_IR; // same position as the X87_SW_ES flag
 			x87_trigger_interrupt(emu);
 		}
 		else

@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+<title>Evolution of the x87 CW and SW registers</title>
+<style>
+td {
+	text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>Evolution of the x87 CW and SW registers</h1>
+
+<h2>The x87 command word register</h2>
+
+<table align='center' border='1'>
+<tr>
+<td colspan='17'>CW</td>
+</tr>
+
+<tr>
+<td width='54'></td>
+<td width='18'>1<br>5</td>
+<td width='18'>1<br>4</td>
+<td width='18'>1<br>3</td>
+<td width='18'>1<br>2</td>
+<td width='18'>1<br>1</td>
+<td width='18'>1<br>0</td>
+<td width='18'>9</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='18'>6</td>
+<td width='18'>5</td>
+<td width='18'>4</td>
+<td width='18'>3</td>
+<td width='18'>2</td>
+<td width='18'>1</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td>8087</td>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td>I<br>C</td>
+<td colspan='2'>RC</td>
+<td colspan='2'>PC</td>
+<td>I<br>E<br>M</td>
+<td style='background:gray;'>
+<td>P<br>M</td>
+<td>U<br>M</td>
+<td>O<br>M</td>
+<td>Z<br>M</td>
+<td>D<br>M</td>
+<td>I<br>M</td>
+</tr>
+
+<tr>
+<td>287</td>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td>I<br>C</td>
+<td colspan='2'>RC</td>
+<td colspan='2'>PC</td>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td>P<br>M</td>
+<td>U<br>M</td>
+<td>O<br>M</td>
+<td>Z<br>M</td>
+<td>D<br>M</td>
+<td>I<br>M</td>
+</tr>
+
+<tr>
+<td>387</td>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td colspan='2'>RC</td>
+<td colspan='2'>PC</td>
+<td style='background:gray;'>
+<td style='background:gray;'>
+<td>P<br>M</td>
+<td>U<br>M</td>
+<td>O<br>M</td>
+<td>Z<br>M</td>
+<td>D<br>M</td>
+<td>I<br>M</td>
+</tr>
+</table>
+
+<ul>
+<li>IM &mdash; invalid operation mask</li>
+<li>DM &mdash; denormalized operand mask</li>
+<li>ZM &mdash; zerodivide mask</li>
+<li>OM &mdash; overflow mask</li>
+<li>UM &mdash; underflow mask</li>
+<li>PM &mdash; precision mask</li>
+<li>IEM &mdash; interrupt enable mask (8087 only)</li>
+<li>PC &mdash; precision control</li>
+<li>RC &mdash; rounding control</li>
+<li>IC &mdash; infinity control (8087/287 only)</li>
+</ul>
+
+<h2>The x87 status word register</h2>
+
+<table align='center' border='1'>
+<tr>
+<td colspan='17'>SW</td>
+</tr>
+
+<tr>
+<td width='54'></td>
+<td width='18'>1<br>5</td>
+<td width='18'>1<br>4</td>
+<td width='18'>1<br>3</td>
+<td width='18'>1<br>2</td>
+<td width='18'>1<br>1</td>
+<td width='18'>1<br>0</td>
+<td width='18'>9</td>
+<td width='18'>8</td>
+<td width='18'>7</td>
+<td width='18'>6</td>
+<td width='18'>5</td>
+<td width='18'>4</td>
+<td width='18'>3</td>
+<td width='18'>2</td>
+<td width='18'>1</td>
+<td width='18'>0</td>
+</tr>
+
+<tr>
+<td>8087</td>
+<td>B</td>
+<td>C<br>3</td>
+<td colspan='3'>ST</td>
+<td>C<br>2</td>
+<td>C<br>1</td>
+<td>C<br>0</td>
+<td>I<br>R</td>
+<td style='background:gray;'>
+<td>P<br>E</td>
+<td>U<br>E</td>
+<td>O<br>E</td>
+<td>Z<br>E</td>
+<td>D<br>E</td>
+<td>I<br>E</td>
+</tr>
+
+<tr>
+<td>287</td>
+<td>B</td>
+<td>C<br>3</td>
+<td colspan='3'>ST</td>
+<td>C<br>2</td>
+<td>C<br>1</td>
+<td>C<br>0</td>
+<td>E<br>S</td>
+<td style='background:gray;'>
+<td>P<br>E</td>
+<td>U<br>E</td>
+<td>O<br>E</td>
+<td>Z<br>E</td>
+<td>D<br>E</td>
+<td>I<br>E</td>
+</tr>
+
+<tr>
+<td>387</td>
+<td>B</td>
+<td>C<br>3</td>
+<td colspan='3'>ST</td>
+<td>C<br>2</td>
+<td>C<br>1</td>
+<td>C<br>0</td>
+<td>E<br>S</td>
+<td>S<br>F</td>
+<td>P<br>E</td>
+<td>U<br>E</td>
+<td>O<br>E</td>
+<td>Z<br>E</td>
+<td>D<br>E</td>
+<td>I<br>E</td>
+</tr>
+</table>
+
+<ul>
+<li>IE &mdash; invalid operation exception</li>
+<li>DE &mdash; denormalized operand exception</li>
+<li>ZE &mdash; zerodivide exception</li>
+<li>OE &mdash; overflow exception</li>
+<li>UE &mdash; underflow exception</li>
+<li>PE &mdash; precision exception</li>
+<li>SF &mdash; stack fault (387 and above)</li>
+<li>IR &mdash; interrupt request (8087 only)</li>
+<li>ES &mdash; error summary status (287 and above)</li>
+<li>C0, C1, C2, C3 &mdash; condition codes</li>
+<li>ST &mdash; stack top</li>
+<li>B &mdash; busy</li>
+</ul>
+
+</body>
+</html>

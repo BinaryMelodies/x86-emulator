@@ -1559,9 +1559,9 @@ restart:
 		if(_OPSIZE == 0)
 		{
 			DEBUG("movb\t");
-			DEBUG(src_op_format, x89_base_register_name[src_base_field], src_disp);
-			DEBUG(", ");
 			DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
+			DEBUG(", ");
+			DEBUG(src_op_format, x89_base_register_name[src_base_field], src_disp);
 			DEBUG("\n");
 			if(!execute)
 				return;
