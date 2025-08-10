@@ -113,15 +113,15 @@ Some preliminary code is available for handling the Intel 8086/8088 internal reg
 
 Here are some basic HTML documents prepared by the author:
 
-* (Timeline of several x86 implementations by vendor)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/history.html]
-* (Address space sizes per generation)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/mem.html]
-* (Evolution of the x86 register set)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/regs.html]
-* (Evolution of the x86 FLAGS register)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/flags.html]
-* (Execution modes among various x86 processors)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/modes.html]
-* (Comparison of the Intel 8087 and Intel 8089 coprocessors)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/coproc.html]
-* (Evolution of the x87 CW and SW registers)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/cw_sw.html]
-* (Overview of Cyrix configuration registers)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/cyrix.html]
-* (Register correspondence between different CPUs)[https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/othercpu.html]
+* [Timeline of several x86 implementations by vendor](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/history.html)
+* [Address space sizes per generation](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/mem.html)
+* [Evolution of the x86 register set](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/regs.html)
+* [Evolution of the x86 FLAGS register](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/flags.html)
+* [Execution modes among various x86 processors](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/modes.html)
+* [Comparison of the Intel 8087 and Intel 8089 coprocessors](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/coproc.html)
+* [Evolution of the x87 CW and SW registers](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/cw_sw.html)
+* [Overview of Cyrix configuration registers](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/cyrix.html)
+* [Register correspondence between different CPUs](https://html-preview.github.io/?url=https://github.com/BinaryMelodies/x86-emulator/blob/main/docs/othercpu.html)
 
 # Acknowledgements
 
