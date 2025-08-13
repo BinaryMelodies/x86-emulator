@@ -4475,14 +4475,14 @@ else
 @instruction WAIT
 if(emu->x87.fpu_type != X87_FPU_NONE)
 {
-	if(X86_CPU_286 <= emu->cpu_type && emu->cpu_type < X86_CPU_486)
+	if(X87_FPU_287 <= emu->x87.fpu_type && emu->x87.fpu_type < X87_FPU_INTEGRATED)
 	{
-		if((emu->cr[0] & X86_CR0_MP) == X86_CR0_MP)
+		if((emu->cr[0] & (X86_CR0_MP | X86_CR0_TS)) == (X86_CR0_MP | X86_CR0_TS))
 		{
 			x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
 		}
 	}
-	if(X86_CPU_286 <= emu->cpu_type)
+	else if(emu->x87.fpu_type == X87_FPU_INTEGRATED)
 	{
 		if((emu->cr[0] & X86_CR0_TS) != 0)
 		{
@@ -4943,6 +4943,7 @@ else
 if(emu->x87.fpu_type == X87_FPU_8087)
 {
 	emu->x87.cw &= ~X87_CW_IEM;
+	_x87_int();
 	if(sync)
 		return;
 }

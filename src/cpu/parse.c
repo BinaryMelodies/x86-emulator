@@ -690,6 +690,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _pop80() x80_pop16(emu)
 #define _push80(val) x80_push16(emu, (val))
 
+// reports any unhandled x87 exceptions, typically executed before non-asynchronous instructions (those that have an FN* form) on integrated FPUs and WAIT
 #define _x87_int() \
 	do \
 	{ \
