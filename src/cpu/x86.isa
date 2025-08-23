@@ -4738,20 +4738,20 @@ $c0 = 0; // TODO: did early FPUs did this
 
 @instruction FADD|cnt=1
 $st = x87_fadd(emu, $st, $0);
-/* TODO */
+x87_signal_exceptions(emu);
 
 @instruction FADD|cnt=2
 $0 = x87_fadd(emu, $0, $1);
-/* TODO */
+x87_signal_exceptions(emu);
 
 @instruction FADDP
 $0 = x87_fadd(emu, $0, $1);
 x87_pop(emu);
-/* TODO */
+x87_signal_exceptions(emu);
 
 @instruction FIADD
 $st = x87_fadd(emu, $st, x87_int64_to_float80(emu, $0));
-/* TODO */
+x87_signal_exceptions(emu);
 
 @instruction FBLD
 uint8_t bytes[10];

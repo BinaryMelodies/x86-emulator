@@ -881,7 +881,7 @@ static inline void x87_trigger_interrupt(x86_state_t * emu)
 	}
 }
 
-static inline void x87_signal_exception(x86_state_t * emu, int intnum)
+static inline void x87_signal_exception_later(x86_state_t * emu, int intnum)
 {
 	emu->x87.sw |= intnum;
 
@@ -891,8 +891,11 @@ static inline void x87_signal_exception(x86_state_t * emu, int intnum)
 		if(emu->x87.fpu_type == X87_FPU_INTEGRATED)
 			emu->x87.sw |= X87_SW_B;
 	}
+}
 
-	if((emu->x87.cw & intnum) == 0)
+static inline void x87_signal_exceptions(x86_state_t * emu)
+{
+	if((emu->x87.sw & ~emu->x87.cw & 0x3F) != 0)
 	{
 		if(emu->x87.fpu_type == X87_FPU_8087)
 		{
@@ -905,6 +908,12 @@ static inline void x87_signal_exception(x86_state_t * emu, int intnum)
 			longjmp(emu->exc[emu->fetch_mode], 1);
 		}
 	}
+}
+
+static inline void x87_signal_exception(x86_state_t * emu, int intnum)
+{
+	x87_signal_exception_later(emu, intnum);
+	x87_signal_exceptions(emu);
 }
 
 static inline void x87_signal_stack_overflow(x86_state_t * emu)
@@ -1386,17 +1395,55 @@ static inline x87_float80_t x87_fadd(x86_state_t * emu, x87_float80_t value1, x8
 	}
 
 	if(fetestexcept(FE_OVERFLOW))
+	{
 		// TODO: 8087/287 behaves differently to the IEEE standard
-		// TODO: unmasked response
-		x87_signal_exception(emu, X87_SW_OE);
+		int exp1, exp2;
+		// unmasked response
+		x87_signal_exception_later(emu, X87_SW_OE);
+
+		frexp(value1.value, &exp1);
+		frexp(value2.value, &exp2);
+		if(exp1 >= exp2)
+		{
+			value1.value = ldexp(value1.value, exp1 - 0x6000);
+			value1.exponent -= 0x6000;
+		}
+		else
+		{
+			value2.value = ldexp(value2.value, exp2 - 0x6000);
+			value2.exponent -= 0x6000;
+		}
+
+		feclearexcept(FE_ALL_EXCEPT);
+		result = x87_restrict_precision(emu, x87_float80_make(value1.value + value2.value));
+	}
 
 	if(fetestexcept(FE_UNDERFLOW))
+	{
 		// TODO: 8087/287 behaves differently to the IEEE standard
-		// TODO: unmasked response
-		x87_signal_exception(emu, X87_SW_UE);
+		int exp1, exp2;
+		// unmasked response
+		x87_signal_exception_later(emu, X87_SW_UE);
+
+		frexp(value1.value, &exp1);
+		frexp(value2.value, &exp2);
+		if(exp1 >= exp2)
+		{
+			value1.value = ldexp(value1.value, exp1 + 0x6000);
+			value1.exponent += 0x6000;
+		}
+		else
+		{
+			value2.value = ldexp(value2.value, exp2 + 0x6000);
+			value2.exponent += 0x6000;
+		}
+
+		feclearexcept(FE_ALL_EXCEPT);
+		result = x87_restrict_precision(emu, x87_float80_make(value1.value + value2.value));
+	}
 
 	if(fetestexcept(FE_INEXACT))
-		x87_signal_exception(emu, X87_SW_PE);
+		x87_signal_exception_later(emu, X87_SW_PE);
 
 #else
 	// TODO
