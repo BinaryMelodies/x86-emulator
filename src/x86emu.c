@@ -1831,7 +1831,7 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 	return address;
 }
 
-uaddr_t load_exe(x86_state_t * emu, FILE * input, long file_offset, struct load_registers * registers)
+uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct load_registers * registers)
 {
 	uaddr_t address;
 
@@ -2273,7 +2273,17 @@ void usage_fmts(void)
 		"\tprl, mpm, mpm80\n"
 		"\t\t(8080/8085/Z80) MP/M .prl file\n"
 		"\tcpm3, cpm+\n"
-		"\t\t(8080/8085/Z80) CP/M Plus .com file\n");
+		"\t\t(8080/8085/Z80) CP/M Plus .com file\n"
+		"\tne\n"
+		"\t\t(8086) Windows and OS/2 \"NE\" new executable (not implemented)\n"
+		"\tle\n"
+		"\t\t(386) DOS/4G \"LX\" and OS/2 \"LE\" linear executable (not implemented)\n"
+		"\tpe\n"
+		"\t\t(386/x86-64) Windows \"PE\" portable executable (not implemented)\n"
+		"\tcoff\n"
+		"\t\t(386) DJGPP and FlexOS 386 COFF executable (not implemented)\n"
+		"\telf\n"
+		"\t\t(386/x86-64) Linux ELF executable (not implemented)\n");
 }
 
 void usage_pctype(void)
@@ -2373,11 +2383,16 @@ int main(int argc, char * argv[])
 	enum
 	{
 		FMT_AUTO, // determine file format from signature (not always reliable)
-		FMT_COM,
-		FMT_PRL,
-		FMT_EXE,
-		FMT_CMD,
-		FMT_CPM3,
+		FMT_COM, // CP/M (8080) and MS-DOS (8086) flat file loaded at 0x0100
+		FMT_PRL, // CP/M (8080) relocatable file
+		FMT_MZ_EXE, // MS-DOS (8086) "MZ" executable
+		FMT_CMD, // CP/M (8086) executable
+		FMT_CPM3, // CP/M Plus (8080) executable
+		FMT_NE_EXE, // NE (286) executable // TODO: not yet implemented
+		FMT_LE_EXE, // LE/LX (386) executable // TODO: not yet implemented
+		FMT_PE_EXE, // PE (386/x86-64) executable // TODO: not yet implemented
+		FMT_COFF, // COFF (386) executable // TODO: not yet implemented
+		FMT_ELF, // ELF (386/x86-64) executable // TODO: not yet implemented
 	} exe_fmt = FMT_AUTO;
 
 	bool load_with_cs = false;
@@ -2609,7 +2624,7 @@ int main(int argc, char * argv[])
 				|| strcasecmp(arg, "msdos") == 0
 				|| strcasecmp(arg, "ms-dos") == 0)
 				{
-					exe_fmt = FMT_EXE;
+					exe_fmt = FMT_MZ_EXE;
 				}
 				else if(strcasecmp(arg, "cmd") == 0
 				|| strcasecmp(arg, "cpm86") == 0
@@ -2627,6 +2642,26 @@ int main(int argc, char * argv[])
 				|| strcasecmp(arg, "cpm+") == 0)
 				{
 					exe_fmt = FMT_CPM3;
+				}
+				else if(strcasecmp(arg, "ne") == 0)
+				{
+					exe_fmt = FMT_NE_EXE;
+				}
+				else if(strcasecmp(arg, "le") == 0)
+				{
+					exe_fmt = FMT_LE_EXE;
+				}
+				else if(strcasecmp(arg, "pe") == 0)
+				{
+					exe_fmt = FMT_PE_EXE;
+				}
+				else if(strcasecmp(arg, "coff") == 0)
+				{
+					exe_fmt = FMT_COFF;
+				}
+				else if(strcasecmp(arg, "elf") == 0)
+				{
+					exe_fmt = FMT_ELF;
 				}
 				else
 				{
@@ -3036,6 +3071,8 @@ printf("ok %d\n", emu->x80.cpu_method);
 	struct load_registers registers;
 	memset(&registers, 0, sizeof registers);
 
+	uint32_t image_offset = 0;
+
 	switch(load_mode)
 	{
 	case LOAD_AUTO:
@@ -3198,13 +3235,77 @@ break;
 			}
 			else
 			{
-				uint8_t magic[2];
-				fread(magic, 2, 1, input);
-				if((magic[0] == 'M' && magic[2] == 'Z')
-				|| (magic[0] == 'Z' && magic[2] == 'M'))
+				uint8_t magic[4];
+				fread(magic, 4, 1, input);
+				if((magic[0] == 'M' && magic[1] == 'Z')
+				|| (magic[0] == 'Z' && magic[1] == 'M'))
 				{
-					exe_fmt = FMT_EXE;
-					goto case_fmt_exe;
+					uint16_t tmp;
+					fseek(input, 2L, SEEK_SET);
+					uint32_t image_size;
+					fread(&tmp, 2, 1, input);
+					image_size = (uint32_t)le16toh(tmp) << 9;
+					fread(&tmp, 2, 1, input);
+					image_size -= (-le16toh(tmp) & 0x1FF);
+
+					fseek(input, 0x3CL, SEEK_SET);
+					uint32_t new_header_offset;
+					fread(&new_header_offset, 2, 1, input);
+					image_size -= le32toh(new_header_offset);
+
+					if(new_header_offset != 0 && (fseek(input, new_header_offset, SEEK_SET), ftell(input)) == new_header_offset)
+					{
+						fread(magic, 4, 1, input);
+						if(magic[0] == 'N' && magic[1] == 'E')
+						{
+							image_offset = new_header_offset;
+							exe_fmt = FMT_NE_EXE;
+							goto case_fmt_ne_exe;
+						}
+						else if((magic[0] == 'L' && magic[1] == 'E')
+							 || (magic[0] == 'L' && magic[1] == 'X'))
+						{
+							image_offset = new_header_offset;
+							exe_fmt = FMT_LE_EXE;
+							goto case_fmt_le_exe;
+						}
+						else if(magic[0] == 'P' && magic[1] == 'E' && magic[2] == '\0' && magic[3] == '\0')
+						{
+							image_offset = new_header_offset;
+							exe_fmt = FMT_PE_EXE;
+							goto case_fmt_pe_exe;
+						}
+						else if(magic[0] == 'L' && magic[1] == '\x01')
+						{
+							image_offset = new_header_offset;
+							exe_fmt = FMT_COFF;
+							goto case_fmt_coff;
+						}
+					}
+
+					if(image_size != 0 && image_size != new_header_offset && (fseek(input, image_size, SEEK_SET), ftell(input)) == image_size)
+					{
+						fread(magic, 4, 1, input);
+						if(magic[0] == 'L' && magic[1] == '\x01')
+						{
+							image_offset = image_size;
+							exe_fmt = FMT_COFF;
+							goto case_fmt_coff;
+						}
+					}
+
+					exe_fmt = FMT_MZ_EXE;
+					goto case_fmt_mz_exe;
+				}
+				else if(magic[0] == 'L' && magic[1] == '\x01')
+				{
+					exe_fmt = FMT_COFF;
+					goto case_fmt_coff;
+				}
+				else if(magic[0] == '\x7F' && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F')
+				{
+					exe_fmt = FMT_ELF;
+					goto case_fmt_elf;
 				}
 				else
 				{
@@ -3226,13 +3327,38 @@ break;
 		case_fmt_cpm3:
 			load_cpm3(emu, input, 0, &registers);
 			break;
-		case FMT_EXE:
-		case_fmt_exe:
-			load_exe(emu, input, 0, &registers);
+		case FMT_MZ_EXE:
+		case_fmt_mz_exe:
+			load_mz_exe(emu, input, 0, &registers);
 			break;
 		case FMT_CMD:
 			load_cmd(emu, input, 0, &registers);
 			break;
+		case FMT_NE_EXE:
+		case_fmt_ne_exe:
+			(void) image_offset;
+			fprintf(stderr, "NE support not yet implemented\n");
+			exit(1);
+		case FMT_LE_EXE:
+		case_fmt_le_exe:
+			(void) image_offset;
+			fprintf(stderr, "LE support not yet implemented\n");
+			exit(1);
+		case FMT_PE_EXE:
+		case_fmt_pe_exe:
+			(void) image_offset;
+			fprintf(stderr, "PE support not yet implemented\n");
+			exit(1);
+		case FMT_COFF:
+		case_fmt_coff:
+			(void) image_offset;
+			fprintf(stderr, "COFF support not yet implemented\n");
+			exit(1);
+		case FMT_ELF:
+		case_fmt_elf:
+			(void) image_offset;
+			fprintf(stderr, "ELF support not yet implemented\n");
+			exit(1);
 		default:
 			break;
 		}
