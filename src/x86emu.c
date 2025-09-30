@@ -1471,6 +1471,36 @@ void machine_setup(x86_state_t * emu, x86_pc_type_t machine)
 	}
 }
 
+static inline _Noreturn void fread_failed(void)
+{
+	fprintf(stderr, "Premature end of file\n");
+	exit(1);
+}
+
+static inline uint8_t fread8(FILE * input)
+{
+	uint8_t value;
+	if(fread(&value, 1, 1, input) != 1)
+		fread_failed();
+	return value;
+}
+
+static inline uint16_t fread16le(FILE * input)
+{
+	uint16_t value;
+	if(fread(&value, 2, 1, input) != 2)
+		fread_failed();
+	return le16toh(value);
+}
+
+static inline uint32_t fread32le(FILE * input)
+{
+	uint32_t value;
+	if(fread(&value, 4, 1, input) != 4)
+		fread_failed();
+	return le32toh(value);
+}
+
 struct load_registers
 {
 	bool cs_given;
@@ -1525,33 +1555,21 @@ uaddr_t load_apricot_disk(x86_state_t * emu, FILE * input, long file_offset, str
 	}
 
 	fseek(input, file_offset + 0x0E, SEEK_SET);
-	uint16_t sector_size;
-	fread(&sector_size, 2, 1, input);
-	sector_size = le16toh(sector_size);
+	uint16_t sector_size = fread16le(input);
 
 	fseek(input, file_offset + 0x1A, SEEK_SET);
-	uint32_t boot_sector_number;
-	fread(&boot_sector_number, 4, 1, input);
-	boot_sector_number = le32toh(boot_sector_number);
-	uint16_t boot_sector_count;
-	fread(&boot_sector_count, 2, 1, input);
-	boot_sector_count = le16toh(boot_sector_count);
+	uint32_t boot_sector_number = fread32le(input);
+	uint16_t boot_sector_count = fread16le(input);
 
-	uint32_t address;
-	uint16_t tmp;
-	fread(&tmp, 2, 1, input);
-	address = le16toh(tmp);
+	uint32_t address = fread16le(input);
 
-	fread(&tmp, 2, 1, input);
-	address += (uint32_t)le16toh(tmp) << 4;
+	address += (uint32_t)fread16le(input) << 4;
 
 	registers->ip_given = true;
-	fread(&tmp, 2, 1, input);
-	registers->ip = le16toh(tmp);
+	registers->ip = fread16le(input);
 
 	registers->cs_given = true;
-	fread(&tmp, 2, 1, input);
-	registers->cs = le16toh(tmp);
+	registers->cs = fread16le(input);
 
 	fseek(input, file_offset + boot_sector_number * sector_size, SEEK_SET);
 	for(unsigned i = 0; i < boot_sector_count * sector_size; i++)
@@ -1567,12 +1585,10 @@ uaddr_t load_apricot_disk(x86_state_t * emu, FILE * input, long file_offset, str
 
 uaddr_t load_pcjr(x86_state_t * emu, FILE * input, long file_offset, struct load_registers * registers)
 {
-	uint16_t tmp;
 	fseek(input, file_offset + 0x1CE, SEEK_SET);
-	fread(&tmp, 2, 1, input);
 
 	registers->cs_given = true;
-	registers->cs = le16toh(tmp);
+	registers->cs = fread16le(input);
 	registers->ip_given = true;
 	registers->ip = 0x0003;
 
@@ -1729,9 +1745,7 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	}
 
 	fseek(input, file_offset + 1L, SEEK_SET);
-	uint16_t image_size;
-	fread(&image_size, 2, 1, input);
-	image_size = le16toh(image_size);
+	uint16_t image_size = fread16le(input);
 
 	load_prl_body(emu, input, file_offset + 0x100L, address, registers->ip, image_size);
 
@@ -1780,13 +1794,10 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 	}
 
 	fseek(input, file_offset + 1L, SEEK_SET);
-	uint16_t image_size;
-	fread(&image_size, 2, 1, input);
-	image_size = le16toh(image_size);
+	uint16_t image_size = fread16le(input);
 	// TODO: pre-initialization code is ignored
 	fseek(input, file_offset + 0xFL, SEEK_SET);
-	uint8_t rsx_count;
-	fread(&rsx_count, 1, 1, input);
+	uint8_t rsx_count = fread8(input);
 	rsx_count = min(15, rsx_count);
 
 	fseek(input, file_offset + 0x100L, SEEK_SET);
@@ -1806,12 +1817,9 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 
 	for(uint8_t rsx_index = 0; rsx_index < rsx_count; rsx_index++)
 	{
-		uint16_t tmp;
 		fseek(input, file_offset + 0x10L * (1 + rsx_index), SEEK_SET);
-		fread(&tmp, 2, 1, input);
-		rsx_records[rsx_index].offset = le16toh(tmp);
-		fread(&tmp, 2, 1, input);
-		rsx_records[rsx_index].length = le16toh(tmp);
+		rsx_records[rsx_index].offset = fread16le(input);
+		rsx_records[rsx_index].length = fread16le(input);
 	}
 
 	address += image_size;
@@ -1852,36 +1860,20 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 		fprintf(stderr, "Error: program segment prefix does not fit memory\n");
 	}
 
-	uint16_t tmp;
 	fseek(input, file_offset + 2L, SEEK_SET);
 	uint32_t image_size;
-	fread(&tmp, 2, 1, input);
-	image_size = (uint32_t)le16toh(tmp) << 9;
-	fread(&tmp, 2, 1, input);
-	image_size -= (-le16toh(tmp) & 0x1FF);
-	uint16_t relocation_count;
-	fread(&relocation_count, 2, 1, input);
-	image_size = le16toh(relocation_count);
-	fread(&tmp, 2, 1, input);
-	uint32_t data_start = (uint32_t)le16toh(tmp) << 4;
-	fseek(input, 4L, SEEK_CUR);
-	uint16_t sp;
-	fseek(input, 2L, SEEK_CUR);
-	fread(&sp, 2, 1, input);
-	sp = le16toh(sp);
-	uint16_t ss;
-	fread(&ss, 2, 1, input);
-	ss = le16toh(ss);
-	fseek(input, 2L, SEEK_CUR);
-	uint16_t ip;
-	fread(&ip, 2, 1, input);
-	ip = le16toh(ip);
-	uint16_t cs;
-	fread(&cs, 2, 1, input);
-	cs = le16toh(cs);
-	uint16_t relocation_offset;
-	fread(&relocation_offset, 2, 1, input);
-	relocation_offset = le16toh(relocation_offset);
+	image_size = (uint32_t)fread16le(input) << 9;
+	image_size -= (-fread16le(input) & 0x1FF);
+	uint16_t relocation_count = fread16le(input);
+	uint32_t data_start = (uint32_t)fread16le(input) << 4;
+	fseek(input, 4L, SEEK_CUR); // skip minimum and maximum supplementary memory size
+	uint16_t sp = fread16le(input);
+	uint16_t ss = fread16le(input);
+	fseek(input, 2L, SEEK_CUR); // skip checksum
+	uint16_t ip = fread16le(input);
+	uint16_t cs = fread16le(input);
+	uint16_t relocation_offset = fread16le(input);
+
 	fseek(input, file_offset + data_start, SEEK_SET);
 	for(uint16_t i = 0; i < image_size; i++)
 	{
@@ -1894,11 +1886,8 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 	if(relocation_count != 0)
 	{
 		fseek(input, file_offset + relocation_offset, SEEK_SET);
-		uint32_t offset;
-		fread(&tmp, 2, 1, input);
-		offset = le16toh(tmp);
-		fread(&tmp, 2, 1, input);
-		offset += (uint16_t)le16toh(tmp) << 4;
+		uint32_t offset = fread16le(input);
+		offset += (uint16_t)fread16le(input) << 4;
 		x86_memory_write16(emu, address + offset,
 			x86_memory_read16(emu, address + offset) + registers->cs);
 	}
@@ -1965,23 +1954,16 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 	fseek(input, file_offset, SEEK_SET);
 
-	uint16_t tmp;
-
 	for(descriptor_count = 0; descriptor_count < 8; descriptor_count++)
 	{
-		uint8_t descriptor_type;
-		fread(&descriptor_type, 1, 1, input);
+		uint8_t descriptor_type = fread8(input);
 		if(descriptor_type == INVALID)
 			break;
 		descriptors[descriptor_count].type = descriptor_type;
-		fread(&tmp, 2, 1, input);
-		descriptors[descriptor_count].length = (uint32_t)le16toh(tmp) << 4; // this will be ignored
-		fread(&tmp, 2, 1, input);
-		descriptors[descriptor_count].base = (uint32_t)le16toh(tmp) << 4;
-		fread(&tmp, 2, 1, input);
-		descriptors[descriptor_count].minimum = (uint32_t)le16toh(tmp) << 4;
-		fread(&tmp, 2, 1, input);
-		descriptors[descriptor_count].maximum = (uint32_t)le16toh(tmp) << 4;
+		descriptors[descriptor_count].length = (uint32_t)fread16le(input) << 4; // this will be ignored
+		descriptors[descriptor_count].base = (uint32_t)fread16le(input) << 4;
+		descriptors[descriptor_count].minimum = (uint32_t)fread16le(input) << 4;
+		descriptors[descriptor_count].maximum = (uint32_t)fread16le(input) << 4;
 
 		if(descriptor_indexes[descriptor_type] != 0)
 		{
@@ -2046,12 +2028,9 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	}
 
 	fseek(input, file_offset + 0x7BL, SEEK_SET);
-	fread(&tmp, 2, 1, input);
-	uint32_t rsx_record_table_offset = (uint32_t)le16toh(tmp) << 7;
-	fread(&tmp, 2, 1, input);
-	uint32_t relocation_offset = (uint32_t)le16toh(tmp) << 7;
-	uint8_t flags;
-	fread(&flags, 1, 1, input);
+	uint32_t rsx_record_table_offset = (uint32_t)fread16le(input) << 7;
+	uint32_t relocation_offset = (uint32_t)fread16le(input) << 7;
+	uint8_t flags = fread8(input);
 
 	for(uint8_t descriptor_index = 0; descriptor_index < descriptor_count; descriptor_index++)
 	{
@@ -2069,15 +2048,11 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	if((flags & 0x80) && relocation_offset != 0)
 	{
 		fseek(input, file_offset + relocation_offset, SEEK_SET);
-		uint8_t destination_group;
-		fread(&destination_group, 1, 1, input);
+		uint8_t destination_group = fread8(input);
 		uint8_t source_group = destination_group >> 4;
 		destination_group &= 0xF;
-		fread(&tmp, 1, 1, input);
-		uint32_t offset = (uint32_t)le16toh(tmp) << 4;
-		uint8_t byte;
-		fread(&byte, 1, 1, input);
-		offset += byte;
+		uint32_t offset = (uint32_t)fread16le(input) << 4;
+		offset += fread8(input);
 
 		if(descriptor_indexes[source_group] != 0 && descriptor_indexes[destination_group] != 0)
 		{
@@ -2153,13 +2128,11 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 		for(rsx_count = 0; rsx_count < 7; rsx_count++)
 		{
-			uint16_t tmp;
 			fseek(input, file_offset + rsx_record_table_offset + 0x10L * rsx_count, SEEK_SET);
-			fread(&tmp, 2, 1, input);
-			tmp = le16toh(tmp);
-			if(tmp == 0xFFFF)
+			uint16_t record_offset = fread16le(input);
+			if(record_offset == 0xFFFF)
 				break;
-			rsx_records[rsx_count] = (uint32_t)tmp << 7;
+			rsx_records[rsx_count] = (uint32_t)record_offset << 7;
 		}
 
 		address += 96;
@@ -2280,6 +2253,10 @@ void usage_fmts(void)
 		"\t\t(386) DOS/4G \"LX\" and OS/2 \"LE\" linear executable (not implemented)\n"
 		"\tpe\n"
 		"\t\t(386/x86-64) Windows \"PE\" portable executable (not implemented)\n"
+		"\tminix\n"
+		"\t\t(8086, 386) MINIX and ELKS a.out executable (not implemented)\n"
+		"\taout\n"
+		"\t\t(386) Linux a.out executable (not implemented)\n"
 		"\tcoff\n"
 		"\t\t(386) DJGPP and FlexOS 386 COFF executable (not implemented)\n"
 		"\telf\n"
@@ -2391,6 +2368,8 @@ int main(int argc, char * argv[])
 		FMT_NE_EXE, // NE (286) executable // TODO: not yet implemented
 		FMT_LE_EXE, // LE/LX (386) executable // TODO: not yet implemented
 		FMT_PE_EXE, // PE (386/x86-64) executable // TODO: not yet implemented
+		FMT_MINIX, // Minix (8086/386) executable // TODO: not yet implemented
+		FMT_AOUT, // Linux a.out (386) executable // TODO: not yet implemented
 		FMT_COFF, // COFF (386) executable // TODO: not yet implemented
 		FMT_ELF, // ELF (386/x86-64) executable // TODO: not yet implemented
 	} exe_fmt = FMT_AUTO;
@@ -2654,6 +2633,14 @@ int main(int argc, char * argv[])
 				else if(strcasecmp(arg, "pe") == 0)
 				{
 					exe_fmt = FMT_PE_EXE;
+				}
+				else if(strcasecmp(arg, "minix") == 0)
+				{
+					exe_fmt = FMT_MINIX;
+				}
+				else if(strcasecmp(arg, "aout") == 0)
+				{
+					exe_fmt = FMT_AOUT;
 				}
 				else if(strcasecmp(arg, "coff") == 0)
 				{
@@ -3236,46 +3223,40 @@ break;
 			else
 			{
 				uint8_t magic[4];
-				fread(magic, 4, 1, input);
-				if((magic[0] == 'M' && magic[1] == 'Z')
-				|| (magic[0] == 'Z' && magic[1] == 'M'))
+				size_t bytes = fread(magic, 4, 1, input);
+				if((bytes >= 2 && magic[0] == 'M' && magic[1] == 'Z')
+				|| (bytes >= 2 && magic[0] == 'Z' && magic[1] == 'M'))
 				{
-					uint16_t tmp;
 					fseek(input, 2L, SEEK_SET);
-					uint32_t image_size;
-					fread(&tmp, 2, 1, input);
-					image_size = (uint32_t)le16toh(tmp) << 9;
-					fread(&tmp, 2, 1, input);
-					image_size -= (-le16toh(tmp) & 0x1FF);
+					uint32_t image_size = (uint32_t)fread16le(input) << 9;
+					image_size -= (-fread16le(input) & 0x1FF);
 
 					fseek(input, 0x3CL, SEEK_SET);
-					uint32_t new_header_offset;
-					fread(&new_header_offset, 2, 1, input);
-					image_size -= le32toh(new_header_offset);
+					uint32_t new_header_offset = fread32le(input);
 
 					if(new_header_offset != 0 && (fseek(input, new_header_offset, SEEK_SET), ftell(input)) == new_header_offset)
 					{
-						fread(magic, 4, 1, input);
-						if(magic[0] == 'N' && magic[1] == 'E')
+						bytes = fread(magic, 4, 1, input);
+						if(bytes >= 2 && magic[0] == 'N' && magic[1] == 'E')
 						{
 							image_offset = new_header_offset;
 							exe_fmt = FMT_NE_EXE;
 							goto case_fmt_ne_exe;
 						}
-						else if((magic[0] == 'L' && magic[1] == 'E')
-							 || (magic[0] == 'L' && magic[1] == 'X'))
+						else if((bytes >= 2 && magic[0] == 'L' && magic[1] == 'E')
+							 || (bytes >= 2 && magic[0] == 'L' && magic[1] == 'X'))
 						{
 							image_offset = new_header_offset;
 							exe_fmt = FMT_LE_EXE;
 							goto case_fmt_le_exe;
 						}
-						else if(magic[0] == 'P' && magic[1] == 'E' && magic[2] == '\0' && magic[3] == '\0')
+						else if(bytes >= 4 && magic[0] == 'P' && magic[1] == 'E' && magic[2] == '\0' && magic[3] == '\0')
 						{
 							image_offset = new_header_offset;
 							exe_fmt = FMT_PE_EXE;
 							goto case_fmt_pe_exe;
 						}
-						else if(magic[0] == 'L' && magic[1] == '\x01')
+						else if(bytes >= 2 && magic[0] == 'L' && magic[1] == '\x01')
 						{
 							image_offset = new_header_offset;
 							exe_fmt = FMT_COFF;
@@ -3285,8 +3266,8 @@ break;
 
 					if(image_size != 0 && image_size != new_header_offset && (fseek(input, image_size, SEEK_SET), ftell(input)) == image_size)
 					{
-						fread(magic, 4, 1, input);
-						if(magic[0] == 'L' && magic[1] == '\x01')
+						bytes = fread(magic, 4, 1, input);
+						if(bytes >= 2 && magic[0] == 'L' && magic[1] == '\x01')
 						{
 							image_offset = image_size;
 							exe_fmt = FMT_COFF;
@@ -3297,12 +3278,25 @@ break;
 					exe_fmt = FMT_MZ_EXE;
 					goto case_fmt_mz_exe;
 				}
-				else if(magic[0] == 'L' && magic[1] == '\x01')
+				else if(bytes >= 2 && magic[0] == '\x01' && magic[1] == '\x03')
+				{
+					exe_fmt = FMT_MINIX;
+					goto case_fmt_minix;
+				}
+				else if((bytes >= 2 && magic[0] == '\x07' && magic[1] == '\x01')
+					 || (bytes >= 2 && magic[0] == '\x08' && magic[1] == '\x01')
+					 || (bytes >= 2 && magic[0] == '\x0B' && magic[1] == '\x01')
+					 || (bytes >= 2 && magic[0] == '\x00' && magic[1] == 0xCC))
+				{
+					exe_fmt = FMT_AOUT;
+					goto case_fmt_aout;
+				}
+				else if(bytes >= 2 && magic[0] == 'L' && magic[1] == '\x01')
 				{
 					exe_fmt = FMT_COFF;
 					goto case_fmt_coff;
 				}
-				else if(magic[0] == '\x7F' && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F')
+				else if(bytes >= 4 && magic[0] == '\x7F' && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F')
 				{
 					exe_fmt = FMT_ELF;
 					goto case_fmt_elf;
@@ -3348,6 +3342,14 @@ break;
 		case_fmt_pe_exe:
 			(void) image_offset;
 			fprintf(stderr, "PE support not yet implemented\n");
+			exit(1);
+		case FMT_MINIX:
+		case_fmt_minix:
+			fprintf(stderr, "MINIX support not yet implemented\n");
+			exit(1);
+		case FMT_AOUT:
+		case_fmt_aout:
+			fprintf(stderr, "a.out support not yet implemented\n");
 			exit(1);
 		case FMT_COFF:
 		case_fmt_coff:
