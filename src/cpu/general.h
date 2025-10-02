@@ -209,6 +209,11 @@ static inline bool x86_is_intel64(x86_state_t * emu)
 	return emu->cpu_type == X86_CPU_INTEL;
 }
 
+static inline bool x86_parser_is_intel64(x86_parser_t * prs)
+{
+	return prs->cpu_type == X86_CPU_INTEL;
+}
+
 static inline bool x86_segment_is_big(x86_segment_t * seg)
 {
 	return (seg->access & X86_DESC_D) != 0;

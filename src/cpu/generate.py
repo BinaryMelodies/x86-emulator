@@ -789,42 +789,42 @@ OPERAND_CODE = {
 	},
 	'Ib': {
 		'size':    'b',
-		'prepare': 'soff_t imm$# = (int8_t)x86_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (int8_t)x86_fetch8$fetch();',
 		'read':    "imm$#",
 		'write':   "imm$# = $$",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Ub': {
 		'size':    'b',
-		'prepare': 'soff_t imm$# = (uint8_t)x86_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (uint8_t)x86_fetch8$fetch();',
 		'read':    "imm$#",
 		'write':   "imm$# = $$",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Iw': {
 		'size':    'w',
-		'prepare': 'soff_t imm$# = (int16_t)x86_fetch16(prs, emu);',
+		'prepare': 'soff_t imm$# = (int16_t)x86_fetch16$fetch();',
 		'read':    "imm$#",
 		'write':   "imm$# = $$",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Iz': {
 		'size':    'wl',
-		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$(prs, emu);',
+		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$$fetch();',
 		'read':    "imm$#",
 		'write':   "imm$# = $$",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Iv': {
 		'size':    'wlq',
-		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$(prs, emu);',
+		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$$fetch();',
 		'read':    "imm$#",
 		'write':   "imm$# = $$",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Ap': {
 		'size':    'wl',
-		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$(prs, emu);\nsoff_t seg$# = x86_fetch16(prs, emu);',
+		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$$fetch();\nsoff_t seg$# = x86_fetch16$fetch();',
 		'read':    "imm$#",
 		'read2':   "seg$#",
 		'write':   "imm$# = $$",
@@ -833,23 +833,23 @@ OPERAND_CODE = {
 	},
 	'Jb': {
 		'size':    'b',
-		'prepare': 'soff_t imm$# = (int8_t)x86_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (int8_t)x86_fetch8$fetch();',
 		'read':    "(imm$# + emu->xip)",
-		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + prs->current_position)"]),
+		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + $prs->current_position)"]),
 	},
 	'Jz': {
 		'size':    'wl',
-		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$(prs, emu);',
+		'prepare': 'soff_t imm$# = (int$bits$_t)x86_fetch$bits$$fetch();',
 		'read':    "(imm$# + emu->xip)",
-		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + prs->current_position)"]),
+		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + $prs->current_position)"]),
 	},
 	'Ov': {
 		'size':    '',
-		'prepare': 'prs->address_offset = x86_fetch_addrsize(prs, emu);',
+		'prepare': '$prs->address_offset = x86_fetch_addrsize$fetch();',
 		'address': "emu->parser->address_offset",
 		'read':    "_read$S(_seg == X86_R_SEGMENT_NONE ? X86_R_DS : _seg, _off$?)",
 		'write':   "_write$S(_seg == X86_R_SEGMENT_NONE ? X86_R_DS : _seg, _off$?, $$)",
-		'format':  ('[%s:%"PRIX64"]', ["x86_segment_name(prs, _seg == X86_R_SEGMENT_NONE ? X86_R_DS : _seg)", "prs->address_offset"]),
+		'format':  ('[%s:%"PRIX64"]', ["x86_segment_name($prs, _seg == X86_R_SEGMENT_NONE ? X86_R_DS : _seg)", "$prs->address_offset"]),
 	},
 	'AL': {
 		'size':    'b',
@@ -867,202 +867,202 @@ OPERAND_CODE = {
 		'size':    'w',
 		'read':    "x86_register_get16(emu, X86_R_AX)",
 		'write':   "x86_register_set16(emu, X86_R_AX, $$)",
-		'format':  ("%s", ["x86_is_nec(prs) ? \"aw\" : \"ax\""]),
+		'format':  ("%s", ["x86_is_nec($prs) ? \"aw\" : \"ax\""]),
 	},
 	'DX': {
 		'size':    'w',
 		'read':    "x86_register_get16(emu, X86_R_DX)",
 		'write':   "x86_register_set16(emu, X86_R_DX, $$)",
-		'format':  ("%s", ["x86_is_nec(prs) ? \"dw\" : \"dx\""]),
+		'format':  ("%s", ["x86_is_nec($prs) ? \"dw\" : \"dx\""]),
 	},
 	'rAX': {
 		'size':    'wlq',
 		'read':    "x86_register_get$S(emu, X86_R_AX)",
 		'write':   "x86_register_set$S(emu, X86_R_AX, $Sc$$)",
-		'format':  ("%s", ["x86_register_name$bits$(prs, X86_R_AX)"]),
+		'format':  ("%s", ["x86_register_name$bits$($prs, X86_R_AX)"]),
 	},
 	'Gb': {
 		'size':    'b',
 		'read':    "x86_register_get8(emu, _reg)",
 		'write':   "x86_register_set8(emu, _reg, $$)",
-		'format':  ("%s", ["x86_register_name8(prs, REGFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name8($prs, REGFLD($prs))"]),
 	},
 	'Gw': {
 		'size':    'w',
 		'read':    "x86_register_get16(emu, _reg)",
 		'write':   "x86_register_set16(emu, _reg, $$)",
-		'format':  ("%s", ["x86_register_name16(prs, REGFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name16($prs, REGFLD($prs))"]),
 	},
 	'Gz': {
 		'size':    'wl',
 		'read':    "x86_register_get$S(emu, _reg)",
 		'write':   "x86_register_set$S(emu, _reg, $Sc$$)",
-		'format':  ("%s", ["x86_register_name$bits$(prs, REGFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name$bits$($prs, REGFLD($prs))"]),
 	},
 	'Gv': {
 		'size':    'wlq',
 		'read':    "x86_register_get$S(emu, _reg)",
 		'write':   "x86_register_set$S(emu, _reg, $Sc$$)",
-		'format':  ("%s", ["x86_register_name$bits$(prs, REGFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name$bits$($prs, REGFLD($prs))"]),
 	},
 	'Rb': {
 		'size':    'b',
 		'read':    "x86_register_get8(emu, _mem)",
 		'write':   "x86_register_set8(emu, _mem, $$)",
-		'format':  ("%s", ["x86_register_name8(prs, MEMFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name8($prs, MEMFLD($prs))"]),
 	},
 	'Rw': {
 		'size':    'w',
 		'read':    "x86_register_get16(emu, _mem)",
 		'write':   "x86_register_set16(emu, _mem, $$)",
-		'format':  ("%s", ["x86_register_name16(prs, MEMFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name16($prs, MEMFLD($prs))"]),
 	},
 	'Rd': {
 		'size':    'l',
 		'read':    "x86_register_get32(emu, _mem)",
 		'write':   "x86_register_set32(emu, _mem, $$)",
-		'format':  ("%s", ["x86_register_name32(prs, MEMFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name32($prs, MEMFLD($prs))"]),
 	},
 	'Rz': {
 		'size':    'wl',
 		'read':    "x86_register_get$S(emu, _mem)",
 		'write':   "x86_register_set$S(emu, _mem, $Sc$$)",
-		'format':  ("%s", ["x86_register_name$bits$(prs, MEMFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name$bits$($prs, MEMFLD($prs))"]),
 	},
 	'Rv': {
 		'size':    'wlq',
 		'read':    "x86_register_get$S(emu, _mem)",
 		'write':   "x86_register_set$S(emu, _mem, $Sc$$)",
-		'format':  ("%s", ["x86_register_name$bits$(prs, MEMFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name$bits$($prs, MEMFLD($prs))"]),
 	},
 	'Ry': {
 		'size':    'lq',
 		'read':    "x86_register_get32(emu, _mem)",
 		'write':   "x86_register_set32(emu, _mem, $$)",
-		'format':  ("%s", ["x86_register_name$bits$(prs, MEMFLD(prs))"]),
+		'format':  ("%s", ["x86_register_name$bits$($prs, MEMFLD($prs))"]),
 	},
 	'Sw': {
 		'size':    'w',
-		'read':    "x86_segment_get(emu, REGFLDVAL(prs))",
-		'write':   "x86_segment_set(emu, REGFLDVAL(prs), $$)",
-		'format':  ("%s", ["x86_segment_name(prs, REGFLDVAL(prs))"]),
+		'read':    "x86_segment_get(emu, REGFLDVAL($prs))",
+		'write':   "x86_segment_set(emu, REGFLDVAL($prs), $$)",
+		'format':  ("%s", ["x86_segment_name($prs, REGFLDVAL($prs))"]),
 	},
 	'Cy': {
 		'size':    'lq',
-		'read':    "_crget$S(REGFLDLOCK(prs))",
-		'write':   "_crset$S(REGFLDLOCK(prs), $$)",
-		'format':  ("cr%d", ["REGFLDLOCK(prs)"]),
+		'read':    "_crget$S(REGFLDLOCK($prs))",
+		'write':   "_crset$S(REGFLDLOCK($prs), $$)",
+		'format':  ("cr%d", ["REGFLDLOCK($prs)"]),
 	},
 	'Dy': {
 		'size':    'lq',
-		'read':    "_drget$S(REGFLDLOCK(prs))",
-		'write':   "_drset$S(REGFLDLOCK(prs), $$)",
-		'format':  ("dr%d", ["REGFLDLOCK(prs)"]),
+		'read':    "_drget$S(REGFLDLOCK($prs))",
+		'write':   "_drset$S(REGFLDLOCK($prs), $$)",
+		'format':  ("dr%d", ["REGFLDLOCK($prs)"]),
 	},
 	'Ty': {
 		'size':    'lq',
-		'read':    "_trget32(REGFLDLOCK(prs))",
-		'write':   "_trset32(REGFLDLOCK(prs), $$)",
-		'format':  ("tr%d", ["REGFLDLOCK(prs)"]), # Note: 386/486 only uses 8 TR registers, but we can assume the LOCK prefix would be extended to them
+		'read':    "_trget32(REGFLDLOCK($prs))",
+		'write':   "_trset32(REGFLDLOCK($prs), $$)",
+		'format':  ("tr%d", ["REGFLDLOCK($prs)"]), # Note: 386/486 only uses 8 TR registers, but we can assume the LOCK prefix would be extended to them
 	},
 	'Pd': {
 		'size':    '',
 		'read':    "x86_mmx_get(emu, _reg)",
 		'write':   "x86_mmx_set(emu, _reg, $$)",
-		'format':  ("mm%d", ["REGFLD(prs)"]),
+		'format':  ("mm%d", ["REGFLD($prs)"]),
 	},
 	'Pq': {
 		'size':    '',
 		'read':    "x86_mmx_get(emu, _reg)",
 		'write':   "x86_mmx_set(emu, _reg, $$)",
-		'format':  ("mm%d", ["REGFLD(prs)"]),
+		'format':  ("mm%d", ["REGFLD($prs)"]),
 	},
 	'Nd': {
 		'size':    '',
 		'read':    "x86_mmx_get(emu, _mem)",
 		'write':   "x86_mmx_set(emu, _mem, $$)",
-		'format':  ("mm%d", ["MEMFLD(prs)"]),
+		'format':  ("mm%d", ["MEMFLD($prs)"]),
 	},
 	'Nq': {
 		'size':    '',
 		'read':    "x86_mmx_get(emu, _mem)",
 		'write':   "x86_mmx_set(emu, _mem, $$)",
-		'format':  ("mm%d", ["MEMFLD(prs)"]),
+		'format':  ("mm%d", ["MEMFLD($prs)"]),
 	},
 	'M': {
 		'size':    '',
 		'address': "emu->parser->address_offset",
-		'format':  ("%s", ["prs->address_text"]),
+		'format':  ("%s", ["$prs->address_text"]),
 	},
 	'Mb': {
 		'size':    'b',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int8)_read8(_seg, _off$?)",
 		'write':   "_write8(_seg, _off$?, $$)",
-		'format':  ("byte %s", ["prs->address_text"]),
+		'format':  ("byte %s", ["$prs->address_text"]),
 	},
 	'Mw': {
 		'size':    'w',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int16)_read16(_seg, _off$?)",
 		'write':   "_write16(_seg, _off$?, $$)",
-		'format':  ("word %s", ["prs->address_text"]),
+		'format':  ("word %s", ["$prs->address_text"]),
 	},
 	'Md': {
 		'size':    'l',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int32)_read32(_seg, _off$?)",
 		'write':   "_write32(_seg, _off$?, $$)",
-		'format':  ("long %s", ["prs->address_text"]),
+		'format':  ("long %s", ["$prs->address_text"]),
 	},
 	'Mq': {
 		'size':    '',
 		'address': "emu->parser->address_offset",
 		'read':    "_read64(_seg, _off$?)",
 		'write':   "_write64(_seg, _off$?, $$)",
-		'format':  ("quad %s", ["prs->address_text"]),
+		'format':  ("quad %s", ["$prs->address_text"]),
 	},
 	'Mz': {
 		'size':    'wl',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int$S)_read$S(_seg, _off$?)",
 		'write':   "_write$S(_seg, _off$?, $$)",
-		'format':  ("$size$ %s", ["prs->address_text"]),
+		'format':  ("$size$ %s", ["$prs->address_text"]),
 	},
 	'Mv': {
 		'size':    'wlq',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int$S)_read$S(_seg, _off$?)",
 		'write':   "_write$S(_seg, _off$?, $$)",
-		'format':  ("$size$ %s", ["prs->address_text"]),
+		'format':  ("$size$ %s", ["$prs->address_text"]),
 	},
 	'Mz': {
 		'size':    'wl',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int$S)_read$S(_seg, _off$?)",
 		'write':   "_write$S(_seg, _off$?, $$)",
-		'format':  ("$size$ %s", ["prs->address_text"]),
+		'format':  ("$size$ %s", ["$prs->address_text"]),
 	},
 	'Ma': {
 		'size':    'wl',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int$S)_read$S(_seg, _off$?)",
 		'write':   "_write$S(_seg, _off$?, $$)",
-		'format':  ("%s", ["prs->address_text"]),
+		'format':  ("%s", ["$prs->address_text"]),
 	},
 	'Mq/Mo': {
 		'size':    'lq',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int$S)_read$S(_seg, _off$?)",
 		'write':   "_write$S(_seg, _off$?, $$)",
-		'format':  ("%s", ["prs->address_text"]),
+		'format':  ("%s", ["$prs->address_text"]),
 	},
 	'Mp': {
 		'size':    'wlq',
 		'address': "emu->parser->address_offset",
 		'read':    "(_int$S)_read$S(_seg, _off$?)",
 		'write':   "_write$S(_seg, _off$?, $$)",
-		'format':  ("%s", ["prs->address_text"]),
+		'format':  ("%s", ["$prs->address_text"]),
 	},
 
 # x87
@@ -1076,33 +1076,33 @@ OPERAND_CODE = {
 		'size':    '',
 		'read':    "x87_register_get80(emu, _mem)",
 		'write':   "x87_register_set80(emu, _mem, $$)",
-		'format':  ("st(%d)", ["MEMFLD(prs)"]),
+		'format':  ("st(%d)", ["MEMFLD($prs)"]),
 	},
 	'mem32real': {
 		'size':    '',
 		'read':    "_read32fp(_seg, _off)",
 		'write':   "_write32fp(_seg, _off, $$, $$.tag)",
-		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
+		'format':  ("%s", ["$x87_address_text"]),
 	},
 	'mem64real': {
 		'size':    '',
 		'read':    "_read64fp(_seg, _off)",
 		'write':   "_write64fp(_seg, _off, $$, $$.tag)",
-		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
+		'format':  ("%s", ["$x87_address_text"]),
 	},
 	'mem80real': {
 		'size':    '',
 		'read':    "_read80fp(_seg, _off)",
 		'write':   "_write80fp(_seg, _off, $$)",
-		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
+		'format':  ("%s", ["$x87_address_text"]),
 	},
 	'M14/M28': {
 		'size':    '',
-		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
+		'format':  ("%s", ["$x87_address_text"]),
 	},
 	'M94/M108': {
 		'size':    '',
-		'format':  ("%s", ["emu ? emu->x87.address_text : prs->address_text"]),
+		'format':  ("%s", ["$x87_address_text"]),
 	},
 
 # NEC exclusive
@@ -1154,28 +1154,28 @@ SREGS = ['ES', 'CS', 'SS', 'DS', 'FS', 'GS', 'DS3', 'DS2']
 for i in range(8):
 	OPERAND_CODE[f'r{i}'] = {
 		'size':    'wlq',
-		'read':    f"x86_register_get$S(emu, REGNUM(prs, {i}))",
-		'write':   f"x86_register_set$S(emu, REGNUM(prs, {i}), $Sc$$)",
-		'format':  ("%s", [f"x86_register_name$bits$(prs, REGNUM(prs, {i}))"]),
+		'read':    f"x86_register_get$S(emu, REGNUM($prs, {i}))",
+		'write':   f"x86_register_set$S(emu, REGNUM($prs, {i}), $Sc$$)",
+		'format':  ("%s", [f"x86_register_name$bits$($prs, REGNUM($prs, {i}))"]),
 	}
 	OPERAND_CODE[f'R{i}B'] = {
 		'size':    'b',
-		'read':    f"x86_register_get8(emu, REGNUM(prs, {i}))",
-		'write':   f"x86_register_set8(emu, REGNUM(prs, {i}), $$)",
-		'format':  ("%s", [f"x86_register_name8(prs, REGNUM(prs, {i}))"]),
+		'read':    f"x86_register_get8(emu, REGNUM($prs, {i}))",
+		'write':   f"x86_register_set8(emu, REGNUM($prs, {i}), $$)",
+		'format':  ("%s", [f"x86_register_name8($prs, REGNUM($prs, {i}))"]),
 	}
 	OPERAND_CODE['e' + WREGS[i]] = {
 		'size':    'wl',
-		'read':    f"x86_register_get16(emu, REGNUM(prs, {i}))",
-		'write':   f"x86_register_set16(emu, REGNUM(prs, {i}), $$)",
-		'format':  ("%s", [f"x86_register_name$bits$(prs, X86_R_{WREGS[i]})"]),
+		'read':    f"x86_register_get16(emu, REGNUM($prs, {i}))",
+		'write':   f"x86_register_set16(emu, REGNUM($prs, {i}), $$)",
+		'format':  ("%s", [f"x86_register_name$bits$($prs, X86_R_{WREGS[i]})"]),
 	}
 	if i < len(SREGS):
 		OPERAND_CODE[SREGS[i]] = {
 			'size':    'w',
 			'read':    f"emu->sr[{i}].selector",
 			'write':   f"x86_segment_set(emu, X86_R_{SREGS[i]}, $$)",
-			'format':  ("%s", [f"x86_segment_name(prs, X86_R_{SREGS[i]})"]),
+			'format':  ("%s", [f"x86_segment_name($prs, X86_R_{SREGS[i]})"]),
 		}
 
 OPERAND_CODE['M10'] = OPERAND_CODE['M']
@@ -1198,19 +1198,19 @@ X87_OPERAND_CODE = operand_convert_x87(OPERAND_CODE)
 
 X80_OPERAND_CODE = {
 	'Ib': {
-		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8$fetch();',
 		'read':    "imm$#",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Iw': {
-		'prepare': 'soff_t imm$# = (int16_t)x80_fetch16(prs, emu);',
+		'prepare': 'soff_t imm$# = (int16_t)x80_fetch16$fetch();',
 		'read':    "imm$#",
 		'format':  ('%"PRIX64"', ["(uoff_t)imm$#"]),
 	},
 	'Jb': {
-		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8$fetch();',
 		'read':    "imm$# + (emu->pc & 0xFFFF)",
-		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + (prs->current_position & 0xFFFF))"]),
+		'format':  ('%"PRIX64"', ["(uoff_t)(imm$# + ($prs->current_position & 0xFFFF))"]),
 	},
 	'A': {
 		'read':   "x86_get_high(emu->bank[emu->af_bank].af)",
@@ -1304,7 +1304,7 @@ X80_OPERAND_CODE = {
 		'format':  ("iy", []),
 	},
 	'(Iw)': {
-		'prepare': 'soff_t imm$# = (int16_t)x80_fetch16(prs, emu);',
+		'prepare': 'soff_t imm$# = (int16_t)x80_fetch16$fetch();',
 		'read':    "_read80b(imm$#)",
 		'write':   "_write80b(imm$#, $$)",
 		'format':  ('(%"PRIX64")', ["(uoff_t)imm$#"]),
@@ -1330,18 +1330,18 @@ X80_OPERAND_CODE = {
 		'format':  ("(sp)", []),
 	},
 	'(Ib)': {
-		'prepare': 'soff_t imm$# = x80_fetch8(prs, emu) & 0xFF;',
+		'prepare': 'soff_t imm$# = x80_fetch8$fetch() & 0xFF;',
 		'read':    "(emu->bank[emu->af_bank].af & 0xFF00) | imm$#",
 		'format':  ('(%"PRIX64")', ["(uoff_t)imm$#"]),
 	},
 	'(IX+Ib)': {
-		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8$fetch();',
 		'read':    "_read80b(emu->ix + imm$#)",
 		'write':   "_write80b(emu->ix + imm$#, $$)",
 		'format':  ('(ix+%"PRIX64")', ["(uoff_t)imm$#"]),
 	},
 	'(IY+Ib)': {
-		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8(prs, emu);',
+		'prepare': 'soff_t imm$# = (int8_t)x80_fetch8$fetch();',
 		'read':    "_read80b(emu->iy + imm$#)",
 		'write':   "_write80b(emu->iy + imm$#, $$)",
 		'format':  ('(ix+%"PRIX64")', ["(uoff_t)imm$#"]),
@@ -1430,13 +1430,16 @@ def replace_patterns(text, size, sizes, **kwds):
 			size = 'long'
 	return text.replace('$size$', size).replace('$bits$', str(get_bits(size)))
 
-def iterate_sizes(sizes, indent = '\t', file = None, size_option = None):
+def iterate_sizes(sizes, indent = '\t', file = None, size_option = None, method = None):
 	assert len(sizes) > 0
+
+	parser_object = 'emu->parser' if method == 'step' else 'prs'
+
 	if len(sizes) == 1:
 		yield indent, SIZE_NAMES[next(iter(sizes))]
 	elif len(sizes) > 1:
 		if size_option == 'control':
-			print_file(f"{indent}if(prs->code_size == SIZE_64BIT)", file = file)
+			print_file(f"{indent}if({parser_object}->code_size == SIZE_64BIT)", file = file)
 			print_file(f"{indent}{{", file = file)
 			yield indent + '\t', 'quad'
 			print_file(f"{indent}}}", file = file)
@@ -1445,7 +1448,7 @@ def iterate_sizes(sizes, indent = '\t', file = None, size_option = None):
 
 			if 'w' in sizes:
 				# WORD
-				print_file(f"{indent}\tswitch(prs->operation_size)", file = file)
+				print_file(f"{indent}\tswitch({parser_object}->operation_size)", file = file)
 				print_file(f"{indent}\t{{", file = file)
 				print_file(f"{indent}\tcase SIZE_16BIT:", file = file)
 				yield indent + '\t\t', 'word'
@@ -1466,14 +1469,17 @@ def iterate_sizes(sizes, indent = '\t', file = None, size_option = None):
 		else:
 			if 'q' in sizes and size_option == 'branch':
 				# Intel64 only uses 64-bit for branches
-				print_file(f"{indent}if(prs->operation_size == SIZE_64BIT && x86_is_intel64(emu))", file = file)
+				if method != 'parse':
+					print_file(f"{indent}if({parser_object}->operation_size == SIZE_64BIT && x86_is_intel64(emu))", file = file)
+				else:
+					print_file(f"{indent}if({parser_object}->operation_size == SIZE_64BIT && x86_parser_is_intel64(prs))", file = file)
 				print_file(f"{indent}{{", file = file)
 				yield indent + '\t', 'quad'
 				print_file(f"{indent}}}", file = file)
 				print_file(f"{indent}else", file = file)
 
 			# WORD
-			print_file(f"{indent}switch(prs->operation_size)", file = file)
+			print_file(f"{indent}switch({parser_object}->operation_size)", file = file)
 			print_file(f"{indent}{{", file = file)
 			print_file(f"{indent}case SIZE_16BIT:", file = file)
 			if 'w' in sizes:
@@ -1485,7 +1491,7 @@ def iterate_sizes(sizes, indent = '\t', file = None, size_option = None):
 			if 'q' not in sizes:
 				print_file(f"{indent}case SIZE_64BIT:", file = file)
 			if 'q' in sizes and size_option in {'branch', 'stack'}:
-				print_file(f"{indent}\tif(prs->code_size != SIZE_64BIT)", file = file)
+				print_file(f"{indent}\tif({parser_object}->code_size != SIZE_64BIT)", file = file)
 				print_file(f"{indent}\t{{", file = file)
 				indent += '\t'
 			if 'l' not in sizes:
@@ -1920,10 +1926,15 @@ registers80 = {
 }
 
 MISSING = set()
-def print_instruction(path, indent, actual_range, entry, discriminator, index, file, mode, modrm):
+def print_instruction(path, indent, actual_range, entry, discriminator, index, file, mode, modrm, method):
 	global INSTRUCTIONS
 	global MISSING
 	assert type(entry) is Instruction
+
+	fetch_suffix = {'both': '(prs, emu)', 'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
+	undefined_suffix = {'both': '_BOTH', 'parse': '_PARSE', 'step': ''}[method]
+	parser_object = 'emu->parser' if method == 'step' else 'prs'
+	x87_address_text = {'both': '(emu ? emu->x87.address_text : prs->address_text)', 'parse': 'prs->address_text', 'step': 'emu->x87.address_text'}[method]
 
 	if modrm is None or entry.kwds.get('modrm') == False:
 		print_file(f"{indent}/* {entry.kwds['mnem']}{' ' + ', '.join(entry.kwds['opds']) if len(entry.kwds['opds']) > 0 else ''} */", file = file)
@@ -1933,194 +1944,197 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 
 	if entry.kwds['mnem'] in {'ES:', 'CS:', 'SS:', 'DS:', 'FS:', 'GS:', 'DS2:', 'DS3:', 'IRAM:'}:
 		segreg = entry.kwds['mnem'][:-1]
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->segment = X86_R_{segreg};", file = file)
+		print_file(f"{indent}{parser_object}->segment = X86_R_{segreg};", file = file)
 		if segreg in {'DS3', 'IRAM'}:
-			print_file(f"{indent}prs->destination_segment = prs->segment;", file = file)
+			print_file(f"{indent}{parser_object}->destination_segment = {parser_object}->segment;", file = file)
 		else:
-			print_file(f"{indent}prs->source_segment = prs->segment;", file = file)
+			print_file(f"{indent}{parser_object}->source_segment = {parser_object}->segment;", file = file)
 		if segreg == 'DS2':
-			print_file(f"{indent}prs->source_segment2 = prs->segment;", file = file)
+			print_file(f"{indent}{parser_object}->source_segment2 = {parser_object}->segment;", file = file)
 		if segreg != 'DS3':
-			print_file(f"{indent}prs->source_segment3 = prs->segment;", file = file)
+			print_file(f"{indent}{parser_object}->source_segment3 = {parser_object}->segment;", file = file)
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'REX:':
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->rex_prefix = true;", file = file)
-		print_file(f"{indent}prs->rex_w = (opcode & X86_REX_W) != 0;", file = file)
-		print_file(f"{indent}prs->rex_r = opcode & X86_REX_R ? 8 : 0;", file = file)
-		print_file(f"{indent}prs->evex_vx = prs->rex_x = opcode & X86_REX_X ? 8 : 0;", file = file)
-		print_file(f"{indent}prs->evex_vb = prs->rex_b = opcode & X86_REX_B ? 8 : 0;", file = file)
-		print_file(f"{indent}if(prs->rex_w)", file = file)
+		print_file(f"{indent}{parser_object}->rex_prefix = true;", file = file)
+		print_file(f"{indent}{parser_object}->rex_w = (opcode & X86_REX_W) != 0;", file = file)
+		print_file(f"{indent}{parser_object}->rex_r = opcode & X86_REX_R ? 8 : 0;", file = file)
+		print_file(f"{indent}{parser_object}->evex_vx = {parser_object}->rex_x = opcode & X86_REX_X ? 8 : 0;", file = file)
+		print_file(f"{indent}{parser_object}->evex_vb = {parser_object}->rex_b = opcode & X86_REX_B ? 8 : 0;", file = file)
+		print_file(f"{indent}if({parser_object}->rex_w)", file = file)
 		print_file(f"{indent}goto restart; // end of legacy codes", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'OPSIZE:':
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->operation_size = prs->code_size == SIZE_16BIT ? SIZE_32BIT : SIZE_16BIT;", file = file)
-		print_file(f"{indent}if(prs->simd_prefix == X86_PREF_NONE)", file = file)
+		print_file(f"{indent}{parser_object}->operation_size = {parser_object}->code_size == SIZE_16BIT ? SIZE_32BIT : SIZE_16BIT;", file = file)
+		print_file(f"{indent}if({parser_object}->simd_prefix == X86_PREF_NONE)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tprs->simd_prefix = X86_PREF_66;", file = file)
+		print_file(f"{indent}\t{parser_object}->simd_prefix = X86_PREF_66;", file = file)
 		print_file(f"{indent}}}", file = file)
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'ADSIZE:':
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->address_size = prs->code_size == SIZE_32BIT ? SIZE_16BIT : SIZE_32BIT;", file = file)
+		print_file(f"{indent}{parser_object}->address_size = {parser_object}->code_size == SIZE_32BIT ? SIZE_16BIT : SIZE_32BIT;", file = file)
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'LOCK:':
-		print_file(f"{indent}if(x86_is_ia64(emu))", file = file)
-		print_file(f"{indent}\tx86_ia64_intercept(emu, 0); // TODO", file = file) # TODO
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		if method == 'both':
+			print_file(f"{indent}if(execute && x86_is_ia64(emu))", file = file)
+			print_file(f"{indent}\tx86_ia64_intercept(emu, 0); // TODO", file = file) # TODO
+		elif method == 'step':
+			print_file(f"{indent}x86_ia64_intercept(emu, 0); // TODO", file = file) # TODO
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->lock_prefix = true;", file = file)
+		print_file(f"{indent}{parser_object}->lock_prefix = true;", file = file)
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'USR:':
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->user_mode = true;", file = file)
+		print_file(f"{indent}{parser_object}->user_mode = true;", file = file)
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] in {'REPZ:', 'REPNZ:', 'REPC:', 'REPNC:'}:
 		prefix = entry.kwds['mnem'][:-1]
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}\tUNDEFINED(); // TODO: illegal instruction", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}(); // TODO: illegal instruction", file = file)
 		print_file(f"{indent}}}", file = file)
-		print_file(f"{indent}prs->rep_prefix = X86_PREF_{prefix};", file = file)
+		print_file(f"{indent}{parser_object}->rep_prefix = X86_PREF_{prefix};", file = file)
 		if prefix in {'REPZ', 'REPNZ'}:
 			code = {'REPNZ': 'F2', 'REPZ': 'F3'}[prefix]
-			print_file(f"{indent}prs->simd_prefix = X86_PREF_{code};", file = file)
+			print_file(f"{indent}{parser_object}->simd_prefix = X86_PREF_{code};", file = file)
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'VEX2:':
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if(prs->simd_prefix != X86_PREF_NONE || prs->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED();", file = file)
+		print_file(f"{indent}if({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
 		if modrm is None:
-			print_file(f"{indent}\tuint8_t byte = x86_fetch8(prs, emu);", file = file)
+			print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		else:
-			print_file(f"{indent}\tuint8_t byte = prs->modrm_byte;", file = file)
-		print_file(f"{indent}\tprs->rex_r = (byte & 0x80) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vx = prs->rex_x = 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vb = prs->rex_b = 0;", file = file)
-		print_file(f"{indent}\tprs->opcode_map = 1;", file = file)
-		print_file(f"{indent}\tprs->rex_w = false;", file = file)
-		print_file(f"{indent}\tprs->vex_v = ((byte >> 3) & 0xF) ^ 0xF;", file = file)
-		print_file(f"{indent}\tprs->vex_l = (byte & 0x04) != 0 ? 1 : 0;", file = file)
-		print_file(f"{indent}\tprs->simd_prefix = (x86_simd_prefix_t)(byte & 3);", file = file)
+			print_file(f"{indent}\tuint8_t byte = {parser_object}->modrm_byte;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_r = (byte & 0x80) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vx = {parser_object}->rex_x = 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vb = {parser_object}->rex_b = 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->opcode_map = 1;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_w = false;", file = file)
+		print_file(f"{indent}\t{parser_object}->vex_v = ((byte >> 3) & 0xF) ^ 0xF;", file = file)
+		print_file(f"{indent}\t{parser_object}->vex_l = (byte & 0x04) != 0 ? 1 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->simd_prefix = (x86_simd_prefix_t)(byte & 3);", file = file)
 		print_file(f"{indent}}}", file = file)
 		# TODO: use opcode_map
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] in {'VEX3:', 'XOP:'}:
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if(prs->simd_prefix != X86_PREF_NONE || prs->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED();", file = file)
+		print_file(f"{indent}if({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
 		if modrm is None:
-			print_file(f"{indent}\tuint8_t byte = x86_fetch8(prs, emu);", file = file)
+			print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		else:
-			print_file(f"{indent}\tuint8_t byte = prs->modrm_byte;", file = file)
-		print_file(f"{indent}\tprs->rex_r = (byte & 0x80) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vx = prs->rex_x = (byte & 0x40) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vb = prs->rex_b = (byte & 0x20) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->opcode_map = byte & 0x1F;", file = file)
+			print_file(f"{indent}\tuint8_t byte = {parser_object}->modrm_byte;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_r = (byte & 0x80) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vx = {parser_object}->rex_x = (byte & 0x40) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vb = {parser_object}->rex_b = (byte & 0x20) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->opcode_map = byte & 0x1F;", file = file)
 		if entry.kwds['mnem'] == 'VEX3':
-			print_file(f"{indent}\tif(prs->opcode_map != 0x01 && prs->opcode_map != 0x02 && prs->opcode_map != 0x03)", file = file)
-			print_file(f"{indent}\t\tUNDEFINED();", file = file)
+			print_file(f"{indent}\tif({parser_object}->opcode_map != 0x01 && {parser_object}->opcode_map != 0x02 && {parser_object}->opcode_map != 0x03)", file = file)
+			print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
 		elif entry.kwds['mnem'] == 'XOP:':
 			print_file(f"{indent}\t// TODO: check whether 0x0A is valid for this CPU", file = file)
-			print_file(f"{indent}\tif(prs->opcode_map != 0x08 && prs->opcode_map != 0x09 && prs->opcode_map != 0x0A)", file = file)
-			print_file(f"{indent}\t\tUNDEFINED();", file = file)
-		print_file(f"{indent}\tbyte = x86_fetch8(prs, emu);", file = file)
-		print_file(f"{indent}\tprs->rex_w = (byte & 0x80) != 0;", file = file)
-		print_file(f"{indent}\tprs->vex_v = ((byte >> 3) & 0xF) ^ 0xF;", file = file)
-		print_file(f"{indent}\tprs->vex_l = (byte & 0x04) != 0 ? 1 : 0;", file = file)
-		print_file(f"{indent}\tprs->simd_prefix = (x86_simd_prefix_t)(byte & 3);", file = file)
+			print_file(f"{indent}\tif({parser_object}->opcode_map != 0x08 && {parser_object}->opcode_map != 0x09 && {parser_object}->opcode_map != 0x0A)", file = file)
+			print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tbyte = x86_fetch8{fetch_suffix};", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_w = (byte & 0x80) != 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->vex_v = ((byte >> 3) & 0xF) ^ 0xF;", file = file)
+		print_file(f"{indent}\t{parser_object}->vex_l = (byte & 0x04) != 0 ? 1 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->simd_prefix = (x86_simd_prefix_t)(byte & 3);", file = file)
 		print_file(f"{indent}}}", file = file)
 		# TODO: use opcode_map
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] in {'EVEX:', 'MVEX:'}:
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if(prs->simd_prefix != X86_PREF_NONE || prs->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED();", file = file)
+		print_file(f"{indent}if({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
 		if modrm is None:
-			print_file(f"{indent}\tuint8_t byte = x86_fetch8(prs, emu);", file = file)
+			print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		else:
-			print_file(f"{indent}\tuint8_t byte = prs->modrm_byte;", file = file)
-		print_file(f"{indent}\tprs->rex_r = (byte & 0x80) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vx = prs->rex_x = (byte & 0x40) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vb = prs->rex_b = (byte & 0x20) == 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vb += (byte & 0x40) == 0 ? 16 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_r += (byte & 0x10) == 0 ? 16 : 0;", file = file)
+			print_file(f"{indent}\tuint8_t byte = {parser_object}->modrm_byte;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_r = (byte & 0x80) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vx = {parser_object}->rex_x = (byte & 0x40) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vb = {parser_object}->rex_b = (byte & 0x20) == 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vb += (byte & 0x40) == 0 ? 16 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_r += (byte & 0x10) == 0 ? 16 : 0;", file = file)
 		if entry.kwds['mnem'] == 'EVEX:':
 			print_file(f"{indent}\t// TODO: only for extended EVEX", file = file)
 			# TODO: otherwise assert it is 0
-			print_file(f"{indent}\tprs->rex_b += (byte & 0x08) != 0 ? 16 : 0;", file = file)
-			print_file(f"{indent}\tprs->opcode_map = byte & 0x07;", file = file)
-			print_file(f"{indent}\tif(prs->opcode_map != 0x01 && prs->opcode_map != 0x02 && prs->opcode_map != 0x03 && prs->opcode_map != 0x04)", file = file)
-			print_file(f"{indent}\t\tUNDEFINED();", file = file)
+			print_file(f"{indent}\t{parser_object}->rex_b += (byte & 0x08) != 0 ? 16 : 0;", file = file)
+			print_file(f"{indent}\t{parser_object}->opcode_map = byte & 0x07;", file = file)
+			print_file(f"{indent}\tif({parser_object}->opcode_map != 0x01 && {parser_object}->opcode_map != 0x02 && {parser_object}->opcode_map != 0x03 && {parser_object}->opcode_map != 0x04)", file = file)
+			print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
 		elif entry.kwds['mnem'] == 'MVEX:':
-			print_file(f"{indent}\tprs->opcode_map = byte & 0x0F;", file = file)
-			print_file(f"{indent}\tif(prs->opcode_map != 0x01 && prs->opcode_map != 0x02 && prs->opcode_map != 0x03)", file = file)
-			print_file(f"{indent}\t\tUNDEFINED();", file = file)
-		print_file(f"{indent}\tbyte = x86_fetch8(prs, emu);", file = file)
-		print_file(f"{indent}\tprs->rex_w = (byte & 0x80) != 0;", file = file)
-		print_file(f"{indent}\tprs->vex_v = ((byte >> 3) & 0xF) ^ 0xF;", file = file)
+			print_file(f"{indent}\t{parser_object}->opcode_map = byte & 0x0F;", file = file)
+			print_file(f"{indent}\tif({parser_object}->opcode_map != 0x01 && {parser_object}->opcode_map != 0x02 && {parser_object}->opcode_map != 0x03)", file = file)
+			print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tbyte = x86_fetch8{fetch_suffix};", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_w = (byte & 0x80) != 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->vex_v = ((byte >> 3) & 0xF) ^ 0xF;", file = file)
 		if entry.kwds['mnem'] == 'EVEX:':
 			print_file(f"{indent}\t// TODO: only for extended EVEX", file = file)
-			print_file(f"{indent}\tprs->rex_x += (byte & 0x04) == 0 ? 16 : 0;", file = file)
+			print_file(f"{indent}\t{parser_object}->rex_x += (byte & 0x04) == 0 ? 16 : 0;", file = file)
 			# TODO: otherwise assert it is 1
 		elif entry.kwds['mnem'] == 'MVEX:':
 			print_file(f"{indent}\tif((byte & 0x04) != 0)", file = file)
-			print_file(f"{indent}\t\tUNDEFINED(); // TODO: what is the right exception?", file = file)
-		print_file(f"{indent}\tprs->simd_prefix = (x86_simd_prefix_t)(byte & 3);", file = file)
-		print_file(f"{indent}\tbyte = x86_fetch8(prs, emu);", file = file)
-		print_file(f"{indent}\tprs->evex_z = (byte & 0x80) != 0;", file = file)
+			print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}(); // TODO: what is the right exception?", file = file)
+		print_file(f"{indent}\t{parser_object}->simd_prefix = (x86_simd_prefix_t)(byte & 3);", file = file)
+		print_file(f"{indent}\tbyte = x86_fetch8{fetch_suffix};", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_z = (byte & 0x80) != 0;", file = file)
 		if entry.kwds['mnem'] == 'EVEX:':
-			print_file(f"{indent}\tprs->vex_l = (byte >> 5) & 3;", file = file)
-			print_file(f"{indent}\tprs->rex_b = (byte & 0x10) != 0;", file = file)
+			print_file(f"{indent}\t{parser_object}->vex_l = (byte >> 5) & 3;", file = file)
+			print_file(f"{indent}\t{parser_object}->rex_b = (byte & 0x10) != 0;", file = file)
 		else:
 			pass # TODO: 3 bits swizzle/etc. control
-		print_file(f"{indent}\tprs->vex_v += (byte & 0x08) == 0 ? 16 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_vx += (byte & 0x08) == 0 ? 16 : 0;", file = file)
-		print_file(f"{indent}\tprs->evex_a = byte & 0x0F;", file = file)
+		print_file(f"{indent}\t{parser_object}->vex_v += (byte & 0x08) == 0 ? 16 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_vx += (byte & 0x08) == 0 ? 16 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->evex_a = byte & 0x0F;", file = file)
 		print_file(f"{indent}}}", file = file)
 		# TODO: use opcode_map
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'REX2:':
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if(prs->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED();", file = file)
-		print_file(f"{indent}\tuint8_t byte = x86_fetch8(prs, emu);", file = file)
-		print_file(f"{indent}\tprs->opcode_map = (byte & 0x80) != 0 ? 1 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_r = (byte & 0x40) != 0 ? 16 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_x = (byte & 0x20) != 0 ? 16 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_b = (byte & 0x10) != 0 ? 16 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_w = (byte & 0x08) != 0;", file = file)
-		print_file(f"{indent}\tprs->rex_r += (byte & 0x04) != 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_x += (byte & 0x02) != 0 ? 8 : 0;", file = file)
-		print_file(f"{indent}\tprs->rex_b += (byte & 0x01) != 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
+		print_file(f"{indent}\t{parser_object}->opcode_map = (byte & 0x80) != 0 ? 1 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_r = (byte & 0x40) != 0 ? 16 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_x = (byte & 0x20) != 0 ? 16 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_b = (byte & 0x10) != 0 ? 16 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_w = (byte & 0x08) != 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_r += (byte & 0x04) != 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_x += (byte & 0x02) != 0 ? 8 : 0;", file = file)
+		print_file(f"{indent}\t{parser_object}->rex_b += (byte & 0x01) != 0 ? 8 : 0;", file = file)
 		print_file(f"{indent}}}", file = file)
 		# TODO: use opcode_map
 		print_file(f"{indent}goto restart;", file = file)
@@ -2141,6 +2155,13 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				print_file(f"{indent}/* TODO */;", file = file)
 				return True
 			opd = X80_OPERAND_CODE.get(opd, {})
+			if method == 'both':
+				opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
+			elif method == 'parse':
+				opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
+			elif method == 'step':
+				opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+			opd = recursive_replace(opd, '$prs', parser_object)
 			opds.append(opd)
 
 		indent1 = indent
@@ -2159,56 +2180,64 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 
 				opds[i] = opd
 
-		syntaxes = ['intel', '']
-		if 'intel' not in entry.kwds:
-			syntaxes.remove('intel')
+		if method != 'step':
+			syntaxes = ['intel', '']
+			if 'intel' not in entry.kwds:
+				syntaxes.remove('intel')
 
-		for syntax in syntaxes:
-			if syntax == '':
-				_mnem = entry.kwds['mnem'].lower()
-				_opds = opds
-			else:
-				_mnem = entry.kwds[syntax][0].lower()
-				_opds = []
-
-				i = 0
-				for opd in entry.kwds[syntax][1]:
-					opd = X80_OPERAND_CODE.get(opd, {})
-					if 'prepare' in opd:
-						opd = recursive_replace(opd, '$#', str(i))
-						i += 1
-					_opds.append(opd)
-
-			pars = ""
-			args = ""
-			for opd in _opds:
-				if 'format' not in opd:
-					continue # TODO
-				fmt = opd['format']
-				if type(fmt) is dict:
-					fmt = fmt[mode]
-				if pars != "":
-					pars += ", "
-				pars += fmt[0]
-				for arg in fmt[1]:
-					args += ", " + arg
-
-			if pars == "":
-				assert args == ""
-				line = f'DEBUG("{_mnem}\\n");'
-			else:
-				line = f'DEBUG("{_mnem}\\t{pars}\\n"{args});'
-
-			if len(syntaxes) == 1:
-				print_file(f'{indent1}{line}', file = file)
-			else:
-				if syntax == 'intel':
-					print_file(f'{indent1}if(prs->use_intel8080_syntax)', file = file)
+			for syntax in syntaxes:
+				if syntax == '':
+					_mnem = entry.kwds['mnem'].lower()
+					_opds = opds
 				else:
-					print_file(f'{indent1}else', file = file)
-				print_file(f'{indent1}{{', file = file)
-				print_file(f'{indent1}\t{line}', file = file)
-				print_file(f'{indent1}}}', file = file)
+					_mnem = entry.kwds[syntax][0].lower()
+					_opds = []
+
+					i = 0
+					for opd in entry.kwds[syntax][1]:
+						opd = X80_OPERAND_CODE.get(opd, {})
+						if 'prepare' in opd:
+							opd = recursive_replace(opd, '$#', str(i))
+							i += 1
+						if method == 'both':
+							opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
+						elif method == 'parse':
+							opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
+						elif method == 'step':
+							opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+						opd = recursive_replace(opd, '$prs', parser_object)
+						_opds.append(opd)
+
+				pars = ""
+				args = ""
+				for opd in _opds:
+					if 'format' not in opd:
+						continue # TODO
+					fmt = opd['format']
+					if type(fmt) is dict:
+						fmt = fmt[mode]
+					if pars != "":
+						pars += ", "
+					pars += fmt[0]
+					for arg in fmt[1]:
+						args += ", " + arg
+
+				if pars == "":
+					assert args == ""
+					line = f'DEBUG("{_mnem}\\n");'
+				else:
+					line = f'DEBUG("{_mnem}\\t{pars}\\n"{args});'
+
+				if len(syntaxes) == 1:
+					print_file(f'{indent1}{line}', file = file)
+				else:
+					if syntax == 'intel':
+						print_file(f'{indent1}if(prs->use_intel8080_syntax)', file = file)
+					else:
+						print_file(f'{indent1}else', file = file)
+					print_file(f'{indent1}{{', file = file)
+					print_file(f'{indent1}\t{line}', file = file)
+					print_file(f'{indent1}}}', file = file)
 
 		mnem = entry.kwds['mnem']
 
@@ -2251,12 +2280,14 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						continue
 				kwds = {}
 
-				print_file(f"{indent1}if(!execute)", file = file)
-				print_file(f"{indent1}\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = file)
+				if method == 'both':
+					print_file(f"{indent1}if(!execute)", file = file)
+					print_file(f"{indent1}\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = file)
 
-				print_file(f"{indent1}{{", file = file)
-				print_file(gen_code80(code, *opds, indent = indent1 + '\t', **kwds), file = file)
-				print_file(f"{indent1}}}", file = file)
+				if method != 'parse':
+					print_file(f"{indent1}{{", file = file)
+					print_file(gen_code80(code, *opds, indent = indent1 + '\t', **kwds), file = file)
+					print_file(f"{indent1}}}", file = file)
 
 				break # found pattern, no need to continue searching
 			else:
@@ -2277,6 +2308,14 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				opd = X87_OPERAND_CODE.get(opd, {})
 			if modrm in opd:
 				opd = opd[modrm]
+			if method == 'both':
+				opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
+			elif method == 'parse':
+				opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
+			elif method == 'step':
+				opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+			opd = recursive_replace(opd, '$prs', parser_object)
+			opd = recursive_replace(opd, '$x87_address_text', x87_address_text)
 			opds.append(opd)
 
 		sizes = all_sizes(opds)
@@ -2312,12 +2351,12 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 			sizes.remove('b')
 
 		if entry.kwds['mnem'] == 'MOV' and ('Cy' in entry.kwds['opds'] or 'Dy' in entry.kwds['opds']):
-			print_file(f"{indent}if(!x86_traits_is_long_mode_supported(&prs->cpu_traits) && prs->lock_prefix)", file = file)
+			print_file(f"{indent}if(!x86_traits_is_long_mode_supported(&{parser_object}->cpu_traits) && {parser_object}->lock_prefix)", file = file)
 			print_file(f"{indent}{{", file = file)
-			print_file(f"{indent}\tUNDEFINED();", file = file)
+			print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
 			print_file(f"{indent}}}", file = file)
 
-		for indent1, size in iterate_sizes(sizes, indent, file, size_option = size_option):
+		for indent1, size in iterate_sizes(sizes, indent, file, size_option = size_option, method = method):
 			cnt = 0
 			for i in range(len(opds)):
 				opd = opds[i]
@@ -2343,223 +2382,244 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				mnem = mnem.split('/')[['word', 'long', 'quad'].index(size)]
 			mnem = mnem.lower()
 
-			syntaxes = ['nec', '']
-			if 'nec' not in entry.kwds:
-				syntaxes.remove('nec')
-			elif size in {'long', 'quad'}:
-				# NEC CPUs do not use 32-bit or 64-bit operands
-				syntaxes.remove('nec')
+			if mode == '87':
+				x87_async = mnem in {'fnclex', 'fndisi', 'fneni', 'fninit', 'fnsave', 'fnstcw', 'fnstenv', 'fnstsw', 'fstsg'}
 
-			for syntax in syntaxes:
-				if syntax == '':
-					_mnem = mnem
-					_opds = opds
-				else:
-					_mnem = entry.kwds[syntax][0].lower()
-					_opds = []
-					i = 0
-					for opd in entry.kwds[syntax][1]:
-						if mode != '87':
-							opd = OPERAND_CODE.get(opd, {})
-						else:
-							opd = X87_OPERAND_CODE.get(opd, {})
-						if modrm in opd:
-							opd = opd[modrm]
-						if 'prepare' in opd:
-							opd = recursive_replace(opd, '$#', str(i))
-							i += 1
-						_opds.append(opd)
+			if method != 'step':
+				syntaxes = ['nec', '']
+				if 'nec' not in entry.kwds:
+					syntaxes.remove('nec')
+				elif size in {'long', 'quad'}:
+					# NEC CPUs do not use 32-bit or 64-bit operands
+					syntaxes.remove('nec')
 
-				pars = ""
-				args = ""
-				for opd in _opds:
-					if 'format' not in opd:
-						continue # TODO
-					fmt = opd['format']
-					if type(fmt) is dict:
-						fmt = fmt[mode]
-					if pars != "":
-						pars += ", "
-					pars += replace_patterns(fmt[0], size, opd['size'])
-					for arg in fmt[1]:
-						#assert type(arg) is not dict
-						args += ", " + replace_patterns(arg, size, opd['size'])
-
-				if pars == "":
-					assert args == ""
-					line = f'DEBUG("{_mnem}\\n");'
-				else:
-					line = f'DEBUG("{_mnem}\\t{pars}\\n"{args});'
-
-				if mode == '87':
-					x87_async = mnem in {'fnclex', 'fndisi', 'fneni', 'fninit', 'fnsave', 'fnstcw', 'fnstenv', 'fnstsw', 'fstsg'}
-
-				if mode == '87' and x87_async:
-					print_file(f'{indent1}if(!(prs->fpu_type == X87_FPU_INTEGRATED || !sync || !execute))', file = file)
-					print_file(f'{indent1}\tDEBUG("[FPU] ~\\t");', file = file)
-				elif mode == '87' and not x87_async:
-					print_file(f'{indent1}if(prs->fpu_type == X87_FPU_INTEGRATED || !sync || !execute)', file = file)
-					print_file(f'{indent1}{{', file = file)
-					indent1 += '\t'
-				elif _mnem == 'esc':
-					print_file(f'{indent1}if(prs->fpu_type != X87_FPU_INTEGRATED && (execute || prs->fpu_type == X87_FPU_NONE))', file = file)
-					print_file(f'{indent1}{{', file = file)
-					indent1 += '\t'
-
-				if len(syntaxes) == 1:
-					print_file(f'{indent1}{line}', file = file)
-				else:
-					if syntax == 'nec':
-						print_file(f'{indent1}if(prs->use_nec_syntax)', file = file)
+				for syntax in syntaxes:
+					if syntax == '':
+						_mnem = mnem
+						_opds = opds
 					else:
-						print_file(f'{indent1}else', file = file)
-					print_file(f'{indent1}{{', file = file)
-					print_file(f'{indent1}\t{line}', file = file)
-					print_file(f'{indent1}}}', file = file)
+						_mnem = entry.kwds[syntax][0].lower()
+						_opds = []
+						i = 0
+						for opd in entry.kwds[syntax][1]:
+							if mode != '87':
+								opd = OPERAND_CODE.get(opd, {})
+							else:
+								opd = X87_OPERAND_CODE.get(opd, {})
+							if modrm in opd:
+								opd = opd[modrm]
+							if method == 'both':
+								opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
+							elif method == 'parse':
+								opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
+							elif method == 'step':
+								opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+							opd = recursive_replace(opd, '$prs', parser_object)
+							opd = recursive_replace(opd, '$x87_address_text', x87_address_text)
+							if 'prepare' in opd:
+								opd = recursive_replace(opd, '$#', str(i))
+								i += 1
+							_opds.append(opd)
 
-				if mode == '87' and not x87_async:
-					indent1 = indent1[:-1]
-					print_file(f'{indent1}}}', file = file)
-				elif _mnem == 'esc':
-					indent1 = indent1[:-1]
-					print_file(f'{indent1}}}', file = file)
+					pars = ""
+					args = ""
+					for opd in _opds:
+						if 'format' not in opd:
+							continue # TODO
+						fmt = opd['format']
+						if type(fmt) is dict:
+							fmt = fmt[mode]
+						if pars != "":
+							pars += ", "
+						pars += replace_patterns(fmt[0], size, opd['size'])
+						for arg in fmt[1]:
+							#assert type(arg) is not dict
+							args += ", " + replace_patterns(arg, size, opd['size'])
+
+					if pars == "":
+						assert args == ""
+						line = f'DEBUG("{_mnem}\\n");'
+					else:
+						line = f'DEBUG("{_mnem}\\t{pars}\\n"{args});'
+
+					if mode == '87' and x87_async:
+						if method == 'both':
+							print_file(f'{indent1}if(!(prs->fpu_type == X87_FPU_INTEGRATED || !sync || !execute))', file = file)
+							print_file(f'{indent1}\tDEBUG("[FPU] ~\\t");', file = file)
+					elif mode == '87' and not x87_async:
+						if method == 'both':
+							print_file(f'{indent1}if(prs->fpu_type == X87_FPU_INTEGRATED || !sync || !execute)', file = file)
+						print_file(f'{indent1}{{', file = file)
+						indent1 += '\t'
+					elif _mnem == 'esc':
+						if method == 'both':
+							print_file(f'{indent1}if(prs->fpu_type != X87_FPU_INTEGRATED && (execute || prs->fpu_type == X87_FPU_NONE))', file = file)
+						else:
+							print_file(f'{indent1}if(prs->fpu_type != X87_FPU_INTEGRATED && prs->fpu_type == X87_FPU_NONE)', file = file)
+						print_file(f'{indent1}{{', file = file)
+						indent1 += '\t'
+
+					if len(syntaxes) == 1:
+						print_file(f'{indent1}{line}', file = file)
+					else:
+						if syntax == 'nec':
+							print_file(f'{indent1}if(prs->use_nec_syntax)', file = file)
+						else:
+							print_file(f'{indent1}else', file = file)
+						print_file(f'{indent1}{{', file = file)
+						print_file(f'{indent1}\t{line}', file = file)
+						print_file(f'{indent1}}}', file = file)
+
+					if mode == '87' and not x87_async:
+						indent1 = indent1[:-1]
+						print_file(f'{indent1}}}', file = file)
+					elif _mnem == 'esc':
+						indent1 = indent1[:-1]
+						print_file(f'{indent1}}}', file = file)
 
 			if entry.kwds['mnem'] != 'ESC':
-				print_file(f"{indent1}if(!execute)", file = file)
-				print_file(f"{indent1}\treturn;", file = file)
-				print_file(f"{indent1}x86_prefetch_queue_fill(emu);", file = file)
+				if method == 'both':
+					print_file(f"{indent1}if(!execute)", file = file)
+					print_file(f"{indent1}\treturn;", file = file)
 
-				if modrm == 'mem':
-					# Needed to fix IP-relative addresses
-					print_file(f"{indent1}x86_calculate_operand_address(emu);", file = file)
+				if method != 'parse':
+					print_file(f"{indent1}x86_prefetch_queue_fill(emu);", file = file)
 
-				if not (entry.kwds['mnem'] in {'ADC', 'ADD', 'AND', 'BTC', 'BTR', 'BTS', 'DEC', 'INC', 'NEG', 'NOT', 'OR', 'SBB', 'SUB', 'XCHG', 'XOR'} and any('address' in opd for opd in opds) and modrm == 'mem') \
-			and not (entry.kwds['mnem'] == 'MOV' and ('Cy' in entry.kwds['opds'] or 'Dy' in entry.kwds['opds'])):
-					if mode != '87':
-						print_file(f"{indent1}NO_LOCK();", file = file)
-					# TODO
-					#else:
-					#	print_file(f"{indent1}if(sync)", file = file)
-					#	print_file(f"{indent1}\tNO_LOCK();", file = file)
+					if modrm == 'mem':
+						# Needed to fix IP-relative addresses
+						print_file(f"{indent1}x86_calculate_operand_address(emu);", file = file)
+
+					if not (entry.kwds['mnem'] in {'ADC', 'ADD', 'AND', 'BTC', 'BTR', 'BTS', 'DEC', 'INC', 'NEG', 'NOT', 'OR', 'SBB', 'SUB', 'XCHG', 'XOR'} and any('address' in opd for opd in opds) and modrm == 'mem') \
+				and not (entry.kwds['mnem'] == 'MOV' and ('Cy' in entry.kwds['opds'] or 'Dy' in entry.kwds['opds'])):
+						if mode != '87':
+							print_file(f"{indent1}NO_LOCK();", file = file)
+						# TODO
+						#else:
+						#	print_file(f"{indent1}if(sync)", file = file)
+						#	print_file(f"{indent1}\tNO_LOCK();", file = file)
 			else:
-				print_file(f"{indent1}if(execute)", file = file)
-				print_file(f"{indent1}\tNO_LOCK();", file = file)
+				if method == 'both':
+					print_file(f"{indent1}if(execute)", file = file)
+					print_file(f"{indent1}\tNO_LOCK();", file = file)
+				elif method == 'step':
+					print_file(f"{indent1}NO_LOCK();", file = file)
 
-			opds1 = opds.copy()
-			mnem1 = entry.kwds['mnem']
-			if mnem1[-1] in {'b', 'z', 'v'}:
-				mnem1 = mnem1[:-1]
-			if mnem1.startswith('J') and mnem1 not in INSTRUCTIONS:
-				mnem1 = 'Jcc'
-			if mnem1.startswith('CMOV') and mnem1 not in INSTRUCTIONS:
-				mnem1 = 'CMOVcc'
-			if mnem1.startswith('SET') and mnem1 not in INSTRUCTIONS:
-				mnem1 = 'SETcc'
-			if mnem1.startswith('LOOP') and mnem1 not in INSTRUCTIONS:
-				mnem1 = 'LOOPcc'
-			if mnem1.startswith('FCMOV') and mnem1 not in INSTRUCTIONS:
-				mnem1 = 'FCMOVcc'
-			if mnem1 in {'LDS', 'LES', 'LFS', 'LGS', 'LSS'}:
-				# convert LxS a, b to MOV xS, a, b (NEC syntax)
-				opds1.insert(0, OPERAND_CODE[mnem1[1:]])
-				mnem1 = 'MOV'
-			if mnem1 in INSTRUCTIONS:
-				for parts, (line, fn, code) in INSTRUCTIONS[mnem1]:
-					if parts != []:
-						condition = False
-						for part in parts:
-							clause = True
-							for morcel in part.split(' '):
-								if morcel.startswith('op='):
-									if size[0] != morcel[3]:
+			if method != 'parse':
+				opds1 = opds.copy()
+				mnem1 = entry.kwds['mnem']
+				if mnem1[-1] in {'b', 'z', 'v'}:
+					mnem1 = mnem1[:-1]
+				if mnem1.startswith('J') and mnem1 not in INSTRUCTIONS:
+					mnem1 = 'Jcc'
+				if mnem1.startswith('CMOV') and mnem1 not in INSTRUCTIONS:
+					mnem1 = 'CMOVcc'
+				if mnem1.startswith('SET') and mnem1 not in INSTRUCTIONS:
+					mnem1 = 'SETcc'
+				if mnem1.startswith('LOOP') and mnem1 not in INSTRUCTIONS:
+					mnem1 = 'LOOPcc'
+				if mnem1.startswith('FCMOV') and mnem1 not in INSTRUCTIONS:
+					mnem1 = 'FCMOVcc'
+				if mnem1 in {'LDS', 'LES', 'LFS', 'LGS', 'LSS'}:
+					# convert LxS a, b to MOV xS, a, b (NEC syntax)
+					opds1.insert(0, OPERAND_CODE[mnem1[1:]])
+					mnem1 = 'MOV'
+				if mnem1 in INSTRUCTIONS:
+					for parts, (line, fn, code) in INSTRUCTIONS[mnem1]:
+						if parts != []:
+							condition = False
+							for part in parts:
+								clause = True
+								for morcel in part.split(' '):
+									if morcel.startswith('op='):
+										if size[0] != morcel[3]:
+											clause = False
+											break
+									elif morcel.startswith('mod='):
+										if modrm is None or modrm[0] != morcel[4]:
+											clause = False
+											break
+									elif morcel.startswith('cnt='):
+										if len(opds1) != int(morcel[4:]):
+											clause = False
+											break
+									elif morcel.startswith('op0='):
+										if entry.kwds['opds'][0].lower() != morcel[4:]:
+											clause = False
+											break
+									elif morcel.startswith('op1='):
+										if entry.kwds['opds'][1].lower() != morcel[4:]:
+											clause = False
+											break
+									else:
+										print_file("// PARTS:", parts, file = file)
 										clause = False
 										break
-								elif morcel.startswith('mod='):
-									if modrm is None or modrm[0] != morcel[4]:
-										clause = False
-										break
-								elif morcel.startswith('cnt='):
-									if len(opds1) != int(morcel[4:]):
-										clause = False
-										break
-								elif morcel.startswith('op0='):
-									if entry.kwds['opds'][0].lower() != morcel[4:]:
-										clause = False
-										break
-								elif morcel.startswith('op1='):
-									if entry.kwds['opds'][1].lower() != morcel[4:]:
-										clause = False
-										break
-								else:
-									print_file("// PARTS:", parts, file = file)
-									clause = False
+
+								if clause:
+									condition = True
 									break
 
-							if clause:
-								condition = True
-								break
+							if not condition:
+								#print_file("// condition failed", size, parts, file = file)
+								continue
 
-						if not condition:
-							#print_file("// condition failed", size, parts, file = file)
-							continue
+						params = set(iter_params(code))
+						kwds = {}
+						size0 = size
+						if mnem1 in {'LAR', 'LSL'}:
+							size0 = max_long(size0) # TODO: make this explicit
+						if size0 != 'void':
+							kwds['opsize'] = size0[0]
+						if mnem1.endswith('cc'):
+							kwds['cond'] = entry.kwds['mnem'][len(mnem1) - 2:]
 
-					params = set(iter_params(code))
-					kwds = {}
-					size0 = size
-					if mnem1 in {'LAR', 'LSL'}:
-						size0 = max_long(size0) # TODO: make this explicit
-					if size0 != 'void':
-						kwds['opsize'] = size0[0]
-					if mnem1.endswith('cc'):
-						kwds['cond'] = entry.kwds['mnem'][len(mnem1) - 2:]
+						if '$A' in params:
+							assert '$S' not in params
+							print_file(f"{indent1}switch({parser_object}->address_size)", file = file)
+							print_file(f"{indent1}{{", file = file)
+							for adsize in ['word', 'long', 'quad']:
+								kwds['adsize'] = adsize[0]
+								print_file(f"{indent1}case SIZE_{get_bits(adsize)}BIT:", file = file)
+								print_file(f"{indent1}\t{{", file = file)
+								print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t\t', **kwds), file = file)
+								print_file(f"{indent1}\t}}", file = file)
+								print_file(f"{indent1}\tbreak;", file = file)
+							print_file(f"{indent1}default:", file = file)
+							print_file(f"{indent1}\tassert(false);", file = file)
+							print_file(f"{indent1}}}", file = file)
+						elif '$S' in params:
+							# TODO: $A as well as $S
+							print_file(f"{indent1}switch(x86_get_stack_size(emu))", file = file)
+							print_file(f"{indent1}{{", file = file)
+							for stksize in ['word', 'long', 'quad']:
+								kwds['stksize'] = stksize[0]
+								print_file(f"{indent1}case SIZE_{get_bits(stksize)}BIT:", file = file)
+								print_file(f"{indent1}\t{{", file = file)
+								print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t\t', **kwds), file = file)
+								print_file(f"{indent1}\t}}", file = file)
+								print_file(f"{indent1}\tbreak;", file = file)
+							print_file(f"{indent1}default:", file = file)
+							print_file(f"{indent1}\tassert(false);", file = file)
+							print_file(f"{indent1}}}", file = file)
+						else:
+							print_file(f"{indent1}{{", file = file)
 
-					if '$A' in params:
-						assert '$S' not in params
-						print_file(f"{indent1}switch(prs->address_size)", file = file)
-						print_file(f"{indent1}{{", file = file)
-						for adsize in ['word', 'long', 'quad']:
-							kwds['adsize'] = adsize[0]
-							print_file(f"{indent1}case SIZE_{get_bits(adsize)}BIT:", file = file)
-							print_file(f"{indent1}\t{{", file = file)
-							print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t\t', **kwds), file = file)
-							print_file(f"{indent1}\t}}", file = file)
-							print_file(f"{indent1}\tbreak;", file = file)
-						print_file(f"{indent1}default:", file = file)
-						print_file(f"{indent1}\tassert(false);", file = file)
-						print_file(f"{indent1}}}", file = file)
-					elif '$S' in params:
-						# TODO: $A as well as $S
-						print_file(f"{indent1}switch(x86_get_stack_size(emu))", file = file)
-						print_file(f"{indent1}{{", file = file)
-						for stksize in ['word', 'long', 'quad']:
-							kwds['stksize'] = stksize[0]
-							print_file(f"{indent1}case SIZE_{get_bits(stksize)}BIT:", file = file)
-							print_file(f"{indent1}\t{{", file = file)
-							print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t\t', **kwds), file = file)
-							print_file(f"{indent1}\t}}", file = file)
-							print_file(f"{indent1}\tbreak;", file = file)
-						print_file(f"{indent1}default:", file = file)
-						print_file(f"{indent1}\tassert(false);", file = file)
-						print_file(f"{indent1}}}", file = file)
+							if mode == '87' and not x87_async:
+								print_file(f"{indent1}\tif(emu->x87.fpu_type == X87_FPU_INTEGRATED)", file = file)
+								print_file(f"{indent1}\t\t_x87_int();", file = file)
+								print_file(f"{indent1}\t_x87_busy();", file = file)
+							if mode == '87' and (not x87_async and mnem not in {'fldcw', 'fldenv', 'frstor', 'frstpm', 'fsetpm'}):
+								print_file(f"{indent1}\tx87_store_exception_pointers(emu);", file = file)
+
+							print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t', **kwds), file = file)
+							print_file(f"{indent1}}}", file = file)
+
+						break # found pattern, no need to continue searching
 					else:
-						print_file(f"{indent1}{{", file = file)
-
-						if mode == '87' and not x87_async:
-							print_file(f"{indent1}\tif(emu->x87.fpu_type == X87_FPU_INTEGRATED)", file = file)
-							print_file(f"{indent1}\t\t_x87_int();", file = file)
-							print_file(f"{indent1}\t_x87_busy();", file = file)
-						if mode == '87' and (not x87_async and mnem not in {'fldcw', 'fldenv', 'frstor', 'frstpm', 'fsetpm'}):
-							print_file(f"{indent1}\tx87_store_exception_pointers(emu);", file = file)
-
-						print_file(gen_code(line, fn, code, *opds1, indent = indent1 + '\t', **kwds), file = file)
-						print_file(f"{indent1}}}", file = file)
-
-					break # found pattern, no need to continue searching
+						print_file("// MISSING CONDITIONS:", entry.kwds['mnem'], file = file)
 				else:
-					print_file("// MISSING CONDITIONS:", entry.kwds['mnem'], file = file)
-			else:
-				print_file("// MISSING INSTRUCTION:", entry.kwds['mnem'], file = file)
-				MISSING.add(entry.kwds['mnem'])
+					print_file("// MISSING INSTRUCTION:", entry.kwds['mnem'], file = file)
+					MISSING.add(entry.kwds['mnem'])
 
 			if cnt > 0:
 				print_file(indent1[:-1] + '}', file = file)
@@ -2568,19 +2628,23 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 
 	assert False
 
-def print_single_implementation_entry(path, indent, actual_range, entry, discriminator, index, file, mode, uses_modrm = None, modrm = None, feature = None, only_mode = None):
+def print_single_implementation_entry(path, indent, actual_range, entry, discriminator, index, file, mode, uses_modrm = None, modrm = None, feature = None, only_mode = None, method = None):
+	assert method is not None
+
+	undefined_suffix = {'both': '_BOTH', 'parse': '_PARSE', 'step': ''}[method]
+
 	if entry is None:
 		if mode == '32':
-			print_file(f"{indent}UNDEFINED();", file = file)
+			print_file(f"{indent}UNDEFINED{undefined_suffix}();", file = file)
 		elif mode == '87':
-			print_file(f"{indent}X87_UNDEFINED();", file = file)
+			print_file(f"{indent}X87_UNDEFINED{undefined_suffix}();", file = file)
 		elif mode == '8':
-			print_file(f"{indent}/* UNDEFINED(); */ // TODO", file = file)
+			print_file(f"{indent}/* UNDEFINED{undefined_suffix}(); */ // TODO", file = file)
 		return True
 	elif type(entry) is Table:
-		return print_switch(mode, path + Path((index, discriminator),), indent, actual_range, file, discriminator = entry.kwds['discriminator'], uses_modrm = uses_modrm, modrm = modrm, feature = feature, only_mode = only_mode)
+		return print_switch(mode, path + Path((index, discriminator),), indent, actual_range, file, discriminator = entry.kwds['discriminator'], uses_modrm = uses_modrm, modrm = modrm, feature = feature, only_mode = only_mode, method = method)
 	else:
-		return print_instruction(path, indent, actual_range, entry, discriminator, index, file, mode, modrm)
+		return print_instruction(path, indent, actual_range, entry, discriminator, index, file, mode, modrm, method)
 
 def get_implementation_ranges(mode, path, discriminator, index, actual_range, modrm = None):
 	path1 = path + Path((index, discriminator))
@@ -2707,7 +2771,9 @@ def get_implementation_ranges(mode, path, discriminator, index, actual_range, mo
 
 			yield mode, impl_range, entry
 
-def make_condition(mode, full_range, impl_range, features, imode):
+def make_condition(mode, full_range, impl_range, features, imode, method):
+	parser_object = 'emu->parser' if method == 'step' else 'prs'
+
 	if mode == '32':
 		cpu_prefix = 'X86_CPU_'
 		cpu_type = 'cpu_type'
@@ -2738,17 +2804,17 @@ def make_condition(mode, full_range, impl_range, features, imode):
 			continue
 		elif start == end:
 			cpu_name = ARCHITECTURES[start].get('name', start).upper()
-			condition = f"prs->{cpu_type} == {cpu_prefix}{cpu_name}"
+			condition = f"{parser_object}->{cpu_type} == {cpu_prefix}{cpu_name}"
 		elif start == full_range[0]:
 			cpu_name = ARCHITECTURES[end].get('name', end).upper()
-			condition = f"prs->{cpu_type} <= {cpu_prefix}{cpu_name}"
+			condition = f"{parser_object}->{cpu_type} <= {cpu_prefix}{cpu_name}"
 		elif end == full_range[-1]:
 			cpu_name = ARCHITECTURES[start].get('name', start).upper()
-			condition = f"{cpu_prefix}{cpu_name} <= prs->{cpu_type}"
+			condition = f"{cpu_prefix}{cpu_name} <= {parser_object}->{cpu_type}"
 		else:
 			start_cpu_name = ARCHITECTURES[start].get('name', start).upper()
 			end_cpu_name = ARCHITECTURES[end].get('name', end).upper()
-			condition = f"{cpu_prefix}{start_cpu_name} <= prs->{cpu_type} && prs->{cpu_type} <= {cpu_prefix}{end_cpu_name}"
+			condition = f"{cpu_prefix}{start_cpu_name} <= {parser_object}->{cpu_type} && {parser_object}->{cpu_type} <= {cpu_prefix}{end_cpu_name}"
 		conditions.append(condition)
 
 	if len(conditions) == 0:
@@ -2782,11 +2848,11 @@ def make_condition(mode, full_range, impl_range, features, imode):
 			if description.startswith('CPU:'):
 				cpu, cpu_flag = description[4:].split('/')
 				op = "!=" if negated else "=="
-				clause = f"prs->cpu_traits.cpu_subtype {op} X86_CPU_{cpu}_{cpu_flag}"
+				clause = f"{parser_object}->cpu_traits.cpu_subtype {op} X86_CPU_{cpu}_{cpu_flag}"
 			elif description.startswith('FPU:'):
 				cpu, cpu_flag = description[4:].split('/')
 				op = "!=" if negated else "=="
-				clause = f"prs->fpu_subtype {op} X87_FPU_{cpu}_{cpu_flag}"
+				clause = f"{parser_object}->fpu_subtype {op} X87_FPU_{cpu}_{cpu_flag}"
 			elif description.startswith('CPUID.'):
 				clause = None
 				for mode in description.split('/'):
@@ -2826,7 +2892,7 @@ def make_condition(mode, full_range, impl_range, features, imode):
 						assert register in {'EAX', 'ECX', 'EDX', 'EBX'}
 						checks = []
 
-						options.append(f"(prs->cpu_traits.{setup}.{register.lower()} & X86_{setup.upper()}_{register}_{flag}) != 0")
+						options.append(f"({parser_object}->cpu_traits.{setup}.{register.lower()} & X86_{setup.upper()}_{register}_{flag}) != 0")
 
 					if len(options) > 1:
 						clause1 = '(' + ' || '.join(options) + ')'
@@ -2840,19 +2906,19 @@ def make_condition(mode, full_range, impl_range, features, imode):
 					if clause is None:
 						clause = clause1
 					else:
-						clause = f'(prs->operation_size != SIZE_64BIT ? {clause} : {clause1})'
+						clause = f'({parser_object}->operation_size != SIZE_64BIT ? {clause} : {clause1})'
 			elif description == 'emulated':
 				op = "!=" if negated else "=="
-				clause = f"prs->cpu_method {op} X80_CPUMETHOD_EMULATED"
+				clause = f"{parser_object}->cpu_method {op} X80_CPUMETHOD_EMULATED"
 			else:
 				op = "!" if negated else ""
-				clause = f"{op}prs->cpu_traits.{description}"
+				clause = f"{op}{parser_object}->cpu_traits.{description}"
 			clauses.append(clause)
 
 	if imode == '32':
-		clauses.append("prs->code_size != SIZE_64BIT")
+		clauses.append(f"{parser_object}->code_size != SIZE_64BIT")
 	elif imode == '64':
-		clauses.append("prs->code_size == SIZE_64BIT")
+		clauses.append(f"{parser_object}->code_size == SIZE_64BIT")
 
 	return ' && '.join(clauses)
 
@@ -2864,7 +2930,9 @@ def ranges(dim, start, end):
 			for t in ranges(dim - 1, start, end):
 				yield t + (i,)
 
-def print_implementations(mode, path, discriminator, index, indent, actual_range, file, modrm, feature, only_mode):
+def print_implementations(mode, path, discriminator, index, indent, actual_range, file, modrm, feature, only_mode, method):
+	undefined_suffix = {'both': '_BOTH', 'parse': '_PARSE', 'step': ''}[method]
+
 	if_keyword = 'if'
 
 	# We will maintain a grid of all possible (cpu, imode, features) tuples and check if everything is covered
@@ -2890,17 +2958,17 @@ def print_implementations(mode, path, discriminator, index, indent, actual_range
 				assert new_feature is None or new_feature == feature_spec
 				new_feature = feature_spec
 
-		condition = make_condition(mode, actual_range, impl_range, features, imode)
+		condition = make_condition(mode, actual_range, impl_range, features, imode, method)
 		uses_modrm = entry.kwds.get('modrm', False)
 		if condition == '':
 			if if_keyword == 'if':
-				return print_single_implementation_entry(path, indent, impl_range, entry, discriminator, index, file, mode, uses_modrm = uses_modrm, modrm = modrm, feature = new_feature, only_mode = imode)
+				return print_single_implementation_entry(path, indent, impl_range, entry, discriminator, index, file, mode, uses_modrm = uses_modrm, modrm = modrm, feature = new_feature, only_mode = imode, method = method)
 			else:
 				print_file(indent + f"else({condition})", file = file)
 		else:
 			print_file(indent + f"{if_keyword}({condition})", file = file)
 		print_file(indent + "{", file = file)
-		print_single_implementation_entry(path, indent + "\t", impl_range, entry, discriminator, index, file, mode, uses_modrm = uses_modrm, modrm = modrm, feature = new_feature, only_mode = imode)
+		print_single_implementation_entry(path, indent + "\t", impl_range, entry, discriminator, index, file, mode, uses_modrm = uses_modrm, modrm = modrm, feature = new_feature, only_mode = imode, method = method)
 		print_file(indent + "}", file = file)
 
 		for cpu in impl_range:
@@ -2923,17 +2991,23 @@ def print_implementations(mode, path, discriminator, index, indent, actual_range
 
 	if mode != '8' and len(all_pairs) > 0:
 		if if_keyword == 'if':
-			print_file(indent + "UNDEFINED();", file = file)
+			print_file(indent + f"UNDEFINED{undefined_suffix}();", file = file)
 		else:
 			print_file(indent + "else", file = file)
 			print_file(indent + "{", file = file)
-			print_file(indent + "\tUNDEFINED();", file = file)
+			print_file(indent + f"\tUNDEFINED{undefined_suffix}();", file = file)
 			print_file(indent + "}", file = file)
 
 	return True
 
-def print_switch(mode, path, indent, actual_range = None, file = None, discriminator = 'subtable', uses_modrm = None, modrm = None, feature = None, only_mode = None):
+def print_switch(mode, path, indent, actual_range = None, file = None, discriminator = 'subtable', uses_modrm = None, modrm = None, feature = None, only_mode = None, method = None):
 	assert mode in {'8', '32', '87'}
+	assert method is not None
+
+	fetch_suffix = {'both': '(prs, emu)', 'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
+	parse_modrm_suffix = {'both': '(prs, emu, execute)', 'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
+	parser_object = 'emu->parser' if method == 'step' else 'prs'
+
 	if actual_range is None:
 		if mode == '32':
 			actual_range = [isa for isa in X86_ARCHITECTURE_LIST if ARCHITECTURES[isa].get('generate', 'yes') != 'no']
@@ -2946,34 +3020,35 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 	if discriminator == 'subtable' or discriminator == '3dnow_subtable':
 		if discriminator == '3dnow_subtable' and modrm is None:
 			assert uses_modrm
-			print_file(f"{indent}prs->modrm_byte = x86_fetch8(prs, emu);", file = file)
-			print_file(f"{indent}if((prs->modrm_byte & 0xC0) == 0xC0)", file = file)
+			print_file(f"{indent}{parser_object}->modrm_byte = x86_fetch8{fetch_suffix};", file = file)
+			print_file(f"{indent}if(({parser_object}->modrm_byte & 0xC0) == 0xC0)", file = file)
 			print_file(f"{indent}{{", file = file)
-			print_switch(mode, path, indent + "\t", actual_range, file, discriminator, uses_modrm, modrm = 'reg', feature = feature, only_mode = only_mode)
+			print_switch(mode, path, indent + "\t", actual_range, file, discriminator, uses_modrm, modrm = 'reg', feature = feature, only_mode = only_mode, method = method)
 			print_file(f"{indent}}}", file = file)
 			print_file(f"{indent}else", file = file)
 			print_file(f"{indent}{{", file = file)
 			if mode != '87':
-				print_file(f"{indent}\tx86_parse_modrm(prs, emu, execute);", file = file)
-			print_switch(mode, path, indent + "\t", actual_range, file, discriminator, uses_modrm, modrm = 'mem', feature = feature, only_mode = only_mode)
+				print_file(f"{indent}\tx86_parse_modrm{parse_modrm_suffix};", file = file)
+			print_switch(mode, path, indent + "\t", actual_range, file, discriminator, uses_modrm, modrm = 'mem', feature = feature, only_mode = only_mode, method = method)
 			print_file(f"{indent}}}", file = file)
 			return True
 
 		if mode == '32':
 			if len(path) == 0:
-				print_file(indent + f"opcode = x86_translate_opcode(prs, x86_fetch8(prs, emu));", file = file)
-				print_file(f"resume:", file = file)
+				print_file(indent + f"opcode = x86_translate_opcode({parser_object}, x86_fetch8{fetch_suffix});", file = file)
+				if method != 'parse':
+					print_file(f"resume:", file = file)
 				print_file(indent + f"switch(opcode)", file = file)
 			else:
-				print_file(indent + f"switch((opcode = x86_fetch8(prs, emu)))", file = file)
+				print_file(indent + f"switch((opcode = x86_fetch8{fetch_suffix}))", file = file)
 		elif mode == '8':
-			print_file(indent + f"switch((opcode = x80_fetch8(prs, emu)))", file = file)
+			print_file(indent + f"switch((opcode = x80_fetch8{fetch_suffix}))", file = file)
 		elif mode == '87':
 			print_file(indent + f"switch(fop >> 8)", file = file)
 		print_file(indent + "{", file = file)
 		for index in range(256):
 			print_file(indent + f"case 0x{index:02X}:", file = file)
-			if print_implementations(mode, path, discriminator, index, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
+			if print_implementations(mode, path, discriminator, index, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode, method = method):
 				print_file(indent + "\tbreak;", file = file)
 		print_file(indent + "}", file = file)
 		return True
@@ -2982,44 +3057,44 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 			assert uses_modrm is not None
 
 			if mode != '87':
-				print_file(f"{indent}prs->modrm_byte = x86_fetch8(prs, emu);", file = file)
+				print_file(f"{indent}{parser_object}->modrm_byte = x86_fetch8{fetch_suffix};", file = file)
 			else:
-				print_file(f"{indent}prs->modrm_byte = fop & 0xFF;", file = file)
+				print_file(f"{indent}{parser_object}->modrm_byte = fop & 0xFF;", file = file)
 
 			if uses_modrm:
-				print_file(f"{indent}if((prs->modrm_byte & 0xC0) == 0xC0)", file = file)
+				print_file(f"{indent}if(({parser_object}->modrm_byte & 0xC0) == 0xC0)", file = file)
 				print_file(f"{indent}{{", file = file)
-				print_implementations(mode, path, 'modfield', 1, indent + "\t", actual_range, file, modrm = 'reg', feature = feature, only_mode = only_mode)
+				print_implementations(mode, path, 'modfield', 1, indent + "\t", actual_range, file, modrm = 'reg', feature = feature, only_mode = only_mode, method = method)
 				print_file(f"{indent}}}", file = file)
 				print_file(f"{indent}else", file = file)
 				print_file(f"{indent}{{", file = file)
 				if mode != '87':
-					print_file(f"{indent}\tx86_parse_modrm(prs, emu, execute);", file = file)
-				print_implementations(mode, path, 'modfield', 0, indent + "\t", actual_range, file, modrm = 'mem', feature = feature, only_mode = only_mode)
+					print_file(f"{indent}\tx86_parse_modrm{parse_modrm_suffix};", file = file)
+				print_implementations(mode, path, 'modfield', 0, indent + "\t", actual_range, file, modrm = 'mem', feature = feature, only_mode = only_mode, method = method)
 				print_file(f"{indent}}}", file = file)
 				return True
 			else:
 				print_file(f"// ONLY CHECK REGISTER {path}", file = file)
 				modrm = 'reg'
 
-		return print_implementations(mode, path, 'modfield', ['mem', 'reg'].index(modrm), indent, actual_range, file, modrm, feature = feature, only_mode = only_mode)
+		return print_implementations(mode, path, 'modfield', ['mem', 'reg'].index(modrm), indent, actual_range, file, modrm, feature = feature, only_mode = only_mode, method = method)
 	elif discriminator == 'regfield':
-		print_file(f"{indent}switch(REGFLDVAL(prs))", file = file)
+		print_file(f"{indent}switch(REGFLDVAL({parser_object}))", file = file)
 		print_file(f"{indent}{{", file = file)
 		for index1 in range(8):
 			print_file(f"{indent}case {index1}:", file = file)
-			if print_implementations(mode, path, 'regfield', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
+			if print_implementations(mode, path, 'regfield', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode, method = method):
 				print_file(indent + "\tbreak;", file = file)
 		print_file(f"{indent}default:", file = file)
 		print_file(f"{indent}\tassert(false);", file = file)
 		print_file(f"{indent}}}", file = file)
 		return True
 	elif discriminator == 'memfield':
-		print_file(f"{indent}switch(MEMFLDVAL(prs))", file = file)
+		print_file(f"{indent}switch(MEMFLDVAL({parser_object}))", file = file)
 		print_file(f"{indent}{{", file = file)
 		for index1 in range(8):
 			print_file(f"{indent}case {index1}:", file = file)
-			if print_implementations(mode, path, 'memfield', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
+			if print_implementations(mode, path, 'memfield', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode, method = method):
 				print_file(indent + "\tbreak;", file = file)
 		print_file(f"{indent}default:", file = file)
 		print_file(f"{indent}\tassert(false);", file = file)
@@ -3027,7 +3102,7 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 		return True
 	elif discriminator == 'prefix':
 		# TODO: rewrite this
-		print_file(f"{indent}switch(prs->simd_prefix)", file = file)
+		print_file(f"{indent}switch({parser_object}->simd_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
 		for index1, prefix in enumerate(['NONE', '66', 'F3', 'F2']):
 			if prefix == 'NONE':
@@ -3040,7 +3115,7 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 				#except StopIteration:
 				#	continue
 				print_file(f"{indent}case X86_PREF_{prefix}:", file = file)
-			if print_implementations(mode, path, 'prefix', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode):
+			if print_implementations(mode, path, 'prefix', index1, indent + "\t", actual_range, file, modrm, feature = feature, only_mode = only_mode, method = method):
 				print_file(indent + "\tbreak;", file = file)
 		print_file(f"{indent}}}", file = file)
 		return True
@@ -3051,30 +3126,114 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 outfile = sys.argv[2] if len(sys.argv) > 2 else os.path.splitext(sys.argv[1])[0] + '.gen.c'
 
 with open(outfile, 'w') as fp:
+	print_file("#define PRIVILEGED PRIVILEGED_BOTH", file = fp)
+	print_file("#define IO_PRIVILEGED IO_PRIVILEGED_BOTH", file = fp)
+	print_file("#define USE_PRS prs", file = fp)
+	print_file("#define IF_EXECUTE if(execute)", file = fp)
+	print_file("#define IF_NOT_EXECUTE if(!execute)", file = fp)
+	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse(prs, emu, true, fop, fcs, fip, segment_number, segment_offset, disassemble, execute)", file = fp)
 	print_file("static inline void x86_parse(x86_parser_t * prs, x86_state_t * emu, bool disassemble, bool execute)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
 	print_file("\tuoff_t opcode_offset;", file = fp)
 	print_file("restart:", file = fp)
-	print_file("\t_resume();", file = fp)
+	print_file("\t_resume_both();", file = fp)
 	print_file("\topcode_offset = prs->current_position;", file = fp)
-	print_switch('32', Path(), '\t', file = fp)
+	print_switch('32', Path(), '\t', method = 'both', file = fp)
 	print_file("}", file = fp)
+	print_file("#undef X87_PARSE", file = fp)
+	print_file("#undef IF_NOT_EXECUTE", file = fp)
+	print_file("#undef IF_EXECUTE", file = fp)
+	print_file("#undef IO_PRIVILEGED", file = fp)
+	print_file("#undef PRIVILEGED", file = fp)
 
+	print_file("#define IF_EXECUTE if(false)", file = fp)
+	print_file("#define IF_NOT_EXECUTE if(true)", file = fp)
+	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse_parser(prs, fop, segment_number, segment_offset)", file = fp)
+	print_file("static inline void x86_parse_parser(x86_parser_t * prs)", file = fp)
+	print_file("{", file = fp)
+	print_file("\tuint8_t opcode;", file = fp)
+	print_file("restart:", file = fp)
+	print_switch('32', Path(), '\t', method = 'parse', file = fp)
+	print_file("}", file = fp)
+	print_file("#undef X87_PARSE", file = fp)
+	print_file("#undef IF_NOT_EXECUTE", file = fp)
+	print_file("#undef IF_EXECUTE", file = fp)
+	print_file("#undef USE_PRS", file = fp)
+
+	print_file("#define PRIVILEGED PRIVILEGED_EMULATOR", file = fp)
+	print_file("#define IO_PRIVILEGED IO_PRIVILEGED_EMULATOR", file = fp)
+	print_file("#define USE_PRS (emu->parser)", file = fp)
+	print_file("#define IF_EXECUTE if(true)", file = fp)
+	print_file("#define IF_NOT_EXECUTE if(false)", file = fp)
+	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse_emulator(emu, true, fop, fcs, fip, segment_number, segment_offset)", file = fp)
+	print_file("static inline void x86_parser_emulator(x86_state_t * emu)", file = fp)
+	print_file("{", file = fp)
+	print_file("\tuint8_t opcode;", file = fp)
+	print_file("\tuoff_t opcode_offset;", file = fp)
+	print_file("restart:", file = fp)
+	print_file("\t_resume();", file = fp)
+	print_file("\topcode_offset = emu->parser->current_position;", file = fp)
+	print_switch('32', Path(), '\t', method = 'step', file = fp)
+	print_file("}", file = fp)
+	print_file("#undef X87_PARSE", file = fp)
+	print_file("#undef PRIVILEGED", file = fp)
+	print_file("#undef IO_PRIVILEGED", file = fp)
+	print_file("#undef USE_PRS", file = fp)
+	print_file("#undef IF_NOT_EXECUTE", file = fp)
+	print_file("#undef IF_EXECUTE", file = fp)
+
+	print_file("#define USE_PRS prs", file = fp)
 	print_file("static inline x86_result_t x80_parse(x80_parser_t * prs, x80_state_t * emu, x86_state_t * emu86, bool disassemble, bool execute)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint16_t old_pc = prs->current_position;", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
-	print_switch('8', Path(), '\t', file = fp)
+	print_switch('8', Path(), '\t', method = 'both', file = fp)
 	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
 	print_file("}", file = fp)
 
+	print_file("static inline x86_result_t x80_parse_parser(x80_parser_t * prs)", file = fp)
+	print_file("{", file = fp)
+	print_file("\tuint8_t opcode;", file = fp)
+	print_switch('8', Path(), '\t', method = 'parse', file = fp)
+	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
+	print_file("}", file = fp)
+	print_file("#undef USE_PRS", file = fp)
+
+	print_file("#define USE_PRS (emu->parser)", file = fp)
+	print_file("static inline x86_result_t x80_parse_emulator(x80_state_t * emu, x86_state_t * emu86)", file = fp)
+	print_file("{", file = fp)
+	print_file("\tuint16_t old_pc = emu->parser->current_position;", file = fp)
+	print_file("\tuint8_t opcode;", file = fp)
+	print_switch('8', Path(), '\t', method = 'step', file = fp)
+	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
+	print_file("}", file = fp)
+	print_file("#undef USE_PRS", file = fp)
+
+	print_file("#define USE_PRS prs", file = fp)
 	print_file("static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute)", file = fp)
 	print_file("{", file = fp)
 	print_file("\t_seg = segment_number;", file = fp)
 	print_file("\t_off = segment_offset;", file = fp)
-	print_switch('87', Path(), '\t', discriminator = 'subtable', file = fp)
+	print_switch('87', Path(), '\t', discriminator = 'subtable', method = 'both', file = fp)
 	print_file("}", file = fp)
+
+	print_file("static inline void x87_parse_parser(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
+	print_file("{", file = fp)
+	print_file("\t_seg = segment_number;", file = fp)
+	print_file("\t_off = segment_offset;", file = fp)
+	print_switch('87', Path(), '\t', discriminator = 'subtable', method = 'parse', file = fp)
+	print_file("}", file = fp)
+	print_file("#undef USE_PRS", file = fp)
+
+	print_file("#define USE_PRS (emu->parser)", file = fp)
+	print_file("static inline void x87_parse_emulator(x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
+	print_file("{", file = fp)
+	print_file("\t_seg = segment_number;", file = fp)
+	print_file("\t_off = segment_offset;", file = fp)
+	print_switch('87', Path(), '\t', discriminator = 'subtable', method = 'step', file = fp)
+	print_file("}", file = fp)
+	print_file("#undef USE_PRS", file = fp)
 
 if len(MISSING) > 0:
 	print("Missing operations: " + ', '.join(sorted(MISSING)))

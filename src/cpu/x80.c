@@ -148,6 +148,16 @@ static inline uint8_t x80_fetch8(x80_parser_t * prs, x80_state_t * emu)
 	}
 }
 
+static inline uint8_t x80_fetch8_parser(x80_parser_t * prs)
+{
+	return prs->fetch8(prs);
+}
+
+static inline uint8_t x80_fetch8_emulator(x80_state_t * emu)
+{
+	return x80_memory_fetch8(emu);
+}
+
 static inline uint16_t x80_fetch16(x80_parser_t * prs, x80_state_t * emu)
 {
 	if(emu != NULL)
@@ -158,6 +168,16 @@ static inline uint16_t x80_fetch16(x80_parser_t * prs, x80_state_t * emu)
 	{
 		return prs->fetch16(prs);
 	}
+}
+
+static inline uint16_t x80_fetch16_parser(x80_parser_t * prs)
+{
+	return prs->fetch16(prs);
+}
+
+static inline uint16_t x80_fetch16_emulator(x80_state_t * emu)
+{
+	return x80_memory_fetch16(emu);
 }
 
 static inline void x80_push16(x80_state_t * emu, uint16_t value)

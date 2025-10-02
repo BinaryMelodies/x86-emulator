@@ -27,6 +27,7 @@ static inline void x86_advance_ip(x86_state_t * emu, size_t count)
 	}
 }
 
+// TODO: remove
 static inline uint8_t x86_fetch8(x86_parser_t * prs, x86_state_t * emu)
 {
 	if(emu != NULL)
@@ -41,6 +42,20 @@ static inline uint8_t x86_fetch8(x86_parser_t * prs, x86_state_t * emu)
 	{
 		return prs->fetch8(prs);
 	}
+}
+
+static inline uint8_t x86_fetch8_parser(x86_parser_t * prs)
+{
+	return prs->fetch8(prs);
+}
+
+static inline uint8_t x86_fetch8_emulator(x86_state_t * emu)
+{
+	uoff_t ip = emu->xip;
+
+	x86_advance_ip(emu, 1);
+
+	return x86_memory_segmented_read8_exec(emu, X86_R_CS, ip);
 }
 
 static inline uint16_t x86_fetch16(x86_parser_t * prs, x86_state_t * emu)
@@ -60,6 +75,21 @@ static inline uint16_t x86_fetch16(x86_parser_t * prs, x86_state_t * emu)
 	}
 }
 
+static inline uint16_t x86_fetch16_parser(x86_parser_t * prs)
+{
+	return prs->fetch16(prs);
+}
+
+static inline uint16_t x86_fetch16_emulator(x86_state_t * emu)
+{
+	uoff_t ip = emu->xip;
+
+	// TODO: wrap around
+	x86_advance_ip(emu, 2);
+
+	return x86_memory_segmented_read16_exec(emu, X86_R_CS, ip);
+}
+
 static inline uint32_t x86_fetch32(x86_parser_t * prs, x86_state_t * emu)
 {
 	if(emu != NULL)
@@ -75,6 +105,21 @@ static inline uint32_t x86_fetch32(x86_parser_t * prs, x86_state_t * emu)
 	{
 		return prs->fetch32(prs);
 	}
+}
+
+static inline uint32_t x86_fetch32_parser(x86_parser_t * prs)
+{
+	return prs->fetch32(prs);
+}
+
+static inline uint32_t x86_fetch32_emulator(x86_state_t * emu)
+{
+	uoff_t ip = emu->xip;
+
+	// TODO: wrap around
+	x86_advance_ip(emu, 4);
+
+	return x86_memory_segmented_read32_exec(emu, X86_R_CS, ip);
 }
 
 static inline uint64_t x86_fetch64(x86_parser_t * prs, x86_state_t * emu)
@@ -94,6 +139,21 @@ static inline uint64_t x86_fetch64(x86_parser_t * prs, x86_state_t * emu)
 	}
 }
 
+static inline uint64_t x86_fetch64_parser(x86_parser_t * prs)
+{
+	return prs->fetch64(prs);
+}
+
+static inline uint64_t x86_fetch64_emulator(x86_state_t * emu)
+{
+	uoff_t ip = emu->xip;
+
+	// TODO: wrap around
+	x86_advance_ip(emu, 4);
+
+	return x86_memory_segmented_read32_exec(emu, X86_R_CS, ip);
+}
+
 static inline uoff_t x86_fetch_addrsize(x86_parser_t * prs, x86_state_t * emu)
 {
 	switch(prs->address_size)
@@ -104,6 +164,36 @@ static inline uoff_t x86_fetch_addrsize(x86_parser_t * prs, x86_state_t * emu)
 		return x86_fetch32(prs, emu);
 	case SIZE_64BIT:
 		return x86_fetch64(prs, emu);
+	default:
+		assert(false);
+	}
+}
+
+static inline uoff_t x86_fetch_addrsize_parser(x86_parser_t * prs)
+{
+	switch(prs->address_size)
+	{
+	case SIZE_16BIT:
+		return x86_fetch16_parser(prs);
+	case SIZE_32BIT:
+		return x86_fetch32_parser(prs);
+	case SIZE_64BIT:
+		return x86_fetch64_parser(prs);
+	default:
+		assert(false);
+	}
+}
+
+static inline uoff_t x86_fetch_addrsize_emulator(x86_state_t * emu)
+{
+	switch(emu->parser->address_size)
+	{
+	case SIZE_16BIT:
+		return x86_fetch16_emulator(emu);
+	case SIZE_32BIT:
+		return x86_fetch32_emulator(emu);
+	case SIZE_64BIT:
+		return x86_fetch64_emulator(emu);
 	default:
 		assert(false);
 	}

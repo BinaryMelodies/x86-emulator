@@ -4544,7 +4544,7 @@ $0.$O = x86_bitfield_extract$O(emu, _seg, _off, $ax.$O, $cl);
 @instruction XCHG|op0=r0
 if(x86_is_ia64(emu))
 	x86_ia64_intercept(emu, 0); // TODO
-if(REGNUM(prs, 0) != 0)
+if(REGNUM(USE_PRS, 0) != 0)
 {
 	_uint$O tmp = $0.$O;
 	$0.$O = $1.$O;
@@ -4611,9 +4611,9 @@ UNDEFINED();
 
 @instruction ESC|mod=m
 /* escape instruction, no code */
-if(prs->fpu_type != X87_FPU_NONE)
+if(USE_PRS->fpu_type != X87_FPU_NONE)
 {
-	if(execute)
+	IF_EXECUTE
 	{
 		x86_calculate_operand_address(emu);
 
@@ -4632,8 +4632,8 @@ if(prs->fpu_type != X87_FPU_NONE)
 	uint16_t fop, fcs;
 	uoff_t fip;
 
-	fop = (opcode << 8) | (prs->modrm_byte);
-	if(!execute)
+	fop = (opcode << 8) | (USE_PRS->modrm_byte);
+	IF_NOT_EXECUTE
 	{
 		// TODO
 	}
@@ -4647,30 +4647,30 @@ if(prs->fpu_type != X87_FPU_NONE)
 			fip = $old_rip;
 	}
 
-	if(execute)
-		memcpy(emu->x87.address_text, prs->address_text, sizeof prs->address_text);
+	IF_EXECUTE
+		memcpy(emu->x87.address_text, USE_PRS->address_text, sizeof USE_PRS->address_text);
 
-	if(prs->fpu_type < X87_FPU_INTEGRATED)
+	if(USE_PRS->fpu_type < X87_FPU_INTEGRATED)
 	{
-		if(execute)
+		IF_EXECUTE
 		{
 			// read the first 2 bytes from memory
 			x86_memory_segmented_read(emu, _seg, _off, 2, emu->x87.operand_data);
 			emu->sr[X86_R_FDS] = emu->sr[_seg];
 		}
-		x87_parse(prs, emu, true, fop, fcs, fip, X86_R_FDS, _off, disassemble, execute);
+		X87_PARSE(fop, fcs, fip, X86_R_FDS, _off);
 	}
 	else
 	{
-		x87_parse(prs, emu, true, fop, fcs, fip, _seg, _off, disassemble, execute);
+		X87_PARSE(fop, fcs, fip, _seg, _off);
 	}
 }
 
 @instruction ESC|mod=r
 /* escape instruction, no code */
-if(prs->fpu_type != X87_FPU_NONE)
+if(USE_PRS->fpu_type != X87_FPU_NONE)
 {
-	if(execute)
+	IF_EXECUTE
 	{
 		if(X86_CPU_286 <= emu->cpu_type)
 		{
@@ -4687,8 +4687,8 @@ if(prs->fpu_type != X87_FPU_NONE)
 	uint16_t fop, fcs;
 	uoff_t fip;
 
-	fop = (opcode << 8) | (prs->modrm_byte);
-	if(!execute)
+	fop = (opcode << 8) | (USE_PRS->modrm_byte);
+	IF_NOT_EXECUTE
 	{
 		// TODO
 	}
@@ -4703,9 +4703,9 @@ if(prs->fpu_type != X87_FPU_NONE)
 	}
 
 //	if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
-//		memcpy(emu->x87.address_text, prs->address_text, sizeof prs->address_text);
+//		memcpy(emu->x87.address_text, USE_PRS->address_text, sizeof USE_PRS->address_text);
 
-	x87_parse(prs, emu, true, fop, fcs, fip, NONE, 0, disassemble, execute);
+	X87_PARSE(fop, fcs, fip, NONE, 0);
 }
 
 @instruction F2XM1
@@ -6271,8 +6271,8 @@ $pf = _parity(z);
 
 @instruction Z80.bits
 // TODO: print instruction
-_uint8 op2 = x80_fetch8(prs, emu);
-_uint8 x = x80_register_get8(emu, prs->index_prefix, op2 & 7, $dsp);
+_uint8 op2 = x80_fetch8(USE_PRS, emu);
+_uint8 x = x80_register_get8(emu, USE_PRS->index_prefix, op2 & 7, $dsp);
 _uint8 z;
 switch((op2 >> 6))
 {
@@ -6352,7 +6352,7 @@ case 3:
 	z = x | (1 << ((op2 >> 3) & 7));
 	break;
 }
-x80_register_set8(emu, prs->index_prefix, op2 & 7, $dsp, z);
+x80_register_set8(emu, USE_PRS->index_prefix, op2 & 7, $dsp, z);
 
 @instruction Z80.CALL|cnt=1
 _push80($pc);

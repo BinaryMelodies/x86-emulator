@@ -92,6 +92,150 @@ static inline void x86_parse_modrm16(x86_parser_t * prs, x86_state_t * emu, bool
 	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int16_t)prs->address_offset);
 }
 
+static inline void x86_parse_modrm16_parser(x86_parser_t * prs)
+{
+	const char * format;
+	int default_segment;
+	int disp_size = (prs->modrm_byte >> 6);
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+
+	prs->address_offset = 0;
+
+	switch(prs->modrm_byte & 7)
+	{
+	case 0:
+		default_segment = X86_R_DS;
+		format = prs->use_nec_syntax ? "[%s:bw+ix+%X]" : "[%s:bx+si+%X]";
+		break;
+	case 1:
+		default_segment = X86_R_DS;
+		format = prs->use_nec_syntax ? "[%s:bw+iy+%X]" : "[%s:bx+di+%X]";
+		break;
+	case 2:
+		default_segment = X86_R_SS;
+		format = prs->use_nec_syntax ? "[%s:bp+ix+%X]" : "[%s:bp+si+%X]";
+		break;
+	case 3:
+		default_segment = X86_R_SS;
+		format = prs->use_nec_syntax ? "[%s:bp+iy+%X]" : "[%s:bp+di+%X]";
+		break;
+	case 4:
+		default_segment = X86_R_DS;
+		format = prs->use_nec_syntax ? "[%s:ix+%X]" : "[%s:si+%X]";
+		break;
+	case 5:
+		default_segment = X86_R_DS;
+		format = prs->use_nec_syntax ? "[%s:iy+%X]" : "[%s:di+%X]";
+		break;
+	case 6:
+		if(disp_size == 0)
+		{
+			default_segment = X86_R_DS;
+			disp_size = 2;
+			format = "[%s:%X]";
+		}
+		else
+		{
+			default_segment = X86_R_SS;
+			format = "[%s:bp+%X]";
+		}
+		break;
+	case 7:
+		default_segment = X86_R_DS;
+		format = prs->use_nec_syntax ? "[%s:bw+%X]" : "[%s:bx+%X]";
+		break;
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += (int8_t)x86_fetch8_parser(prs);
+		break;
+	case 2:
+		prs->address_offset += x86_fetch16_parser(prs);
+		break;
+	}
+
+	prs->address_offset &= 0xFFFF;
+	if(prs->segment == NONE)
+	{
+		prs->segment = default_segment;
+	}
+
+	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int16_t)prs->address_offset);
+}
+
+static inline void x86_parse_modrm16_emulator(x86_state_t * emu)
+{
+	int default_segment;
+	x86_parser_t * prs = emu->parser;
+	int disp_size = (prs->modrm_byte >> 6);
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+
+	prs->address_offset = 0;
+
+	switch(prs->modrm_byte & 7)
+	{
+	case 0:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_BX) + x86_register_get16(emu, X86_R_SI);
+		default_segment = X86_R_DS;
+		break;
+	case 1:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_BX) + x86_register_get16(emu, X86_R_DI);
+		default_segment = X86_R_DS;
+		break;
+	case 2:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_BP) + x86_register_get16(emu, X86_R_SI);
+		default_segment = X86_R_SS;
+		break;
+	case 3:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_BP) + x86_register_get16(emu, X86_R_DI);
+		default_segment = X86_R_SS;
+		break;
+	case 4:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_SI);
+		default_segment = X86_R_DS;
+		break;
+	case 5:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_DI);
+		default_segment = X86_R_DS;
+		break;
+	case 6:
+		if(disp_size == 0)
+		{
+			emu->parser->address_offset = 0;
+			default_segment = X86_R_DS;
+			disp_size = 2;
+		}
+		else
+		{
+			emu->parser->address_offset = x86_register_get16(emu, X86_R_BP);
+			default_segment = X86_R_SS;
+		}
+		break;
+	case 7:
+		emu->parser->address_offset = x86_register_get16(emu, X86_R_BX);
+		default_segment = X86_R_DS;
+		break;
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += (int8_t)x86_fetch8_emulator(emu);
+		break;
+	case 2:
+		prs->address_offset += x86_fetch16_emulator(emu);
+		break;
+	}
+
+	prs->address_offset &= 0xFFFF;
+	if(prs->segment == NONE)
+	{
+		prs->segment = default_segment;
+	}
+}
+
 static inline void x86_parse_modrm32(x86_parser_t * prs, x86_state_t * emu, bool execute)
 {
 	char format[24];
@@ -178,6 +322,143 @@ static inline void x86_parse_modrm32(x86_parser_t * prs, x86_state_t * emu, bool
 	}
 
 	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int32_t)prs->address_offset);
+}
+
+static inline void x86_parse_modrm32_parser(x86_parser_t * prs)
+{
+	char format[24];
+	int default_segment;
+	int disp_size = (prs->modrm_byte >> 6);
+	int reg = prs->modrm_byte & 7;
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+
+	prs->address_offset = 0;
+
+	if((reg & 7) == 4)
+	{
+		// SIB byte
+		uint8_t sib = x86_fetch8_parser(prs);
+		reg = sib & 7;
+		int i = (sib >> 3) & 7;
+		int s = sib >> 6;
+
+		if(reg == 5 && disp_size == 0)
+		{
+			default_segment = X86_R_DS;
+			disp_size = 2;
+		}
+		else
+		{
+			default_segment = reg == 4 || reg == 5 ? X86_R_SS : X86_R_DS;
+		}
+
+		strcpy(format, "[%s:");
+		if(!(reg == 5 && disp_size == 0))
+		{
+			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s+", x86_register_name32(prs, reg));
+		}
+		if(i != 4)
+		{
+			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s*%d+", x86_register_name32(prs, i), 1 << s);
+		}
+		strcat(format, "%X]");
+	}
+	else if((reg & 7) == 5 && disp_size == 0)
+	{
+		default_segment = X86_R_DS;
+		disp_size = 2;
+		strcpy(format, "[%s:%X]");
+	}
+	else
+	{
+		default_segment = reg == 5 ? X86_R_SS : X86_R_DS;
+		snprintf(format, sizeof format, "[%%s:%s+%%X]", x86_register_name32(prs, reg));
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += (int8_t)x86_fetch8_parser(prs);
+		break;
+	case 2:
+		prs->address_offset += x86_fetch32_parser(prs);
+		break;
+	}
+
+	prs->address_offset &= 0xFFFFFFFF;
+	if(prs->segment == NONE)
+	{
+		prs->segment = default_segment;
+	}
+
+	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int32_t)prs->address_offset);
+}
+
+static inline void x86_parse_modrm32_emulator(x86_state_t * emu)
+{
+	int default_segment;
+	x86_parser_t * prs = emu->parser;
+	int disp_size = (prs->modrm_byte >> 6);
+	int reg = prs->modrm_byte & 7;
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+
+	prs->address_offset = 0;
+
+	if((reg & 7) == 4)
+	{
+		// SIB byte
+		uint8_t sib = x86_fetch8_emulator(emu);
+		reg = sib & 7;
+		int i = (sib >> 3) & 7;
+		int s = sib >> 6;
+
+		if(i == 4)
+		{
+			emu->parser->address_offset = 0;
+		}
+		else
+		{
+			emu->parser->address_offset = x86_register_get32(emu, i) << s;
+		}
+
+		if(reg == 5 && disp_size == 0)
+		{
+			default_segment = X86_R_DS;
+			disp_size = 2;
+		}
+		else
+		{
+			emu->parser->address_offset += x86_register_get32(emu, reg);
+			default_segment = reg == 4 || reg == 5 ? X86_R_SS : X86_R_DS;
+		}
+	}
+	else if((reg & 7) == 5 && disp_size == 0)
+	{
+		emu->parser->address_offset = 0;
+		default_segment = X86_R_DS;
+		disp_size = 2;
+	}
+	else
+	{
+		emu->parser->address_offset = x86_register_get32(emu, reg);
+		default_segment = reg == 5 ? X86_R_SS : X86_R_DS;
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += (int8_t)x86_fetch8_emulator(emu);
+		break;
+	case 2:
+		prs->address_offset += x86_fetch32_emulator(emu);
+		break;
+	}
+
+	prs->address_offset &= 0xFFFFFFFF;
+	if(prs->segment == NONE)
+	{
+		prs->segment = default_segment;
+	}
 }
 
 static inline void x86_parse_modrm64_32(x86_parser_t * prs, x86_state_t * emu, bool execute)
@@ -267,6 +548,141 @@ static inline void x86_parse_modrm64_32(x86_parser_t * prs, x86_state_t * emu, b
 	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int32_t)displacement);
 }
 
+static inline void x86_parse_modrm64_32_parser(x86_parser_t * prs)
+{
+	char format[24];
+	int disp_size = (prs->modrm_byte >> 6);
+	int reg = prs->modrm_byte & 7;
+	int32_t displacement = 0;
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+	prs->register_field |= prs->rex_w;
+	reg |= prs->rex_b;
+
+	prs->address_offset = 0;
+
+	if((reg & 7) == 4)
+	{
+		// SIB byte
+		uint8_t sib = x86_fetch8_parser(prs);
+		reg = sib & 7;
+		int i = (sib >> 3) & 7;
+		int s = sib >> 6;
+		i |= prs->rex_x;
+		reg |= prs->rex_b;
+
+		if((reg & 7) == 5 && disp_size == 0)
+		{
+			disp_size = 2;
+		}
+
+		strcpy(format, "[%s:");
+		if(!((reg & 7) == 5 && disp_size == 0))
+		{
+			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s+", x86_register_name32(prs, reg));
+		}
+		if(i != 4)
+		{
+			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s*%d+", x86_register_name32(prs, i), 1 << s);
+		}
+		strcat(format, "%X]");
+	}
+	else if((reg & 7) == 5 && disp_size == 0)
+	{
+		prs->ip_relative = true;
+		disp_size = 2;
+		strcpy(format, "[%s:eip+%X]");
+	}
+	else
+	{
+		snprintf(format, sizeof format, "[%%s:%s+%%X]", x86_register_name32(prs, reg));
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += displacement = (int8_t)x86_fetch8_parser(prs);
+		break;
+	case 2:
+		prs->address_offset += displacement = x86_fetch32_parser(prs);
+		break;
+	}
+
+	prs->address_offset &= 0xFFFFFFFF;
+	if(prs->segment == NONE)
+	{
+		prs->segment = X86_R_DS;
+	}
+
+	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int32_t)displacement);
+}
+
+static inline void x86_parse_modrm64_32_emulator(x86_state_t * emu)
+{
+	x86_parser_t * prs = emu->parser;
+	int disp_size = (prs->modrm_byte >> 6);
+	int reg = prs->modrm_byte & 7;
+	int32_t displacement = 0;
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+	prs->register_field |= prs->rex_w;
+	reg |= prs->rex_b;
+
+	prs->address_offset = 0;
+
+	if((reg & 7) == 4)
+	{
+		// SIB byte
+		uint8_t sib = x86_fetch8_emulator(emu);
+		reg = sib & 7;
+		int i = (sib >> 3) & 7;
+		int s = sib >> 6;
+		i |= prs->rex_x;
+		reg |= prs->rex_b;
+
+		if(i == 4)
+		{
+			emu->parser->address_offset = 0;
+		}
+		else
+		{
+			emu->parser->address_offset = x86_register_get32(emu, i) << s;
+		}
+
+		if((reg & 7) == 5 && disp_size == 0)
+		{
+			disp_size = 2;
+		}
+		else
+		{
+			emu->parser->address_offset += x86_register_get32(emu, reg);
+		}
+	}
+	else if((reg & 7) == 5 && disp_size == 0)
+	{
+		prs->ip_relative = true;
+		disp_size = 2;
+	}
+	else
+	{
+		emu->parser->address_offset = x86_register_get32(emu, reg);
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += displacement = (int8_t)x86_fetch8_emulator(emu);
+		break;
+	case 2:
+		prs->address_offset += displacement = x86_fetch32_emulator(emu);
+		break;
+	}
+
+	prs->address_offset &= 0xFFFFFFFF;
+	if(prs->segment == NONE)
+	{
+		prs->segment = X86_R_DS;
+	}
+}
+
 static inline void x86_parse_modrm64(x86_parser_t * prs, x86_state_t * emu, bool execute)
 {
 	char format[24];
@@ -353,6 +769,139 @@ static inline void x86_parse_modrm64(x86_parser_t * prs, x86_state_t * emu, bool
 	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int32_t)displacement);
 }
 
+static inline void x86_parse_modrm64_parser(x86_parser_t * prs)
+{
+	char format[24];
+	int disp_size = (prs->modrm_byte >> 6);
+	int reg = prs->modrm_byte & 7;
+	int32_t displacement = 0;
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+	prs->register_field |= prs->rex_w;
+	reg |= prs->rex_b;
+
+	prs->address_offset = 0;
+
+	if((reg & 7) == 4)
+	{
+		// SIB byte
+		uint8_t sib = x86_fetch8_parser(prs);
+		reg = sib & 7;
+		int i = (sib >> 3) & 7;
+		int s = sib >> 6;
+		i |= prs->rex_x;
+		reg |= prs->rex_b;
+
+		if((reg & 7) == 5 && disp_size == 0)
+		{
+			disp_size = 2;
+		}
+
+		strcpy(format, "[%s:");
+		if(!((reg & 7) == 5 && disp_size == 0))
+		{
+			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s+", x86_register_name64(prs, reg));
+		}
+		if(i != 4)
+		{
+			snprintf(format + strlen(format), sizeof(format) - strlen(format), "%s*%d+", x86_register_name64(prs, i), 1 << s);
+		}
+		strcat(format, "%X]");
+	}
+	else if((reg & 7) == 5 && disp_size == 0)
+	{
+		prs->ip_relative = true;
+		disp_size = 2;
+		strcpy(format, "[%s:rip+%X]");
+	}
+	else
+	{
+		snprintf(format, sizeof format, "[%%s:%s+%%X]", x86_register_name64(prs, reg));
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += displacement = (int8_t)x86_fetch8_parser(prs);
+		break;
+	case 2:
+		prs->address_offset += displacement = x86_fetch32_parser(prs);
+		break;
+	}
+
+	if(prs->segment == NONE)
+	{
+		prs->segment = X86_R_DS;
+	}
+
+	sprintf(prs->address_text, format, x86_segment_name(prs, prs->segment), (int32_t)displacement);
+}
+
+static inline void x86_parse_modrm64_emulator(x86_state_t * emu)
+{
+	x86_parser_t * prs = emu->parser;
+	int disp_size = (prs->modrm_byte >> 6);
+	int reg = prs->modrm_byte & 7;
+	int32_t displacement = 0;
+	prs->register_field = (prs->modrm_byte >> 3) & 7;
+	prs->register_field |= prs->rex_w;
+	reg |= prs->rex_b;
+
+	prs->address_offset = 0;
+
+	if((reg & 7) == 4)
+	{
+		// SIB byte
+		uint8_t sib = x86_fetch8_emulator(emu);
+		reg = sib & 7;
+		int i = (sib >> 3) & 7;
+		int s = sib >> 6;
+		i |= prs->rex_x;
+		reg |= prs->rex_b;
+
+		if(i == 4)
+		{
+			emu->parser->address_offset = 0;
+		}
+		else
+		{
+			emu->parser->address_offset = x86_register_get64(emu, i) << s;
+		}
+
+		if((reg & 7) == 5 && disp_size == 0)
+		{
+			disp_size = 2;
+		}
+		else
+		{
+			emu->parser->address_offset += x86_register_get64(emu, reg);
+		}
+	}
+	else if((reg & 7) == 5 && disp_size == 0)
+	{
+		prs->ip_relative = true;
+		disp_size = 2;
+	}
+	else
+	{
+		emu->parser->address_offset = x86_register_get64(emu, reg);
+	}
+
+	switch(disp_size)
+	{
+	case 1:
+		prs->address_offset += displacement = (int8_t)x86_fetch8_emulator(emu);
+		break;
+	case 2:
+		prs->address_offset += displacement = x86_fetch32_emulator(emu);
+		break;
+	}
+
+	if(prs->segment == NONE)
+	{
+		prs->segment = X86_R_DS;
+	}
+}
+
 static inline void x86_parse_modrm(x86_parser_t * prs, x86_state_t * emu, bool execute)
 {
 	if(prs->address_size == X86_SIZE_WORD)
@@ -370,6 +919,46 @@ static inline void x86_parse_modrm(x86_parser_t * prs, x86_state_t * emu, bool e
 	else
 	{
 		x86_parse_modrm32(prs, emu, execute);
+	}
+}
+
+static inline void x86_parse_modrm_parser(x86_parser_t * prs)
+{
+	if(prs->address_size == X86_SIZE_WORD)
+	{
+		x86_parse_modrm16_parser(prs);
+	}
+	else if(prs->address_size == X86_SIZE_QUAD)
+	{
+		x86_parse_modrm64_parser(prs);
+	}
+	else if(prs->code_size == X86_SIZE_QUAD)
+	{
+		x86_parse_modrm64_32_parser(prs);
+	}
+	else
+	{
+		x86_parse_modrm32_parser(prs);
+	}
+}
+
+static inline void x86_parse_modrm_emulator(x86_state_t * emu)
+{
+	if(emu->parser->address_size == X86_SIZE_WORD)
+	{
+		x86_parse_modrm16_emulator(emu);
+	}
+	else if(emu->parser->address_size == X86_SIZE_QUAD)
+	{
+		x86_parse_modrm64_emulator(emu);
+	}
+	else if(emu->parser->code_size == X86_SIZE_QUAD)
+	{
+		x86_parse_modrm64_32_emulator(emu);
+	}
+	else
+	{
+		x86_parse_modrm32_emulator(emu);
 	}
 }
 
@@ -518,16 +1107,46 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _sub_overflow32(x, y, z) (((((x) & ~(y) & ~(z)) | (~(x) & (y) & (z))) & 0x80000000) != 0)
 #define _sub_overflow64(x, y, z) (((((x) & ~(y) & ~(z)) | (~(x) & (y) & (z))) & 0x8000000000000000) != 0)
 
-#define DEBUG(...) do { if(disassemble) debug_printf((prs)->debug_output, __VA_ARGS__); } while(0) // TODO: better type
+#define DEBUG(...) do { debug_printf((prs)->debug_output, __VA_ARGS__); } while(0) // TODO: better type
+
+// Called when the instruction is not defined, returns without any action
+#define UNDEFINED_PARSE() \
+	do \
+	{ \
+		DEBUG("ud"); \
+		return; \
+	} while(0)
 
 // Called when the instruction is not defined, either triggers an interrupt or returns without any action
-#define UNDEFINED() \
+#define UNDEFINED_BOTH() \
 	do \
 	{ \
 		DEBUG("ud"); \
 		if(execute) \
 		{ \
 			x86_undefined_instruction(emu); \
+		} \
+	} while(0)
+
+// Called when the instruction is not defined, either triggers an interrupt or returns without any action
+#define UNDEFINED() x86_undefined_instruction(emu)
+
+// Called when the instruction is not defined, either triggers an interrupt or returns without any action
+#define X87_UNDEFINED_PARSE() \
+	do \
+	{ \
+		DEBUG("ud"); \
+		return; \
+	} while(0)
+
+// Called when the instruction is not defined, either triggers an interrupt or returns without any action
+#define X87_UNDEFINED_BOTH() \
+	do \
+	{ \
+		DEBUG("ud"); \
+		if(execute && prs->fpu_type == X87_FPU_INTEGRATED) \
+		{ \
+			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
 		} \
 		return; \
 	} while(0)
@@ -536,22 +1155,28 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define X87_UNDEFINED() \
 	do \
 	{ \
-		DEBUG("ud"); \
-		if(execute) \
+		if(prs->fpu_type == X87_FPU_INTEGRATED) \
 		{ \
-			if(prs->fpu_type == X87_FPU_INTEGRATED) \
-			{ \
-				x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
-			} \
+			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
 		} \
 		return; \
 	} while(0)
 
 // Should be called before executing an instruction requiring system mode (current privilege level 0)
-#define PRIVILEGED() \
+#define PRIVILEGED_BOTH() \
 	do \
 	{ \
 		if(execute && x86_get_cpl(emu) != 0) \
+		{ \
+			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
+		} \
+	} while(0)
+
+// Should be called before executing an instruction requiring system mode (current privilege level 0)
+#define PRIVILEGED_EMULATOR() \
+	do \
+	{ \
+		if(x86_get_cpl(emu) != 0) \
 		{ \
 			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
 		} \
@@ -569,31 +1194,39 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 	} while(0)
 
 // Should be called before I/O instructions, only relevant for v25/v55
-#define IO_PRIVILEGED() \
+#define IO_PRIVILEGED_BOTH() \
 	do \
 	{ \
 		if(execute && emu->ibrk_ == 0) \
 			x86_trigger_interrupt(emu, X86_EXC_IO() | X86_EXC_FAULT, 0); \
 	} while(0)
 
+// Should be called before I/O instructions, only relevant for v25/v55
+#define IO_PRIVILEGED_EMULATOR() \
+	do \
+	{ \
+		if(emu->ibrk_ == 0) \
+			x86_trigger_interrupt(emu, X86_EXC_IO() | X86_EXC_FAULT, 0); \
+	} while(0)
+
 #define REGFLDVAL(prs) (((prs)->modrm_byte >> 3) & 7)
 #define REGFLD(prs) (REGFLDVAL(prs) | ((prs)->rex_r))
 #define REGFLDLOCK(prs) (REGFLDVAL(prs) | ((prs)->rex_r) | ((prs)->lock_prefix ? 8 : 0))
-#define _reg REGFLD(prs)
+#define _reg REGFLD(USE_PRS)
 
 #define MEMFLDVAL(prs) ((prs)->modrm_byte & 7)
 #define MEMFLD(prs) (MEMFLDVAL(prs) | ((prs)->rex_b))
-#define _mem MEMFLD(prs)
+#define _mem MEMFLD(USE_PRS)
 
 #define REGNUM(prs, value) ((value) | (prs)->rex_b)
 
-#define _seg prs->segment
-#define _off prs->address_offset
+#define _seg USE_PRS->segment
+#define _off USE_PRS->address_offset
 
-#define _dst_seg prs->destination_segment
-#define _src_seg prs->source_segment
-#define _src_seg2 prs->source_segment2
-#define _src_seg3 prs->source_segment3
+#define _dst_seg USE_PRS->destination_segment
+#define _src_seg USE_PRS->source_segment
+#define _src_seg2 USE_PRS->source_segment2
+#define _src_seg3 USE_PRS->source_segment3
 
 #define _rep() x86_rep_condition(emu)
 
@@ -815,6 +1448,8 @@ static inline uint16_t _satuluw(uint32_t value)
 	execute - true to execute instruction, false to only disassemble
 */
 static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
+static inline void x87_parse_parser(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset);
+static inline void x87_parse_emulator(x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset);
 
 // do instruction again (for REP prefix and WAIT)
 #define _restart() \
@@ -833,6 +1468,21 @@ static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, u
 
 // reload instruction data before running (for REP prefix and WAIT)
 #define _resume() \
+	do { \
+		if(emu->restarted_instruction.opcode != 0) \
+		{ \
+			opcode = emu->restarted_instruction.opcode; \
+			emu->xip = emu->restarted_instruction.xip_afterwards; \
+			emu->parser->operation_size = emu->restarted_instruction.operation_size; \
+			emu->parser->address_size = emu->restarted_instruction.address_size; \
+			emu->parser->source_segment = emu->restarted_instruction.source_segment; \
+			emu->parser->destination_segment = emu->restarted_instruction.destination_segment; \
+			emu->parser->rep_prefix = emu->restarted_instruction.rep_prefix; \
+			emu->restarted_instruction.opcode = 0; \
+			goto resume; \
+		} \
+	} while(0)
+#define _resume_both() \
 	do { \
 		if(execute && emu->restarted_instruction.opcode != 0) \
 		{ \
