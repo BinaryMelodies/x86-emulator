@@ -3885,6 +3885,47 @@ break;
 			x80_step(&emu->x80, NULL);
 		}
 
+		if(x86_is_emulation_mode(emu) && (system_type & X86_SYSTEM_TYPE_CPM80))
+		{
+			switch(emu->x80.pc)
+			{
+			case 0x0000:
+				fprintf(stderr, "CP/M-80 exit\n");
+				exit(0);
+				break;
+			case 0x0005:
+				// BDOS call
+				switch(emu->x80.c)
+				{
+				case 0x00:
+					fprintf(stderr, "CP/M-80 exit\n");
+					exit(0);
+					break;
+				case 0x02:
+					_dos_putchar(emu, emu->x80.e);
+					_display_screen(emu);
+					break;
+				case 0x09:
+					for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+					{
+						uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
+						if(value == '$')
+							break;
+						_dos_putchar(emu, value);
+					}
+					_display_screen(emu);
+					break;
+				default:
+					fprintf(stderr, "CP/M-80 API call C=%02X\n", emu->x80.c);
+					exit(0);
+				}
+				// RET
+				emu->x80.pc = x86_memory_read16(emu, emu->ds_cache.base + emu->x80.sp);
+				emu->x80.sp += 2;
+				break;
+			};
+		}
+
 		if(option_debug && !continuous && breakpoint == 0 && !_screen_printed)
 			_display_screen(emu);
 		fprintf(stderr, "%s", emu->parser->debug_output);

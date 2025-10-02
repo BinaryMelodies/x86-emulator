@@ -1702,10 +1702,26 @@ struct x80_state_t
 	};
 
 	// general purpose registers
-	struct
+	union
 	{
-		uint16_t af, bc, de, hl;
-	} bank[2];
+		struct
+		{
+			uint16_t af, bc, de, hl;
+			uint16_t af2, bc2, de2, hl2;
+		};
+		struct
+		{
+#if BYTE_ORDER == LITTLE_ENDIAN
+			uint8_t f, a, c, b, e, d, l, h;
+#elif BYTE_ORDER == BIT_ENDIAN
+			uint8_t a, f, b, c, d, e, h, l;
+#endif
+		};
+		struct
+		{
+			uint16_t af, bc, de, hl;
+		} bank[2];
+	};
 	uint16_t sp, ix, iy;
 
 	// Z80 control registers (IFF1 is also used on the 8080/8085)
