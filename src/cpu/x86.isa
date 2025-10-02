@@ -6964,6 +6964,55 @@ if(($a & 0x08) != 0)
 }
 // TODO: other bits
 
+@instruction Z80.ARHL
+// 8085 specific
+// TODO: flags
+$hl = (int16_t)$hl >> 1;
+
+@instruction Z80.DSUB
+// 8085 specific
+// TODO: flags
+$hl = $hl - $bc;
+
+@instruction Z80.JK
+// 8085 specific
+// TODO
+(void) $0;
+
+@instruction Z80.JNK
+// 8085 specific
+// TODO
+(void) $0;
+
+@instruction Z80.LDHI
+// 8085 specific
+// TODO: flags
+$de = $hl + (uint8_t)$0;
+
+@instruction Z80.LDSI
+// 8085 specific
+// TODO: flags
+$de = $sp + (uint8_t)$0;
+
+@instruction Z80.LHLX
+// 8085 specific
+// TODO: flags
+$hl = _read80w($de);
+
+@instruction Z80.RDEL
+// 8085 specific
+// TODO: flags
+$de = $de << 1;
+
+@instruction Z80.RSTV
+// 8085 specific
+// TODO
+
+@instruction Z80.SHLX
+// 8085 specific
+// TODO: flags
+_write80w($de, $hl);
+
 @processors
 
 #### Intel CPUs
