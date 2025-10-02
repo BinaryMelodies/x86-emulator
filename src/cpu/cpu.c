@@ -1178,9 +1178,14 @@ x86_result_t x80_step(x80_state_t * emu, x86_state_t * emu86)
 	if(emu->cpu_method != X80_CPUMETHOD_SEPARATE)
 		return X86_RESULT(X86_RESULT_SUCCESS, 0); // TODO: better response when no processor present?
 
+	if(emu86 != NULL && emu86->option_disassemble)
+		x80_parse_parser(emu->parser);
+
 	emu->parser->index_prefix = NONE;
-	return x80_parse(emu->parser, emu, emu86, emu86 != NULL && emu86->option_disassemble, true);
+	return x80_parse_emulator(emu, emu86);
 }
+
+void x86_disassemble(x86_parser_t * prs, x86_state_t * emu);
 
 x86_result_t x86_step(x86_state_t * emu)
 {
@@ -1197,10 +1202,13 @@ x86_result_t x86_step(x86_state_t * emu)
 
 	emu->current_exception = X86_EXC_CLASS_BENIGN;
 
-	bool disassemble = emu->option_disassemble;
+	if(emu->option_disassemble)
+	{
 #define prs (emu->parser)
-	DEBUG("[CPU]\t");
+		DEBUG("[CPU]\t");
 #undef prs
+		x86_disassemble(emu->parser, emu);
+	}
 
 	if(x86_is_emulation_mode(emu))
 	{
@@ -1208,7 +1216,7 @@ x86_result_t x86_step(x86_state_t * emu)
 		{
 			emu->x80.parser->debug_output[0] = '\0';
 			emu->x80.parser->index_prefix = NONE;
-			emu->emulation_result = x80_parse(emu->x80.parser, &emu->x80, emu, disassemble, true);
+			emu->emulation_result = x80_parse_emulator(&emu->x80, emu);
 		}
 
 		strcat(emu->parser->debug_output, emu->x80.parser->debug_output);
@@ -1240,7 +1248,7 @@ x86_result_t x86_step(x86_state_t * emu)
 
 			emu->parser->address_offset = 0;
 			emu->parser->register_field = 0;
-			x86_parse(emu->parser, emu, disassemble, true);
+			x86_parse_emulator(emu);
 		}
 	}
 
@@ -1261,7 +1269,7 @@ void x80_disassemble(x80_parser_t * prs)
 {
 	uint16_t old_pc = prs->current_position;
 	prs->index_prefix = NONE;
-	x80_parse(prs, NULL, NULL, true, false);
+	x80_parse_parser(prs);
 	prs->current_position = old_pc; // TODO
 }
 
@@ -1299,10 +1307,11 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 		prs->address_offset = 0;
 		prs->register_field = 0;
 		prs->ip_relative = false;
-		x86_parse(prs, NULL, true, false);
+		x86_parse_parser(prs);
 		prs->current_position = old_xip; // TODO
 
 		emu->prefetch_queue_data_offset = 0; // reset the prefetch queue to the starting position
+		// TODO: this messes up the prefetch queue
 	}
 }
 
@@ -1316,14 +1325,16 @@ void x87_step(x86_state_t * emu)
 	if(setjmp(emu->exc[emu->fetch_mode = FETCH_MODE_NORMAL]) != 0)
 		return; /* exception occured */
 
-	bool disassemble = emu->option_disassemble;
-
+	if(emu->option_disassemble)
+	{
 #define prs (emu->parser)
-	DEBUG("[FPU]\t");
+		DEBUG("[FPU]\t");
 #undef prs
+		x87_parse_parser(emu->parser, emu->x87.next_fop, emu->x87.segment, emu->x87.offset);
+	}
 
-	x87_parse(emu->parser, emu, false, emu->x87.next_fop, emu->x87.next_fcs, emu->x87.next_fip, emu->x87.segment, emu->x87.offset,
-		disassemble, true);
+	x87_parse_emulator(emu, false, emu->x87.next_fop, emu->x87.next_fcs, emu->x87.next_fip, emu->x87.segment, emu->x87.offset);
+
 	if(emu->x87.fpu_type != X87_FPU_INTEGRATED)
 	{
 		switch(emu->x87.queued_operation)
@@ -1665,7 +1676,7 @@ void x89_step(x86_state_t * emu)
 		if(emu->x89.channel[channel_number].running)
 		{
 #define prs (emu->parser)
-			if((emu->x89.channel[channel_number].psw & X89_PSW_XF) == 0)
+			if(disassemble && (emu->x89.channel[channel_number].psw & X89_PSW_XF) == 0)
 				DEBUG("[IOP%d]\t", channel_number);
 			x89_channel_step(emu, channel_number, emu->option_disassemble, true);
 #undef prs

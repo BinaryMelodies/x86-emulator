@@ -2446,3 +2446,7 @@ restart:
 	}
 }
 
+#undef DEBUG
+
+#define DEBUG(...) do { debug_printf((prs)->debug_output, __VA_ARGS__); } while(0) // TODO: better type
+

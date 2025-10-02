@@ -1589,7 +1589,7 @@ struct x89_parser_t
 {
 	uint32_t current_position;
 
-	char debug_output[64];
+	char debug_output[256];
 
 	uint8_t (* fetch8)(x89_parser_t *);
 	uint16_t (* fetch16)(x89_parser_t *);

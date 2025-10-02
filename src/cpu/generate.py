@@ -2027,8 +2027,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		return False
 	elif entry.kwds['mnem'] == 'VEX2:':
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tif({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
 		if modrm is None:
 			print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		else:
@@ -2047,8 +2047,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		return False
 	elif entry.kwds['mnem'] in {'VEX3:', 'XOP:'}:
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tif({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
 		if modrm is None:
 			print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		else:
@@ -2075,8 +2075,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		return False
 	elif entry.kwds['mnem'] in {'EVEX:', 'MVEX:'}:
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tif({parser_object}->simd_prefix != X86_PREF_NONE || {parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
 		if modrm is None:
 			print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		else:
@@ -2124,8 +2124,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		return False
 	elif entry.kwds['mnem'] == 'REX2:':
 		print_file(f"{indent}{{", file = file)
-		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
-		print_file(f"{indent}\tUNDEFINED{undefined_suffix}();", file = file)
+		print_file(f"{indent}\tif({parser_object}->rex_prefix)", file = file)
+		print_file(f"{indent}\t\tUNDEFINED{undefined_suffix}();", file = file)
 		print_file(f"{indent}\tuint8_t byte = x86_fetch8{fetch_suffix};", file = file)
 		print_file(f"{indent}\t{parser_object}->opcode_map = (byte & 0x80) != 0 ? 1 : 0;", file = file)
 		print_file(f"{indent}\t{parser_object}->rex_r = (byte & 0x40) != 0 ? 16 : 0;", file = file)
@@ -2455,7 +2455,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						if method == 'both':
 							print_file(f'{indent1}if(prs->fpu_type != X87_FPU_INTEGRATED && (execute || prs->fpu_type == X87_FPU_NONE))', file = file)
 						else:
-							print_file(f'{indent1}if(prs->fpu_type != X87_FPU_INTEGRATED && prs->fpu_type == X87_FPU_NONE)', file = file)
+							print_file(f'{indent1}if(prs->fpu_type == X87_FPU_NONE)', file = file)
 						print_file(f'{indent1}{{', file = file)
 						indent1 += '\t'
 
@@ -2503,6 +2503,15 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 					print_file(f"{indent1}\tNO_LOCK();", file = file)
 				elif method == 'step':
 					print_file(f"{indent1}NO_LOCK();", file = file)
+				elif method == 'parse':
+					print_file(f"{indent1}if(prs->fpu_type != X87_FPU_NONE)", file = file)
+					print_file(f"{indent1}{{", file = file)
+					print_file(f"{indent1}\tuint16_t fop;", file = file)
+					print_file(f"{indent1}", file = file)
+					print_file(f"{indent1}\tfop = (opcode << 8) | (prs->modrm_byte);", file = file)
+					print_file(f"{indent1}\t// TODO", file = file)
+					print_file(f"{indent1}\tx87_parse_parser(prs, fop, _seg, _off);", file = file)
+					print_file(f"{indent1}}}", file = file)
 
 			if method != 'parse':
 				opds1 = opds.copy()
@@ -3132,15 +3141,16 @@ with open(outfile, 'w') as fp:
 	print_file("#define IF_EXECUTE if(execute)", file = fp)
 	print_file("#define IF_NOT_EXECUTE if(!execute)", file = fp)
 	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse(prs, emu, true, fop, fcs, fip, segment_number, segment_offset, disassemble, execute)", file = fp)
-	print_file("static inline void x86_parse(x86_parser_t * prs, x86_state_t * emu, bool disassemble, bool execute)", file = fp)
-	print_file("{", file = fp)
-	print_file("\tuint8_t opcode;", file = fp)
-	print_file("\tuoff_t opcode_offset;", file = fp)
-	print_file("restart:", file = fp)
-	print_file("\t_resume_both();", file = fp)
-	print_file("\topcode_offset = prs->current_position;", file = fp)
-	print_switch('32', Path(), '\t', method = 'both', file = fp)
-	print_file("}", file = fp)
+#	print_file("static inline void x86_parse(x86_parser_t * prs, x86_state_t * emu, bool disassemble, bool execute)", file = fp)
+#	print_file("{", file = fp)
+#	print_file("\tassert(false);", file = fp) # TODO
+#	print_file("\tuint8_t opcode;", file = fp)
+#	print_file("\tuoff_t opcode_offset;", file = fp)
+#	print_file("restart:", file = fp)
+#	print_file("\t_resume_both();", file = fp)
+#	print_file("\topcode_offset = prs->current_position;", file = fp)
+#	print_switch('32', Path(), '\t', method = 'both', file = fp)
+#	print_file("}", file = fp)
 	print_file("#undef X87_PARSE", file = fp)
 	print_file("#undef IF_NOT_EXECUTE", file = fp)
 	print_file("#undef IF_EXECUTE", file = fp)
@@ -3167,7 +3177,7 @@ with open(outfile, 'w') as fp:
 	print_file("#define IF_EXECUTE if(true)", file = fp)
 	print_file("#define IF_NOT_EXECUTE if(false)", file = fp)
 	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse_emulator(emu, true, fop, fcs, fip, segment_number, segment_offset)", file = fp)
-	print_file("static inline void x86_parser_emulator(x86_state_t * emu)", file = fp)
+	print_file("static inline void x86_parse_emulator(x86_state_t * emu)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
 	print_file("\tuoff_t opcode_offset;", file = fp)
@@ -3184,13 +3194,14 @@ with open(outfile, 'w') as fp:
 	print_file("#undef IF_EXECUTE", file = fp)
 
 	print_file("#define USE_PRS prs", file = fp)
-	print_file("static inline x86_result_t x80_parse(x80_parser_t * prs, x80_state_t * emu, x86_state_t * emu86, bool disassemble, bool execute)", file = fp)
-	print_file("{", file = fp)
-	print_file("\tuint16_t old_pc = prs->current_position;", file = fp)
-	print_file("\tuint8_t opcode;", file = fp)
-	print_switch('8', Path(), '\t', method = 'both', file = fp)
-	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
-	print_file("}", file = fp)
+#	print_file("static inline x86_result_t x80_parse(x80_parser_t * prs, x80_state_t * emu, x86_state_t * emu86, bool disassemble, bool execute)", file = fp)
+#	print_file("{", file = fp)
+#	print_file("\tassert(false);", file = fp) # TODO
+#	print_file("\tuint16_t old_pc = prs->current_position;", file = fp)
+#	print_file("\tuint8_t opcode;", file = fp)
+#	print_switch('8', Path(), '\t', method = 'both', file = fp)
+#	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
+#	print_file("}", file = fp)
 
 	print_file("static inline x86_result_t x80_parse_parser(x80_parser_t * prs)", file = fp)
 	print_file("{", file = fp)
@@ -3211,12 +3222,13 @@ with open(outfile, 'w') as fp:
 	print_file("#undef USE_PRS", file = fp)
 
 	print_file("#define USE_PRS prs", file = fp)
-	print_file("static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute)", file = fp)
-	print_file("{", file = fp)
-	print_file("\t_seg = segment_number;", file = fp)
-	print_file("\t_off = segment_offset;", file = fp)
-	print_switch('87', Path(), '\t', discriminator = 'subtable', method = 'both', file = fp)
-	print_file("}", file = fp)
+#	print_file("static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute)", file = fp)
+#	print_file("{", file = fp)
+#	print_file("\tassert(false);", file = fp) # TODO
+#	print_file("\t_seg = segment_number;", file = fp)
+#	print_file("\t_off = segment_offset;", file = fp)
+#	print_switch('87', Path(), '\t', discriminator = 'subtable', method = 'both', file = fp)
+#	print_file("}", file = fp)
 
 	print_file("static inline void x87_parse_parser(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
 	print_file("{", file = fp)
