@@ -2827,6 +2827,7 @@ $rip = (_uint$O)$0.$O;
 if(!x86_is_ia64(emu))
 	UNDEFINED();
 /* TODO: (ia64) JMPE */
+(void) $0.b;
 
 @instruction JMPF|op0=rb
 /* 8086 undefined instruction */
@@ -4613,56 +4614,44 @@ UNDEFINED();
 /* escape instruction, no code */
 if(USE_PRS->fpu_type != X87_FPU_NONE)
 {
-	IF_EXECUTE
+	x86_calculate_operand_address(emu);
+
+	if(X86_CPU_286 <= emu->cpu_type)
 	{
-		x86_calculate_operand_address(emu);
-
-		if(X86_CPU_286 <= emu->cpu_type)
+		if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)
 		{
-			if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)
-			{
-				x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
-			}
+			x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
 		}
-
-		if(emu->x87.fpu_type == X87_FPU_8087) // TODO: what is the proper condition?
-			_x87_int();
 	}
+
+	if(emu->x87.fpu_type == X87_FPU_8087) // TODO: what is the proper condition?
+		_x87_int();
 
 	uint16_t fop, fcs;
 	uoff_t fip;
 
 	fop = (opcode << 8) | (USE_PRS->modrm_byte);
-	IF_NOT_EXECUTE
-	{
-		// TODO
-	}
-	else
-	{
-		// testing on real hardware shows that this is how the values are actually stored
-		fcs = $cs;
-		if(emu->x87.fpu_type == X87_FPU_8087)
-			fip = opcode_offset; // without any prefixes
-		else
-			fip = $old_rip;
-	}
 
-	IF_EXECUTE
-		memcpy(emu->x87.address_text, USE_PRS->address_text, sizeof USE_PRS->address_text);
+	// testing on real hardware shows that this is how the values are actually stored
+	fcs = $cs;
+	if(emu->x87.fpu_type == X87_FPU_8087)
+		fip = opcode_offset; // without any prefixes
+	else
+		fip = $old_rip;
+
+	memcpy(emu->x87.address_text, USE_PRS->address_text, sizeof USE_PRS->address_text);
 
 	if(USE_PRS->fpu_type < X87_FPU_INTEGRATED)
 	{
-		IF_EXECUTE
-		{
-			// read the first 2 bytes from memory
-			x86_memory_segmented_read(emu, _seg, _off, 2, emu->x87.operand_data);
-			emu->sr[X86_R_FDS] = emu->sr[_seg];
-		}
-		X87_PARSE(fop, fcs, fip, X86_R_FDS, _off);
+		// read the first 2 bytes from memory
+		x86_memory_segmented_read(emu, _seg, _off, 2, emu->x87.operand_data);
+		emu->sr[X86_R_FDS] = emu->sr[_seg];
+
+		x87_execute(emu, true, fop, fcs, fip, X86_R_FDS, _off);
 	}
 	else
 	{
-		X87_PARSE(fop, fcs, fip, _seg, _off);
+		x87_execute(emu, true, fop, fcs, fip, _seg, _off);
 	}
 }
 
@@ -4670,42 +4659,33 @@ if(USE_PRS->fpu_type != X87_FPU_NONE)
 /* escape instruction, no code */
 if(USE_PRS->fpu_type != X87_FPU_NONE)
 {
-	IF_EXECUTE
+	if(X86_CPU_286 <= emu->cpu_type)
 	{
-		if(X86_CPU_286 <= emu->cpu_type)
+		if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)
 		{
-			if((emu->cr[0] & (X86_CR0_EM | X86_CR0_TS)) != 0)
-			{
-				x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
-			}
+			x86_trigger_interrupt(emu, X86_EXC_NM | X86_EXC_FAULT, 0);
 		}
-
-		if(emu->x87.fpu_type == X87_FPU_8087) // TODO: what is the proper condition?
-			_x87_int();
 	}
+
+	if(emu->x87.fpu_type == X87_FPU_8087) // TODO: what is the proper condition?
+		_x87_int();
 
 	uint16_t fop, fcs;
 	uoff_t fip;
 
 	fop = (opcode << 8) | (USE_PRS->modrm_byte);
-	IF_NOT_EXECUTE
-	{
-		// TODO
-	}
+
+	// testing on real hardware shows that this is how the values are actually stored
+	fcs = $cs;
+	if(emu->x87.fpu_type == X87_FPU_8087)
+		fip = opcode_offset; // without any prefixes
 	else
-	{
-		// testing on real hardware shows that this is how the values are actually stored
-		fcs = $cs;
-		if(emu->x87.fpu_type == X87_FPU_8087)
-			fip = opcode_offset; // without any prefixes
-		else
-			fip = $old_rip;
-	}
+		fip = $old_rip;
 
 //	if(emu->x87.fpu_type != X87_FPU_INTEGRATED && (emu->x87.sw & X87_SW_B) != 0)
 //		memcpy(emu->x87.address_text, USE_PRS->address_text, sizeof USE_PRS->address_text);
 
-	X87_PARSE(fop, fcs, fip, NONE, 0);
+	x87_execute(emu, true, fop, fcs, fip, NONE, 0);
 }
 
 @instruction F2XM1

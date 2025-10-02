@@ -1179,10 +1179,10 @@ x86_result_t x80_step(x80_state_t * emu, x86_state_t * emu86)
 		return X86_RESULT(X86_RESULT_SUCCESS, 0); // TODO: better response when no processor present?
 
 	if(emu86 != NULL && emu86->option_disassemble)
-		x80_parse_parser(emu->parser);
+		x80_parse(emu->parser);
 
 	emu->parser->index_prefix = NONE;
-	return x80_parse_emulator(emu, emu86);
+	return x80_execute(emu, emu86);
 }
 
 void x86_disassemble(x86_parser_t * prs, x86_state_t * emu);
@@ -1216,7 +1216,7 @@ x86_result_t x86_step(x86_state_t * emu)
 		{
 			emu->x80.parser->debug_output[0] = '\0';
 			emu->x80.parser->index_prefix = NONE;
-			emu->emulation_result = x80_parse_emulator(&emu->x80, emu);
+			emu->emulation_result = x80_execute(&emu->x80, emu);
 		}
 
 		strcat(emu->parser->debug_output, emu->x80.parser->debug_output);
@@ -1248,7 +1248,7 @@ x86_result_t x86_step(x86_state_t * emu)
 
 			emu->parser->address_offset = 0;
 			emu->parser->register_field = 0;
-			x86_parse_emulator(emu);
+			x86_execute(emu);
 		}
 	}
 
@@ -1269,7 +1269,7 @@ void x80_disassemble(x80_parser_t * prs)
 {
 	uint16_t old_pc = prs->current_position;
 	prs->index_prefix = NONE;
-	x80_parse_parser(prs);
+	x80_parse(prs);
 	prs->current_position = old_pc; // TODO
 }
 
@@ -1307,7 +1307,7 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 		prs->address_offset = 0;
 		prs->register_field = 0;
 		prs->ip_relative = false;
-		x86_parse_parser(prs);
+		x86_parse(prs);
 		prs->current_position = old_xip; // TODO
 
 		emu->prefetch_queue_data_offset = 0; // reset the prefetch queue to the starting position
@@ -1330,10 +1330,10 @@ void x87_step(x86_state_t * emu)
 #define prs (emu->parser)
 		DEBUG("[FPU]\t");
 #undef prs
-		x87_parse_parser(emu->parser, emu->x87.next_fop, emu->x87.segment, emu->x87.offset);
+		x87_parse(emu->parser, emu->x87.next_fop, emu->x87.segment, emu->x87.offset);
 	}
 
-	x87_parse_emulator(emu, false, emu->x87.next_fop, emu->x87.next_fcs, emu->x87.next_fip, emu->x87.segment, emu->x87.offset);
+	x87_execute(emu, false, emu->x87.next_fop, emu->x87.next_fcs, emu->x87.next_fip, emu->x87.segment, emu->x87.offset);
 
 	if(emu->x87.fpu_type != X87_FPU_INTEGRATED)
 	{

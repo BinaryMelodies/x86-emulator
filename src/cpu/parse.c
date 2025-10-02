@@ -1118,17 +1118,6 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 	} while(0)
 
 // Called when the instruction is not defined, either triggers an interrupt or returns without any action
-#define UNDEFINED_BOTH() \
-	do \
-	{ \
-		DEBUG("ud"); \
-		if(execute) \
-		{ \
-			x86_undefined_instruction(emu); \
-		} \
-	} while(0)
-
-// Called when the instruction is not defined, either triggers an interrupt or returns without any action
 #define UNDEFINED() x86_undefined_instruction(emu)
 
 // Called when the instruction is not defined, either triggers an interrupt or returns without any action
@@ -1136,18 +1125,6 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 	do \
 	{ \
 		DEBUG("ud"); \
-		return; \
-	} while(0)
-
-// Called when the instruction is not defined, either triggers an interrupt or returns without any action
-#define X87_UNDEFINED_BOTH() \
-	do \
-	{ \
-		DEBUG("ud"); \
-		if(execute && prs->fpu_type == X87_FPU_INTEGRATED) \
-		{ \
-			x86_trigger_interrupt(emu, X86_EXC_UD | X86_EXC_FAULT, 0); \
-		} \
 		return; \
 	} while(0)
 
@@ -1163,17 +1140,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 	} while(0)
 
 // Should be called before executing an instruction requiring system mode (current privilege level 0)
-#define PRIVILEGED_BOTH() \
-	do \
-	{ \
-		if(execute && x86_get_cpl(emu) != 0) \
-		{ \
-			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
-		} \
-	} while(0)
-
-// Should be called before executing an instruction requiring system mode (current privilege level 0)
-#define PRIVILEGED_EMULATOR() \
+#define PRIVILEGED() \
 	do \
 	{ \
 		if(x86_get_cpl(emu) != 0) \
@@ -1194,15 +1161,7 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 	} while(0)
 
 // Should be called before I/O instructions, only relevant for v25/v55
-#define IO_PRIVILEGED_BOTH() \
-	do \
-	{ \
-		if(execute && emu->ibrk_ == 0) \
-			x86_trigger_interrupt(emu, X86_EXC_IO() | X86_EXC_FAULT, 0); \
-	} while(0)
-
-// Should be called before I/O instructions, only relevant for v25/v55
-#define IO_PRIVILEGED_EMULATOR() \
+#define IO_PRIVILEGED() \
 	do \
 	{ \
 		if(emu->ibrk_ == 0) \
@@ -1320,6 +1279,8 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 
 #define _read80b(off) x80_memory_read8(emu, (off))
 #define _write80b(off, val) x80_memory_write8(emu, (off), (val))
+#define _read80w(off) x80_memory_read16(emu, (off))
+#define _write80w(off, val) x80_memory_write16(emu, (off), (val))
 #define _pop80() x80_pop16(emu)
 #define _push80(val) x80_push16(emu, (val))
 
@@ -1444,12 +1405,9 @@ static inline uint16_t _satuluw(uint32_t value)
 	sync - true if called from x86_parse, false if called separately
 	fop, fcs, fip - Values for the exception pointers, if those need to be set
 	segment_number, segment_offset - Parsed operand
-	disassemble - true to fill debug output buffer with the disassembled instruction
-	execute - true to execute instruction, false to only disassemble
 */
-static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute);
-static inline void x87_parse_parser(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset);
-static inline void x87_parse_emulator(x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset);
+static inline void x87_parse(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset);
+static inline void x87_execute(x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset);
 
 // do instruction again (for REP prefix and WAIT)
 #define _restart() \
@@ -1470,21 +1428,6 @@ static inline void x87_parse_emulator(x86_state_t * emu, bool sync, uint16_t fop
 #define _resume() \
 	do { \
 		if(emu->restarted_instruction.opcode != 0) \
-		{ \
-			opcode = emu->restarted_instruction.opcode; \
-			emu->xip = emu->restarted_instruction.xip_afterwards; \
-			emu->parser->operation_size = emu->restarted_instruction.operation_size; \
-			emu->parser->address_size = emu->restarted_instruction.address_size; \
-			emu->parser->source_segment = emu->restarted_instruction.source_segment; \
-			emu->parser->destination_segment = emu->restarted_instruction.destination_segment; \
-			emu->parser->rep_prefix = emu->restarted_instruction.rep_prefix; \
-			emu->restarted_instruction.opcode = 0; \
-			goto resume; \
-		} \
-	} while(0)
-#define _resume_both() \
-	do { \
-		if(execute && emu->restarted_instruction.opcode != 0) \
 		{ \
 			opcode = emu->restarted_instruction.opcode; \
 			emu->xip = emu->restarted_instruction.xip_afterwards; \

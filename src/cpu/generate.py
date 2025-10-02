@@ -1469,7 +1469,7 @@ def iterate_sizes(sizes, indent = '\t', file = None, size_option = None, method 
 		else:
 			if 'q' in sizes and size_option == 'branch':
 				# Intel64 only uses 64-bit for branches
-				if method != 'parse':
+				if method == 'step':
 					print_file(f"{indent}if({parser_object}->operation_size == SIZE_64BIT && x86_is_intel64(emu))", file = file)
 				else:
 					print_file(f"{indent}if({parser_object}->operation_size == SIZE_64BIT && x86_parser_is_intel64(prs))", file = file)
@@ -1920,6 +1920,7 @@ registers80 = {
 	'$bc': 'emu->bank[emu->main_bank].bc',
 	'$de': 'emu->bank[emu->main_bank].de',
 	'$hl': 'emu->bank[emu->main_bank].hl',
+	'$sp': 'emu->sp',
 	'$pc': 'emu->pc',
 	'$pc=': 'emu->pc = $$',
 	'$old_pc': 'old_pc',
@@ -1931,10 +1932,10 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 	global MISSING
 	assert type(entry) is Instruction
 
-	fetch_suffix = {'both': '(prs, emu)', 'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
-	undefined_suffix = {'both': '_BOTH', 'parse': '_PARSE', 'step': ''}[method]
+	fetch_suffix = {'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
+	undefined_suffix = {'parse': '_PARSE', 'step': ''}[method]
 	parser_object = 'emu->parser' if method == 'step' else 'prs'
-	x87_address_text = {'both': '(emu ? emu->x87.address_text : prs->address_text)', 'parse': 'prs->address_text', 'step': 'emu->x87.address_text'}[method]
+	x87_address_text = {'parse': 'prs->address_text', 'step': 'emu->x87.address_text'}[method]
 
 	if modrm is None or entry.kwds.get('modrm') == False:
 		print_file(f"{indent}/* {entry.kwds['mnem']}{' ' + ', '.join(entry.kwds['opds']) if len(entry.kwds['opds']) > 0 else ''} */", file = file)
@@ -1993,10 +1994,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		print_file(f"{indent}goto restart;", file = file)
 		return False
 	elif entry.kwds['mnem'] == 'LOCK:':
-		if method == 'both':
-			print_file(f"{indent}if(execute && x86_is_ia64(emu))", file = file)
-			print_file(f"{indent}\tx86_ia64_intercept(emu, 0); // TODO", file = file) # TODO
-		elif method == 'step':
+		if method == 'step':
 			print_file(f"{indent}x86_ia64_intercept(emu, 0); // TODO", file = file) # TODO
 		print_file(f"{indent}if({parser_object}->rex_prefix)", file = file)
 		print_file(f"{indent}{{", file = file)
@@ -2155,12 +2153,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				print_file(f"{indent}/* TODO */;", file = file)
 				return True
 			opd = X80_OPERAND_CODE.get(opd, {})
-			if method == 'both':
-				opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
-			elif method == 'parse':
-				opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
-			elif method == 'step':
-				opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+			opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 			opd = recursive_replace(opd, '$prs', parser_object)
 			opds.append(opd)
 
@@ -2180,7 +2173,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 
 				opds[i] = opd
 
-		if method != 'step':
+		if method == 'parse':
 			syntaxes = ['intel', '']
 			if 'intel' not in entry.kwds:
 				syntaxes.remove('intel')
@@ -2199,12 +2192,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						if 'prepare' in opd:
 							opd = recursive_replace(opd, '$#', str(i))
 							i += 1
-						if method == 'both':
-							opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
-						elif method == 'parse':
-							opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
-						elif method == 'step':
-							opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+						opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 						opd = recursive_replace(opd, '$prs', parser_object)
 						_opds.append(opd)
 
@@ -2280,11 +2268,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						continue
 				kwds = {}
 
-				if method == 'both':
-					print_file(f"{indent1}if(!execute)", file = file)
-					print_file(f"{indent1}\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = file)
-
-				if method != 'parse':
+				if method == 'step':
 					print_file(f"{indent1}{{", file = file)
 					print_file(gen_code80(code, *opds, indent = indent1 + '\t', **kwds), file = file)
 					print_file(f"{indent1}}}", file = file)
@@ -2308,12 +2292,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				opd = X87_OPERAND_CODE.get(opd, {})
 			if modrm in opd:
 				opd = opd[modrm]
-			if method == 'both':
-				opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
-			elif method == 'parse':
-				opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
-			elif method == 'step':
-				opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+			opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 			opd = recursive_replace(opd, '$prs', parser_object)
 			opd = recursive_replace(opd, '$x87_address_text', x87_address_text)
 			opds.append(opd)
@@ -2385,7 +2364,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 			if mode == '87':
 				x87_async = mnem in {'fnclex', 'fndisi', 'fneni', 'fninit', 'fnsave', 'fnstcw', 'fnstenv', 'fnstsw', 'fstsg'}
 
-			if method != 'step':
+			if method == 'parse':
 				syntaxes = ['nec', '']
 				if 'nec' not in entry.kwds:
 					syntaxes.remove('nec')
@@ -2408,12 +2387,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 								opd = X87_OPERAND_CODE.get(opd, {})
 							if modrm in opd:
 								opd = opd[modrm]
-							if method == 'both':
-								opd = recursive_replace(opd, '$fetch()', '(prs, emu)')
-							elif method == 'parse':
-								opd = recursive_replace(opd, '$fetch()', '_parser(prs)')
-							elif method == 'step':
-								opd = recursive_replace(opd, '$fetch()', '_emulator(emu)')
+							opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 							opd = recursive_replace(opd, '$prs', parser_object)
 							opd = recursive_replace(opd, '$x87_address_text', x87_address_text)
 							if 'prepare' in opd:
@@ -2442,20 +2416,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 					else:
 						line = f'DEBUG("{_mnem}\\t{pars}\\n"{args});'
 
-					if mode == '87' and x87_async:
-						if method == 'both':
-							print_file(f'{indent1}if(!(prs->fpu_type == X87_FPU_INTEGRATED || !sync || !execute))', file = file)
-							print_file(f'{indent1}\tDEBUG("[FPU] ~\\t");', file = file)
-					elif mode == '87' and not x87_async:
-						if method == 'both':
-							print_file(f'{indent1}if(prs->fpu_type == X87_FPU_INTEGRATED || !sync || !execute)', file = file)
-						print_file(f'{indent1}{{', file = file)
-						indent1 += '\t'
-					elif _mnem == 'esc':
-						if method == 'both':
-							print_file(f'{indent1}if(prs->fpu_type != X87_FPU_INTEGRATED && (execute || prs->fpu_type == X87_FPU_NONE))', file = file)
-						else:
-							print_file(f'{indent1}if(prs->fpu_type == X87_FPU_NONE)', file = file)
+					if not (mode == '87' and not x87_async) and _mnem == 'esc':
+						print_file(f'{indent1}if(prs->fpu_type == X87_FPU_NONE)', file = file)
 						print_file(f'{indent1}{{', file = file)
 						indent1 += '\t'
 
@@ -2470,19 +2432,12 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						print_file(f'{indent1}\t{line}', file = file)
 						print_file(f'{indent1}}}', file = file)
 
-					if mode == '87' and not x87_async:
-						indent1 = indent1[:-1]
-						print_file(f'{indent1}}}', file = file)
-					elif _mnem == 'esc':
+					if not (mode == '87' and not x87_async) and _mnem == 'esc':
 						indent1 = indent1[:-1]
 						print_file(f'{indent1}}}', file = file)
 
 			if entry.kwds['mnem'] != 'ESC':
-				if method == 'both':
-					print_file(f"{indent1}if(!execute)", file = file)
-					print_file(f"{indent1}\treturn;", file = file)
-
-				if method != 'parse':
+				if method == 'step':
 					print_file(f"{indent1}x86_prefetch_queue_fill(emu);", file = file)
 
 					if modrm == 'mem':
@@ -2498,10 +2453,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						#	print_file(f"{indent1}if(sync)", file = file)
 						#	print_file(f"{indent1}\tNO_LOCK();", file = file)
 			else:
-				if method == 'both':
-					print_file(f"{indent1}if(execute)", file = file)
-					print_file(f"{indent1}\tNO_LOCK();", file = file)
-				elif method == 'step':
+				if method == 'step':
 					print_file(f"{indent1}NO_LOCK();", file = file)
 				elif method == 'parse':
 					print_file(f"{indent1}if(prs->fpu_type != X87_FPU_NONE)", file = file)
@@ -2510,10 +2462,10 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 					print_file(f"{indent1}", file = file)
 					print_file(f"{indent1}\tfop = (opcode << 8) | (prs->modrm_byte);", file = file)
 					print_file(f"{indent1}\t// TODO", file = file)
-					print_file(f"{indent1}\tx87_parse_parser(prs, fop, _seg, _off);", file = file)
+					print_file(f"{indent1}\tx87_parse(prs, fop, _seg, _off);", file = file)
 					print_file(f"{indent1}}}", file = file)
 
-			if method != 'parse':
+			if method == 'step':
 				opds1 = opds.copy()
 				mnem1 = entry.kwds['mnem']
 				if mnem1[-1] in {'b', 'z', 'v'}:
@@ -2640,7 +2592,7 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 def print_single_implementation_entry(path, indent, actual_range, entry, discriminator, index, file, mode, uses_modrm = None, modrm = None, feature = None, only_mode = None, method = None):
 	assert method is not None
 
-	undefined_suffix = {'both': '_BOTH', 'parse': '_PARSE', 'step': ''}[method]
+	undefined_suffix = {'parse': '_PARSE', 'step': ''}[method]
 
 	if entry is None:
 		if mode == '32':
@@ -2940,7 +2892,7 @@ def ranges(dim, start, end):
 				yield t + (i,)
 
 def print_implementations(mode, path, discriminator, index, indent, actual_range, file, modrm, feature, only_mode, method):
-	undefined_suffix = {'both': '_BOTH', 'parse': '_PARSE', 'step': ''}[method]
+	undefined_suffix = {'parse': '_PARSE', 'step': ''}[method]
 
 	if_keyword = 'if'
 
@@ -3013,8 +2965,8 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 	assert mode in {'8', '32', '87'}
 	assert method is not None
 
-	fetch_suffix = {'both': '(prs, emu)', 'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
-	parse_modrm_suffix = {'both': '(prs, emu, execute)', 'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
+	fetch_suffix = {'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
+	parse_modrm_suffix = {'parse': '_parser(prs)', 'step': '_emulator(emu)'}[method]
 	parser_object = 'emu->parser' if method == 'step' else 'prs'
 
 	if actual_range is None:
@@ -3045,7 +2997,7 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 		if mode == '32':
 			if len(path) == 0:
 				print_file(indent + f"opcode = x86_translate_opcode({parser_object}, x86_fetch8{fetch_suffix});", file = file)
-				if method != 'parse':
+				if method == 'step':
 					print_file(f"resume:", file = file)
 				print_file(indent + f"switch(opcode)", file = file)
 			else:
@@ -3135,49 +3087,17 @@ def print_switch(mode, path, indent, actual_range = None, file = None, discrimin
 outfile = sys.argv[2] if len(sys.argv) > 2 else os.path.splitext(sys.argv[1])[0] + '.gen.c'
 
 with open(outfile, 'w') as fp:
-	print_file("#define PRIVILEGED PRIVILEGED_BOTH", file = fp)
-	print_file("#define IO_PRIVILEGED IO_PRIVILEGED_BOTH", file = fp)
 	print_file("#define USE_PRS prs", file = fp)
-	print_file("#define IF_EXECUTE if(execute)", file = fp)
-	print_file("#define IF_NOT_EXECUTE if(!execute)", file = fp)
-	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse(prs, emu, true, fop, fcs, fip, segment_number, segment_offset, disassemble, execute)", file = fp)
-#	print_file("static inline void x86_parse(x86_parser_t * prs, x86_state_t * emu, bool disassemble, bool execute)", file = fp)
-#	print_file("{", file = fp)
-#	print_file("\tassert(false);", file = fp) # TODO
-#	print_file("\tuint8_t opcode;", file = fp)
-#	print_file("\tuoff_t opcode_offset;", file = fp)
-#	print_file("restart:", file = fp)
-#	print_file("\t_resume_both();", file = fp)
-#	print_file("\topcode_offset = prs->current_position;", file = fp)
-#	print_switch('32', Path(), '\t', method = 'both', file = fp)
-#	print_file("}", file = fp)
-	print_file("#undef X87_PARSE", file = fp)
-	print_file("#undef IF_NOT_EXECUTE", file = fp)
-	print_file("#undef IF_EXECUTE", file = fp)
-	print_file("#undef IO_PRIVILEGED", file = fp)
-	print_file("#undef PRIVILEGED", file = fp)
-
-	print_file("#define IF_EXECUTE if(false)", file = fp)
-	print_file("#define IF_NOT_EXECUTE if(true)", file = fp)
-	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse_parser(prs, fop, segment_number, segment_offset)", file = fp)
-	print_file("static inline void x86_parse_parser(x86_parser_t * prs)", file = fp)
+	print_file("static inline void x86_parse(x86_parser_t * prs)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
 	print_file("restart:", file = fp)
 	print_switch('32', Path(), '\t', method = 'parse', file = fp)
 	print_file("}", file = fp)
-	print_file("#undef X87_PARSE", file = fp)
-	print_file("#undef IF_NOT_EXECUTE", file = fp)
-	print_file("#undef IF_EXECUTE", file = fp)
 	print_file("#undef USE_PRS", file = fp)
 
-	print_file("#define PRIVILEGED PRIVILEGED_EMULATOR", file = fp)
-	print_file("#define IO_PRIVILEGED IO_PRIVILEGED_EMULATOR", file = fp)
 	print_file("#define USE_PRS (emu->parser)", file = fp)
-	print_file("#define IF_EXECUTE if(true)", file = fp)
-	print_file("#define IF_NOT_EXECUTE if(false)", file = fp)
-	print_file("#define X87_PARSE(fop, fcs, fip, segment_number, segment_offset) x87_parse_emulator(emu, true, fop, fcs, fip, segment_number, segment_offset)", file = fp)
-	print_file("static inline void x86_parse_emulator(x86_state_t * emu)", file = fp)
+	print_file("static inline void x86_execute(x86_state_t * emu)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
 	print_file("\tuoff_t opcode_offset;", file = fp)
@@ -3186,24 +3106,10 @@ with open(outfile, 'w') as fp:
 	print_file("\topcode_offset = emu->parser->current_position;", file = fp)
 	print_switch('32', Path(), '\t', method = 'step', file = fp)
 	print_file("}", file = fp)
-	print_file("#undef X87_PARSE", file = fp)
-	print_file("#undef PRIVILEGED", file = fp)
-	print_file("#undef IO_PRIVILEGED", file = fp)
 	print_file("#undef USE_PRS", file = fp)
-	print_file("#undef IF_NOT_EXECUTE", file = fp)
-	print_file("#undef IF_EXECUTE", file = fp)
 
 	print_file("#define USE_PRS prs", file = fp)
-#	print_file("static inline x86_result_t x80_parse(x80_parser_t * prs, x80_state_t * emu, x86_state_t * emu86, bool disassemble, bool execute)", file = fp)
-#	print_file("{", file = fp)
-#	print_file("\tassert(false);", file = fp) # TODO
-#	print_file("\tuint16_t old_pc = prs->current_position;", file = fp)
-#	print_file("\tuint8_t opcode;", file = fp)
-#	print_switch('8', Path(), '\t', method = 'both', file = fp)
-#	print_file("\treturn X86_RESULT(X86_RESULT_SUCCESS, 0);", file = fp)
-#	print_file("}", file = fp)
-
-	print_file("static inline x86_result_t x80_parse_parser(x80_parser_t * prs)", file = fp)
+	print_file("static inline x86_result_t x80_parse(x80_parser_t * prs)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
 	print_switch('8', Path(), '\t', method = 'parse', file = fp)
@@ -3212,7 +3118,7 @@ with open(outfile, 'w') as fp:
 	print_file("#undef USE_PRS", file = fp)
 
 	print_file("#define USE_PRS (emu->parser)", file = fp)
-	print_file("static inline x86_result_t x80_parse_emulator(x80_state_t * emu, x86_state_t * emu86)", file = fp)
+	print_file("static inline x86_result_t x80_execute(x80_state_t * emu, x86_state_t * emu86)", file = fp)
 	print_file("{", file = fp)
 	print_file("\tuint16_t old_pc = emu->parser->current_position;", file = fp)
 	print_file("\tuint8_t opcode;", file = fp)
@@ -3222,15 +3128,7 @@ with open(outfile, 'w') as fp:
 	print_file("#undef USE_PRS", file = fp)
 
 	print_file("#define USE_PRS prs", file = fp)
-#	print_file("static inline void x87_parse(x86_parser_t * prs, x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset, bool disassemble, bool execute)", file = fp)
-#	print_file("{", file = fp)
-#	print_file("\tassert(false);", file = fp) # TODO
-#	print_file("\t_seg = segment_number;", file = fp)
-#	print_file("\t_off = segment_offset;", file = fp)
-#	print_switch('87', Path(), '\t', discriminator = 'subtable', method = 'both', file = fp)
-#	print_file("}", file = fp)
-
-	print_file("static inline void x87_parse_parser(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
+	print_file("static inline void x87_parse(x86_parser_t * prs, uint16_t fop, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
 	print_file("{", file = fp)
 	print_file("\t_seg = segment_number;", file = fp)
 	print_file("\t_off = segment_offset;", file = fp)
@@ -3239,7 +3137,7 @@ with open(outfile, 'w') as fp:
 	print_file("#undef USE_PRS", file = fp)
 
 	print_file("#define USE_PRS (emu->parser)", file = fp)
-	print_file("static inline void x87_parse_emulator(x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
+	print_file("static inline void x87_execute(x86_state_t * emu, bool sync, uint16_t fop, uint16_t fcs, uaddr_t fip, x86_segnum_t segment_number, uoff_t segment_offset)", file = fp)
 	print_file("{", file = fp)
 	print_file("\t_seg = segment_number;", file = fp)
 	print_file("\t_off = segment_offset;", file = fp)
