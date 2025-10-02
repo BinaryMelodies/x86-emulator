@@ -1608,11 +1608,11 @@ restart:
 		{
 			if(_IMSIZE == 1)
 			{
-				DEBUG("jmp\t%X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+				DEBUG("jmp\t%X\n", prs->current_position + literal);
 			}
 			else
 			{
-				DEBUG("ljmp\t%X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+				DEBUG("ljmp\t%X\n", prs->current_position + literal);
 			}
 		}
 		else
@@ -1721,11 +1721,11 @@ restart:
 		// JNZ R
 		if(_IMSIZE == 1)
 		{
-			DEBUG("jnz\t%s, %X\n", x89_register_name[_REGFLD], emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG("jnz\t%s, %X\n", x89_register_name[_REGFLD], prs->current_position + literal);
 		}
 		else
 		{
-			DEBUG("ljnz\t%s, %X\n", x89_register_name[_REGFLD], emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG("ljnz\t%s, %X\n", x89_register_name[_REGFLD], prs->current_position + literal);
 		}
 
 		if(!execute)
@@ -1737,11 +1737,11 @@ restart:
 		// JZ R
 		if(_IMSIZE == 1)
 		{
-			DEBUG("jz\t%s, %X\n", x89_register_name[_REGFLD], emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG("jz\t%s, %X\n", x89_register_name[_REGFLD], prs->current_position + literal);
 		}
 		else
 		{
-			DEBUG("ljz\t%s, %X\n", x89_register_name[_REGFLD], emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG("ljz\t%s, %X\n", x89_register_name[_REGFLD], prs->current_position + literal);
 		}
 
 		if(!execute)
@@ -1876,7 +1876,7 @@ restart:
 		// TSL M, I, L
 		DEBUG("tsl\t");
 		DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-		DEBUG(", %X, %X\n", segment, emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+		DEBUG(", %X, %X\n", segment, prs->current_position + literal);
 		if(!execute)
 			return;
 		if(x89_read8(emu, addr) == 0)
@@ -1908,7 +1908,7 @@ restart:
 			DEBUG("lcall\t");
 		}
 		DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-		DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+		DEBUG(", %X\n", prs->current_position + literal);
 
 		if(!execute)
 			return;
@@ -2016,7 +2016,7 @@ restart:
 			DEBUG("ljmce\t");
 		}
 		DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-		DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+		DEBUG(", %X\n", prs->current_position + literal);
 
 		if(!execute)
 			return;
@@ -2037,7 +2037,7 @@ restart:
 			DEBUG("ljmcne\t");
 		}
 		DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-		DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+		DEBUG(", %X\n", prs->current_position + literal);
 
 		if(!execute)
 			return;
@@ -2058,7 +2058,7 @@ restart:
 			DEBUG("ljnbt\t");
 		}
 		DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-		DEBUG(", %d, %X\n", _REGFLD, emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+		DEBUG(", %d, %X\n", _REGFLD, prs->current_position + literal);
 
 		if(!execute)
 			return;
@@ -2076,7 +2076,7 @@ restart:
 			DEBUG("ljbt\t");
 		}
 		DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-		DEBUG(", %d, %X\n", _REGFLD, emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+		DEBUG(", %d, %X\n", _REGFLD, prs->current_position + literal);
 
 		if(!execute)
 			return;
@@ -2269,7 +2269,7 @@ restart:
 		{
 			DEBUG("jnzb\t");
 			DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-			DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG(", %X\n", prs->current_position + literal);
 
 			if(!execute)
 				return;
@@ -2281,7 +2281,7 @@ restart:
 		{
 			DEBUG("jnz\t");
 			DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-			DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG(", %X\n", prs->current_position + literal);
 
 			if(!execute)
 				return;
@@ -2296,7 +2296,7 @@ restart:
 		{
 			DEBUG("jzb\t");
 			DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-			DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG(", %X\n", prs->current_position + literal);
 
 			if(!execute)
 				return;
@@ -2308,7 +2308,7 @@ restart:
 		{
 			DEBUG("jz\t");
 			DEBUG(op_format, x89_base_register_name[_BASEFLD], disp);
-			DEBUG(", %X\n", emu->x89.channel[channel_number].r[X89_R_TP].address + literal);
+			DEBUG(", %X\n", prs->current_position + literal);
 
 			if(!execute)
 				return;

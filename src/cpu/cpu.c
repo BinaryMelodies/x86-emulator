@@ -1678,14 +1678,16 @@ void x89_step(x86_state_t * emu)
 #define prs (emu->parser)
 			if(disassemble && (emu->x89.channel[channel_number].psw & X89_PSW_XF) == 0)
 				DEBUG("[IOP%d]\t", channel_number);
-			x89_channel_step(emu, channel_number, emu->option_disassemble, true);
 #undef prs
+			x89_channel_step(emu, channel_number, disassemble, true);
 		}
 	}
 }
 
-void x89_disassemble(x89_parser_t * prs)
+void x89_disassemble(x89_parser_t * prs, x86_state_t * emu, unsigned channel_number)
 {
-	x89_parse(prs, NULL, -1, true, false);
+	x89_address_t old_tp = emu->x89.channel[channel_number].r[X89_R_TP];
+	x89_parse(prs, NULL, channel_number, true, false);
+	emu->x89.channel[channel_number].r[X89_R_TP] = old_tp;
 }
 

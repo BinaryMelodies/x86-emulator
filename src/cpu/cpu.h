@@ -2801,7 +2801,7 @@ void x80_disassemble(x80_parser_t * prs);
 void x86_disassemble(x86_parser_t * prs, x86_state_t * emu);
 
 x89_parser_t * x89_setup_parser(x86_state_t * emu, unsigned channel_number);
-void x89_disassemble(x89_parser_t * prs);
+void x89_disassemble(x89_parser_t * prs, x86_state_t * emu, unsigned channel_number);
 
 // Note: the emu86 argument is optional
 x86_result_t x80_step(x80_state_t * emu, x86_state_t * emu86);

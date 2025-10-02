@@ -3619,7 +3619,7 @@ break;
 					{
 						fprintf(stderr, "[X89:%d]\t", channel_number);
 						x89_parser_t * prs = x89_setup_parser(emu, channel_number);
-						x89_disassemble(prs);
+						x89_disassemble(prs, emu, channel_number);
 						fprintf(stderr, "%s", prs->debug_output);
 						free(prs);
 					}
