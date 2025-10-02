@@ -1295,7 +1295,7 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 		prs->simd_prefix = X86_PREF_NONE;
 		prs->lock_prefix = prs->user_mode = false;
 
-		prs->address_size = prs->code_size;
+		prs->address_size = prs->code_size = x86_get_code_size(emu);
 		prs->operation_size = prs->code_size == X86_SIZE_WORD ? X86_SIZE_WORD : X86_SIZE_DWORD;
 
 		prs->rex_prefix = prs->rex_w = false;
