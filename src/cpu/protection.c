@@ -2495,7 +2495,7 @@ static inline void x86_return_via_nested_task(x86_state_t * emu)
 }
 
 #define _DEFINE_x86_return_interrupt(__size) \
-static inline void x86_return_interrupt##__size(x86_state_t * emu) \
+void x86_return_interrupt##__size(x86_state_t * emu) \
 { \
 	x86_store_x80_registers(emu); \
 	_IF_NOT64(__size, ( \

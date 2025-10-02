@@ -2835,4 +2835,9 @@ void x89_step(x86_state_t * emu);
 #define X86_CPUID_VENDOR_AO486         .ebx = 0x5453694D, .edx = 0x41207265, .ecx = 0x3638344F // "MiSTer AO486"
 #define X86_CPUID_VENDOR_CUSTOM        .ebx = 0x616E6942, .edx = 0x654D7972, .ecx = 0x79646F6C // "BinaryMelody"
 
+// convenience functions for emulation
+void x86_return_interrupt16(x86_state_t * emu);
+void x86_return_interrupt32(x86_state_t * emu);
+void x86_return_interrupt64(x86_state_t * emu);
+
 #endif // __CPU_H

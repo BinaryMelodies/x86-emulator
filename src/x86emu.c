@@ -1348,6 +1348,86 @@ static void _x80_port_write(x80_state_t * emu, uint16_t port, uint8_t value)
 	_port_write(NULL, port, &value, 1);
 }
 
+static uint8_t screen_cursor_x = 0, screen_cursor_y = 0;
+//static uint8_t screen_attribute; // TODO
+
+static inline void _screen_fix_cursor_location(x86_state_t * emu)
+{
+	(void) emu;
+
+	if(screen_cursor_x >= 80)
+	{
+		screen_cursor_y += screen_cursor_x / 80;
+		screen_cursor_x %= 80;
+		if(screen_cursor_y >= 25)
+		{
+			screen_cursor_y %= 25;
+		}
+	}
+}
+
+static void _screen_putchar(x86_state_t * emu, int c)
+{
+	(void) emu;
+
+	switch(pc_type)
+	{
+	case X86_PCTYPE_IBM_PC_MDA:
+	case X86_PCTYPE_IBM_PC_CGA:
+	case X86_PCTYPE_IBM_PCJR:
+		{
+			uint8_t * memory = *_get_page(pc_type == X86_PCTYPE_IBM_PC_MDA ? 0xB0000 : 0xB8000);
+			_screen_fix_cursor_location(emu);
+			memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
+			memory[screen_cursor_y * 160 + screen_cursor_x * 2 + 1] = 0x07;
+			screen_cursor_x ++;
+			_screen_fix_cursor_location(emu);
+		}
+		break;
+	case X86_PCTYPE_NEC_PC98:
+		{
+			uint8_t * char_memory = *_get_page(0xA0000);
+			uint8_t * attr_memory = *_get_page(0xA2000);
+			_screen_fix_cursor_location(emu);
+			char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
+			attr_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = 0xE1;
+			screen_cursor_x ++;
+			_screen_fix_cursor_location(emu);
+		}
+		break;
+	case X86_PCTYPE_NEC_PC88_VA:
+		{
+			uint8_t * char_memory = *_get_page(0xA6000);
+			uint8_t * attr_memory = necpc88va_v3_memory_mode ? *_get_page(0xAE000) : NULL;
+			_screen_fix_cursor_location(emu);
+			if(!necpc88va_v3_memory_mode)
+			{
+				char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
+				char_memory[screen_cursor_y * 160 + screen_cursor_x * 2 + 1] = 0x07;
+			}
+			else
+			{
+				char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
+				attr_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = 0x07;
+			}
+			screen_cursor_x ++;
+			_screen_fix_cursor_location(emu);
+		}
+		break;
+	case X86_PCTYPE_APRICOT:
+		{
+			uint16_t * memory = (uint16_t *)*_get_page(0xF0000);
+			_screen_fix_cursor_location(emu);
+			memory[screen_cursor_y * 80 + screen_cursor_x] = c + 0x40;
+			screen_cursor_x ++;
+			_screen_fix_cursor_location(emu);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 #include "cpu/x86.list.c"
 
 static inline void setup_x89(x86_state_t * emu, uaddr_t channel_control_block)
@@ -1470,6 +1550,27 @@ void machine_setup(x86_state_t * emu, x86_pc_type_t machine)
 		break;
 	}
 }
+
+// Rudimentary system emulation
+
+enum
+{
+	_X86_SYSTEM_TYPE_CPM80,
+	_X86_SYSTEM_TYPE_CPM86,
+	_X86_SYSTEM_TYPE_MSDOS,
+	_X86_SYSTEM_TYPE_LINUX,
+};
+
+typedef enum x86_system_type_t
+{
+	X86_SYSTEM_TYPE_NONE = 0,
+	X86_SYSTEM_TYPE_CPM80 = 1 << _X86_SYSTEM_TYPE_CPM80,
+	X86_SYSTEM_TYPE_CPM86 = 1 << _X86_SYSTEM_TYPE_CPM86,
+	X86_SYSTEM_TYPE_MSDOS = 1 << _X86_SYSTEM_TYPE_MSDOS,
+	X86_SYSTEM_TYPE_LINUX = 1 << _X86_SYSTEM_TYPE_LINUX,
+} x86_system_type_t;
+
+static x86_system_type_t system_type = X86_SYSTEM_TYPE_NONE;
 
 static inline _Noreturn void fread_failed(void)
 {
@@ -1666,6 +1767,11 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		x86_memory_write8(emu, address++, c);
 	}
 
+	if(x86_is_emulation_mode(emu))
+		system_type |= X86_SYSTEM_TYPE_CPM80;
+	else
+		system_type |= X86_SYSTEM_TYPE_MSDOS;
+
 	return address;
 }
 
@@ -1748,6 +1854,8 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	uint16_t image_size = fread16le(input);
 
 	load_prl_body(emu, input, file_offset + 0x100L, address, registers->ip, image_size);
+
+	system_type |= X86_SYSTEM_TYPE_CPM80;
 
 	return address + image_size;
 }
@@ -1836,6 +1944,8 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 		registers->sp = 0;
 	}
 
+	system_type |= X86_SYSTEM_TYPE_CPM80;
+
 	return address;
 }
 
@@ -1923,6 +2033,8 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 	registers->cs += cs;
 	registers->ip_given = true;
 	registers->ip = ip;
+
+	system_type |= X86_SYSTEM_TYPE_MSDOS;
 
 	return address + image_size;
 }
@@ -2152,7 +2264,27 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		}
 	}
 
+	system_type |= X86_SYSTEM_TYPE_CPM86;
+
 	return address;
+}
+
+static void _dos_putchar(x86_state_t * emu, int c)
+{
+	(void) emu;
+
+	switch(c)
+	{
+	case 0x0A:
+		screen_cursor_y ++;
+		break;
+	case 0x0D:
+		screen_cursor_x = 0;
+		break;
+	default:
+		_screen_putchar(emu, c);
+		break;
+	}
 }
 
 void usage_cpu(void)
@@ -2832,7 +2964,7 @@ int main(int argc, char * argv[])
 	emu->parser->use_nec_syntax = x86_is_nec(emu);
 	emu->x80.parser->use_intel8080_syntax = emu->cpu_type == X86_CPU_V20;
 
-printf("ok %d\n", emu->x80.cpu_method);
+//printf("ok %d\n", emu->x80.cpu_method);
 
 	x86_reset(emu, true);
 
@@ -3652,6 +3784,87 @@ break;
 //			fprintf(stderr, "CPU halted\n");
 			break;
 		case X86_RESULT_CPU_INTERRUPT:
+			fprintf(stderr, "Interrupt 0x%02X\n", X86_RESULT_VALUE(result));
+			switch(X86_RESULT_VALUE(result))
+			{
+			case 0x20:
+				if((system_type & X86_SYSTEM_TYPE_MSDOS))
+				{
+					fprintf(stderr, "MS-DOS exit\n");
+					exit(0);
+				}
+				break;
+			case 0x21:
+				if((system_type & X86_SYSTEM_TYPE_MSDOS))
+				{
+					switch(emu->ah)
+					{
+					case 0x00:
+						fprintf(stderr, "MS-DOS exit\n");
+						exit(0);
+						break;
+					case 0x02:
+						_dos_putchar(emu, emu->dl);
+						_display_screen(emu);
+						break;
+					case 0x09:
+						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+						{
+							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
+							if(value == '$')
+								break;
+							_dos_putchar(emu, value);
+						}
+						_display_screen(emu);
+						break;
+					case 0x4C:
+						fprintf(stderr, "MS-DOS exit\n");
+						exit(emu->al);
+						break;
+					default:
+						fprintf(stderr, "MS-DOS API call AH=%02X\n", emu->ah);
+						exit(0);
+					}
+					x86_return_interrupt16(emu);
+				}
+				break;
+			case 0x80:
+				if((system_type & X86_SYSTEM_TYPE_LINUX))
+				{
+					exit(0);
+				}
+				break;
+			case 0xE0:
+				if((system_type & X86_SYSTEM_TYPE_CPM86))
+				{
+					switch(emu->cl)
+					{
+					case 0x00:
+						fprintf(stderr, "CP/M-86 exit\n");
+						exit(0);
+						break;
+					case 0x02:
+						_dos_putchar(emu, emu->dl);
+						_display_screen(emu);
+						break;
+					case 0x09:
+						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+						{
+							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
+							if(value == '$')
+								break;
+							_dos_putchar(emu, value);
+						}
+						_display_screen(emu);
+						break;
+					default:
+						fprintf(stderr, "CP/M-86 API call CL=%02X\n", emu->cl);
+						exit(0);
+					}
+					x86_return_interrupt16(emu);
+				}
+				break;
+			}
 			break;
 		case X86_RESULT_ICE_INTERRUPT:
 			break;
