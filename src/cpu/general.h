@@ -109,6 +109,7 @@ static inline uint32_t x86_memory_segmented_read32_exec(x86_state_t * emu, x86_s
 static inline void x86_input(x86_state_t * emu, uint16_t port, uint16_t count, void * buffer);
 static inline void x86_output(x86_state_t * emu, uint16_t port, uint16_t count, const void * buffer);
 
+static inline void x86_prefetch_queue_rewind(x86_state_t * emu);
 static inline void x86_prefetch_queue_flush(x86_state_t * emu);
 static inline void x86_prefetch_queue_fill(x86_state_t * emu);
 

@@ -652,6 +652,13 @@ static inline void x86_memory_write_system(x86_state_t * emu, uaddr_t address, u
 
 // prefetch queue handling
 
+static inline void x86_prefetch_queue_rewind(x86_state_t * emu)
+{
+	// note: (R)IP must also be reset, otherwise the queue will be invalid
+	emu->prefetch_queue_data_size += emu->prefetch_queue_data_offset;
+	emu->prefetch_queue_data_offset = 0;
+}
+
 static inline void x86_prefetch_queue_flush(x86_state_t * emu)
 {
 	emu->prefetch_queue_data_size = 0;

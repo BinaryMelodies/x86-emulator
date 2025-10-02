@@ -1310,8 +1310,8 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 		x86_parse(prs);
 		prs->current_position = old_xip; // TODO
 
-		emu->prefetch_queue_data_offset = 0; // reset the prefetch queue to the starting position
-		// TODO: this messes up the prefetch queue
+		// reset the prefetch queue to the starting position
+		x86_prefetch_queue_rewind(emu);
 	}
 }
 
