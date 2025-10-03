@@ -2029,6 +2029,7 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 			emu->sr[segnum].access &= ~X86_DESC_D;
 		}
 		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		emu->sr[X86_R_CS].access |= X86_DESC_X;
 		// turn off virtual 8086 mode (386)
 		emu->vm = 0;
 		// turn on protected mode (286)
@@ -2044,6 +2045,7 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 			emu->sr[segnum].limit = 0xFFFFFFFF;
 		}
 		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		emu->sr[X86_R_CS].access |= X86_DESC_X;
 		// turn off virtual 8086 mode (386)
 		emu->vm = 0;
 		// turn on protected mode (286)
@@ -2058,6 +2060,7 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 			emu->sr[segnum].access &= ~X86_DESC_D;
 		}
 		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		emu->sr[X86_R_CS].access |= X86_DESC_X;
 		// turn off virtual 8086 mode (386)
 		emu->vm = 0;
 		// turn on protected mode (286)
@@ -2072,6 +2075,7 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 			emu->sr[segnum].access |= X86_DESC_D;
 		}
 		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		emu->sr[X86_R_CS].access |= X86_DESC_X;
 		// turn off virtual 8086 mode (386)
 		emu->vm = 0;
 		// turn on protected mode (286)
@@ -2083,6 +2087,7 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 		// make the segment 64-bit (x64)
 		emu->sr[X86_R_CS].access &= ~X86_DESC_D;
 		emu->sr[X86_R_CS].access |= X86_DESC_L;
+		emu->sr[X86_R_CS].access |= X86_DESC_X;
 		// turn off virtual 8086 mode (386)
 		emu->vm = 0;
 		// turn on protected mode (286)
@@ -2140,6 +2145,8 @@ struct load_registers
 	uoff_t ip;
 	bool sp_given;
 	uoff_t sp;
+	bool cpl_given;
+	uoff_t cpl;
 };
 
 uaddr_t load_bin(x86_state_t * emu, FILE * input, long file_offset, struct load_registers * registers, size_t maximum)
@@ -3008,6 +3015,9 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 	}
 
 	system_type |= X86_SYSTEM_TYPE_LINUX;
+
+	registers->cpl_given = true;
+	registers->cpl = 3;
 	emu->capture_transitions = true; // do not execute interrupts
 
 	return 0;
@@ -3020,10 +3030,16 @@ static void dos_putchar(x86_state_t * emu, int c)
 	switch(c)
 	{
 	case 0x0A:
-		screen_cursor_y ++;
+		if(pc_type == X86_PCTYPE_NONE)
+			bios_screen_putchar(emu, c);
+		else
+			screen_cursor_y ++;
 		break;
 	case 0x0D:
-		screen_cursor_x = 0;
+		if(pc_type == X86_PCTYPE_NONE)
+			bios_screen_putchar(emu, c);
+		else
+			screen_cursor_x = 0;
 		break;
 	default:
 		bios_screen_putchar(emu, c);
@@ -4118,25 +4134,40 @@ int main(int argc, char * argv[])
 
 	case EXEC_PM16:
 	case EXEC_CM16:
+		if(!registers.cpl_given)
+		{
+			registers.cpl = 0;
+		}
+		else
+		{
+			registers.cpl &= 3;
+		}
+
 		if(!registers.cs_given)
 		{
 			registers.cs = 0x1000;
 		}
 
+		emu->cpl = registers.cpl;
+
 		emu->xip = registers.ip & 0xFFFF;
-		emu->sr[X86_R_CS].selector = 0x08;
+		emu->sr[X86_R_CS].selector = 0x08 | registers.cpl;
 		emu->sr[X86_R_CS].base = registers.cs << 4;
 		if(!registers.ss_given)
 			registers.ss = registers.ds_given ? registers.ds : registers.cs;
-		emu->sr[X86_R_SS].selector = 0x10;
+		emu->sr[X86_R_SS].selector = 0x10 | registers.cpl;
 		emu->sr[X86_R_SS].base = registers.ss << 4;
 		if(!registers.ds_given)
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
-		selector = registers.ss_given && registers.ds_given ? 0x18 : 0x10;
+		selector = (registers.ss_given && registers.ds_given ? 0x18 : 0x10) | registers.cpl;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
 			emu->sr[segnum].selector = selector;
 			emu->sr[segnum].base = registers.ds << 4;
+		}
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access |= registers.cpl << 13;
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
@@ -4144,31 +4175,55 @@ int main(int argc, char * argv[])
 
 	case EXEC_PM32:
 	case EXEC_CM32:
+		if(!registers.cpl_given)
+		{
+			registers.cpl = 0;
+		}
+		else
+		{
+			registers.cpl &= 3;
+		}
+
 		if(!registers.cs_given)
 		{
 			registers.cs = 0;
 		}
 
+		emu->cpl = registers.cpl;
+
 		emu->xip = registers.ip & 0xFFFFFFFF;
-		emu->sr[X86_R_CS].selector = 0x08;
+		emu->sr[X86_R_CS].selector = 0x08 | registers.cpl;
 		emu->sr[X86_R_CS].base = registers.cs << 4;
 		if(!registers.ss_given)
 			registers.ss = registers.ds_given ? registers.ds : registers.cs;
-		emu->sr[X86_R_SS].selector = 0x10;
+		emu->sr[X86_R_SS].selector = 0x10 | registers.cpl;
 		emu->sr[X86_R_SS].base = registers.ss << 4;
 		if(!registers.ds_given)
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
-		selector = registers.ss_given && registers.ds_given ? 0x18 : 0x10;
+		selector = (registers.ss_given && registers.ds_given ? 0x18 : 0x10) | registers.cpl;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
 			emu->sr[segnum].selector = selector;
 			emu->sr[segnum].base = registers.ds << 4;
+		}
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access |= registers.cpl << 13;
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
 		break;
 
 	case EXEC_LM64:
+		if(!registers.cpl_given)
+		{
+			registers.cpl = 0;
+		}
+		else
+		{
+			registers.cpl &= 3;
+		}
+
 		if(registers.cs_given)
 		{
 			registers.ip += registers.cs;
@@ -4179,12 +4234,18 @@ int main(int argc, char * argv[])
 			registers.sp += registers.ss;
 		}
 
+		emu->cpl = registers.cpl;
+
 		emu->xip = registers.ip + (registers.cs_given ? registers.cs << 4 : 0);
-		emu->sr[X86_R_CS].selector = 0x08;
-		emu->sr[X86_R_SS].selector = 0x10 + (registers.ss_given ? registers.ss << 4 : 0);
+		emu->sr[X86_R_CS].selector = 0x08 | registers.cpl;
+		emu->sr[X86_R_SS].selector = 0x10 | registers.cpl;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
-			emu->sr[segnum].selector = 0x10;
+			emu->sr[segnum].selector = 0x10 | registers.cpl;
+		}
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access |= registers.cpl << 13;
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
@@ -4317,6 +4378,7 @@ int main(int argc, char * argv[])
 		if(wait_for_interrupt == WAIT_NOTHING)
 		{
 			x86_result_t result = x86_step(emu);
+			bool is_cpu_interrupt = false;
 			switch(X86_RESULT_TYPE(result))
 			{
 			case X86_RESULT_SUCCESS:
@@ -4327,6 +4389,9 @@ int main(int argc, char * argv[])
 	//			fprintf(stderr, "CPU halted\n");
 				break;
 			case X86_RESULT_CPU_INTERRUPT:
+				is_cpu_interrupt = true;
+				__attribute__((fallthrough));
+			case X86_RESULT_INTERRUPT:
 				switch(X86_RESULT_VALUE(result))
 				{
 				default:
@@ -4354,7 +4419,8 @@ int main(int argc, char * argv[])
 						case 0x02:
 							dos_putchar(emu, emu->dl);
 							_display_screen(emu);
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x06:
 							if(emu->dl != 0xFF)
@@ -4375,7 +4441,8 @@ int main(int argc, char * argv[])
 									emu->zf = X86_FL_ZF;
 								}
 							}
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x07:
 							wait_for_interrupt = WAIT_MSDOS_21_07;
@@ -4392,7 +4459,8 @@ int main(int argc, char * argv[])
 								dos_putchar(emu, value);
 							}
 							_display_screen(emu);
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x0B:
 							if(dos_key_available())
@@ -4403,7 +4471,8 @@ int main(int argc, char * argv[])
 							{
 								emu->al = 0x00;
 							}
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x4C:
 							fprintf(stderr, "MS-DOS exit\n");
@@ -4455,7 +4524,8 @@ int main(int argc, char * argv[])
 						case 0x02:
 							dos_putchar(emu, emu->dl);
 							_display_screen(emu);
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x06:
 							if(emu->dl != 0xFF)
@@ -4475,7 +4545,8 @@ int main(int argc, char * argv[])
 								}
 								emu->bx = emu->ax;
 							}
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x09:
 							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
@@ -4486,7 +4557,8 @@ int main(int argc, char * argv[])
 								dos_putchar(emu, value);
 							}
 							_display_screen(emu);
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						case 0x0B:
 							if(dos_key_available())
@@ -4498,7 +4570,8 @@ int main(int argc, char * argv[])
 								emu->al = 0x00;
 							}
 							emu->bx = emu->ax;
-							x86_return_interrupt16(emu);
+							if(is_cpu_interrupt)
+								x86_return_interrupt16(emu);
 							break;
 						default:
 							fprintf(stderr, "CP/M-86 API call CL=%02X\n", emu->cl);
@@ -4519,6 +4592,33 @@ int main(int argc, char * argv[])
 			case X86_RESULT_INHIBIT_INTERRUPTS:
 				inhibit_interrupts = true;
 				break;
+			case X86_RESULT_UNDEFINED:
+				fprintf(stderr, "Undefined instruction\n");
+				break;
+			case X86_RESULT_FAR_JUMP:
+				fprintf(stderr, "Captured far jump\n");
+				exit(0);
+			case X86_RESULT_FAR_CALL:
+				fprintf(stderr, "Captured far call\n");
+				exit(0);
+			case X86_RESULT_FAR_RETURN:
+				fprintf(stderr, "Captured far return\n");
+				exit(0);
+			case X86_RESULT_INTERRUPT_RETURN:
+				fprintf(stderr, "Captured return from interrupt\n");
+				exit(0);
+			case X86_RESULT_SYSENTER:
+				fprintf(stderr, "Captured far SYSENTER\n");
+				exit(0);
+			case X86_RESULT_SYSEXIT:
+				fprintf(stderr, "Captured far SYSEXIT\n");
+				exit(0);
+			case X86_RESULT_SYSCALL:
+				fprintf(stderr, "Captured far SYSCALL\n");
+				exit(0);
+			case X86_RESULT_SYSRET:
+				fprintf(stderr, "Captured far SYSRET\n");
+				exit(0);
 			}
 			if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 			{

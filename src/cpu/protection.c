@@ -2358,7 +2358,7 @@ static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int except
 
 	if(emu->capture_transitions)
 	{
-		emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception & 0xFF);
+		emu->emulation_result = X86_RESULT(X86_RESULT_INTERRUPT, exception & 0xFF);
 		longjmp(emu->exc[emu->fetch_mode], 1);
 	}
 
