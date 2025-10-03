@@ -1589,7 +1589,7 @@ static inline uint8_t fread8(FILE * input)
 static inline uint16_t fread16le(FILE * input)
 {
 	uint16_t value;
-	if(fread(&value, 2, 1, input) != 2)
+	if(fread(&value, 2, 1, input) != 1)
 		fread_failed();
 	return le16toh(value);
 }
@@ -1597,7 +1597,7 @@ static inline uint16_t fread16le(FILE * input)
 static inline uint32_t fread32le(FILE * input)
 {
 	uint32_t value;
-	if(fread(&value, 4, 1, input) != 4)
+	if(fread(&value, 4, 1, input) != 1)
 		fread_failed();
 	return le32toh(value);
 }
