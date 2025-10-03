@@ -1229,13 +1229,13 @@ X80_OPERAND_CODE = {
 		'format':  ("c", []),
 	},
 	'D': {
-		'read':   "x86_get_high(emu->bank[emu->main_bank].bc)",
-		'write':  "x86_set_high(&emu->bank[emu->main_bank].bc, $$)",
+		'read':   "x86_get_high(emu->bank[emu->main_bank].de)",
+		'write':  "x86_set_high(&emu->bank[emu->main_bank].de, $$)",
 		'format':  ("d", []),
 	},
 	'E': {
-		'read':   "x86_get_low(emu->bank[emu->main_bank].bc)",
-		'write':  "x86_set_low(&emu->bank[emu->main_bank].bc, $$)",
+		'read':   "x86_get_low(emu->bank[emu->main_bank].de)",
+		'write':  "x86_set_low(&emu->bank[emu->main_bank].de, $$)",
 		'format':  ("e", []),
 	},
 	'H': {
