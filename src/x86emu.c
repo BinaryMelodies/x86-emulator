@@ -3007,6 +3007,8 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 		}
 	}
 
+	system_type |= X86_SYSTEM_TYPE_LINUX;
+
 	return 0;
 }
 
@@ -4171,6 +4173,20 @@ int main(int argc, char * argv[])
 			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 4, 0xEE00);
 			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 6, 0x0000);
 		}
+		emu->gdtr.base = emu->idtr.base + 256 * 8;
+		emu->gdtr.limit = registers.ss_given && registers.ds_given ? 0x1F : 0x17;
+		x86_memory_write16(emu, emu->gdtr.base + 8,     0x0000);
+		x86_memory_write32(emu, emu->gdtr.base + 8 + 2, (emu->sr[X86_R_CS].base & 0x00FFFFFF) | 0x9A000000);
+		x86_memory_write16(emu, emu->gdtr.base + 8 + 6, ((emu->sr[X86_R_CS].base & 0xFF000000) >> 16) | 0x00CF);
+		x86_memory_write16(emu, emu->gdtr.base + 16,     0x0000);
+		x86_memory_write32(emu, emu->gdtr.base + 16 + 2, (emu->sr[X86_R_SS].base & 0x00FFFFFF) | 0x92000000);
+		x86_memory_write16(emu, emu->gdtr.base + 16 + 6, ((emu->sr[X86_R_SS].base & 0xFF000000) >> 16) | 0x00CF);
+		if(registers.ss_given && registers.ds_given)
+		{
+			x86_memory_write16(emu, emu->gdtr.base + 24,     0x0000);
+			x86_memory_write32(emu, emu->gdtr.base + 24 + 2, (emu->sr[X86_R_DS].base & 0x00FFFFFF) | 0x92000000);
+			x86_memory_write16(emu, emu->gdtr.base + 24 + 6, ((emu->sr[X86_R_DS].base & 0xFF000000) >> 16) | 0x00CF);
+		}
 		break;
 
 	case EXEC_LM64:
@@ -4423,6 +4439,7 @@ int main(int argc, char * argv[])
 				case 0x80:
 					if((system_type & X86_SYSTEM_TYPE_LINUX))
 					{
+						fprintf(stderr, "Linux system call EAH=%08X\n", emu->eax);
 						exit(0);
 					}
 					break;
