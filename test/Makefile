@@ -1,12 +1,25 @@
 
-all: 86.img 286.img 386.img x64.img cpu.com testv33.img testv25.img testv55.img testx87.com testscr.com testtext.com testkbd.com testpcjr.jrc testact.img testpc88.img testrel.bin dos.com
-# testi89.bin testv20.img
+all:
+	make -C boot all
+	make -C cpu all
+	make -C pc all
+	make -C msdos all
+	make -C cpm80 all
 
 clean:
-	rm -rf *.img *.com *.jrc *.hex *.bin
+	make -C boot clean
+	make -C cpu clean
+	make -C pc clean
+	make -C msdos clean
+	make -C cpm80 clean
 
 distclean: clean
 	rm -rf *~
+	make -C boot distclean
+	make -C cpu distclean
+	make -C pc distclean
+	make -C msdos distclean
+	make -C cpm80 distclean
 
 86.img: boot.asm
 	nasm -fbin $< -o $@ -DOS86=1

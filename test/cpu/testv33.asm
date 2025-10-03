@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -c v33 test/testv33.img
+; - x86emu -c v33 test/cpu/testv33.img
 
 %macro	brkxa	1
 	db	0x0F, 0xE0, %1

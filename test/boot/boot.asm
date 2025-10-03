@@ -1,9 +1,9 @@
 
 ; Launch using:
-; - x86emu test/86.img
-; - x86emu test/286.img
-; - x86emu test/386.img
-; - x86emu test/x64.img
+; - x86emu test/boot/8086.img
+; - x86emu test/boot/286.img
+; - x86emu test/boot/386.img
+; - x86emu test/boot/x86-64.img
 
 %macro	_descriptor	3
 	dw	(%2) & 0xFFFF, (%1) & 0xFFFF, (((%1) >> 16) & 0x00FF) | (((%3) & 0x00FF) << 8), (((%2) >> 16) & 0x000F) | (((%3) & 0xF000) >> 8) | (((%1) >> 16) & 0xFF00)

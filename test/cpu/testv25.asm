@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -c v25 test/testv25.img
+; - x86emu -c v25 test/cpu/testv25.img
 
 %macro	brkcs	1
 %ifidn	%1, ax

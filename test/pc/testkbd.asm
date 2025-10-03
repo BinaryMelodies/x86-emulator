@@ -1,8 +1,8 @@
 
 ; Launch using:
-; - x86emu -P mda test/testkbd.com
-; - x86emu -P cga test/testkbd.com
-; - x86emu -P pc98 test/testkbd.com
+; - x86emu -P mda  test/pc/testkbd.com
+; - x86emu -P cga  test/pc/testkbd.com
+; - x86emu -P pc98 test/pc/testkbd.com
 
 MACH_IBMPC_MDA	equ	1
 MACH_IBMPC_CGA	equ	2

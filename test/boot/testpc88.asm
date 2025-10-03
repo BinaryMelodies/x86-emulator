@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -P pc88va test/testpc88.img
+; - x86emu -P pc88va test/boot/testpc88.img
 
 ; PC-88 VA boot
 

@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -c v20 test/testv20.img
+; - x86emu -c v20 test/cpu/testv20.img
 
 %include 'i8080.inc'
 

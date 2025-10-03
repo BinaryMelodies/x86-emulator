@@ -1,11 +1,11 @@
 
 src/cpu/x86.gen.c
 src/cpu/x86.list.c
-test/*.img
-test/*.com
-test/*.jrc
-test/*.bin
-test/*.hex
+*.img
+*.com
+*.jrc
+*.bin
+*.hex
 external/*
 verify/8088
 verify/v20

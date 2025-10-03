@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -c <CPU architecture name> test/cpu.com
+; - x86emu -c <CPU architecture name> test/cpu/cpu.com
 
 ; based on https://www.rcollins.org/ddj/Sep96/Sep96.html
 

@@ -1,6 +1,6 @@
 
 ; Launch using (debugging on to see results):
-; - x86emu -c 8086 -f 8087 -d test/testx87.com
+; - x86emu -c 8086 -f 8087 -d test/cpu/testx87.com
 
 	org	0x100
 

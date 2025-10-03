@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -P pcjr test/testpcjr.jrc
+; - x86emu -P pcjr test/boot/testpcjr.jrc
 
 SEGMENT_VALUE	equ	0x1234
 

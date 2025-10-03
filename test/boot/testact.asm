@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -P act test/testact.img
+; - x86emu -P act test/boot/testact.img
 
 ; Apricot boot
 
@@ -41,3 +41,4 @@ message:
 	db	"Greetings!"
 message_length	equ	$ - message
 
+	times	0x200 - (($ - $$) & 0x1FF)	db	0

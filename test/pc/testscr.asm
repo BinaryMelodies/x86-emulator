@@ -1,10 +1,10 @@
 
 ; Launch using:
-; - x86emu -P mda -O blink   test/testscr.com
-; - x86emu -P mda -O noblink test/testscr.com
-; - x86emu -P cga -O blink   test/testscr.com
-; - x86emu -P cga -O noblink test/testscr.com
-; - x86emu -P pc98           test/testscr.com
+; - x86emu -P mda -O blink   test/pc/testscr.com
+; - x86emu -P mda -O noblink test/pc/testscr.com
+; - x86emu -P cga -O blink   test/pc/testscr.com
+; - x86emu -P cga -O noblink test/pc/testscr.com
+; - x86emu -P pc98           test/pc/testscr.com
 
 MACH_IBMPC_MDA	equ	1
 MACH_IBMPC_CGA	equ	2

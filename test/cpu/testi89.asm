@@ -1,6 +1,6 @@
 
 ; Launch using:
-; - x86emu -m i89 test/testi89.bin
+; - x86emu -m i89 test/cpu/testi89.bin
 
 	org	1000h
 

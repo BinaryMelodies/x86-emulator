@@ -1,8 +1,8 @@
 
 ; Launch using:
-; - x86emu -P mda test/testtext.com
-; - x86emu -P cga test/testtext.com
-; - x86emu -P pcjr test/testtext.com
+; - x86emu -P mda  test/pc/testtext.com
+; - x86emu -P cga  test/pc/testtext.com
+; - x86emu -P pcjr test/pc/testtext.com
 
 MACH_IBMPC_MDA	equ	1
 MACH_IBMPC_CGA	equ	2
