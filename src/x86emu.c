@@ -10,6 +10,12 @@
 #include <termios.h>
 #include <unistd.h>
 
+static inline void x80_return(x86_state_t * emu)
+{
+	emu->x80.pc = x86_memory_read16(emu, emu->ds_cache.base + emu->x80.sp);
+	emu->x80.sp += 2;
+}
+
 //// Terminal control
 
 bool kbd_is_init = false;
@@ -1539,6 +1545,7 @@ static int ibmpc_convert_scancode(int k)
 	return 0;
 }
 
+#if 0
 static int necpc98_convert_scancode(int k)
 {
 	for(unsigned c = 0; c < sizeof necpc98_scancodes / sizeof necpc98_scancodes[0]; c++)
@@ -1548,6 +1555,7 @@ static int necpc98_convert_scancode(int k)
 	}
 	return 0;
 }
+#endif
 
 static struct
 {
@@ -1577,6 +1585,7 @@ static bool dos_key_available(void)
 	return dos_kbd_state.buffer.length > 0;
 }
 
+#if 0
 static int dos_key_peek(void)
 {
 	if(dos_key_available())
@@ -1588,6 +1597,7 @@ static int dos_key_peek(void)
 		return -1;
 	}
 }
+#endif
 
 static int dos_key_get(void)
 {
@@ -3961,6 +3971,8 @@ break;
 		WAIT_CPM80_0005_01, // waiting in CALL 0x0005/C=0x01
 		WAIT_CPM86_E0_01, // waiting in INT 0xE0/CL=0x01
 		WAIT_MSDOS_21_01, // waiting in INT 0x21/AH=0x01
+		WAIT_MSDOS_21_07, // waiting in INT 0x21/AH=0x07
+		WAIT_MSDOS_21_08, // waiting in INT 0x21/AH=0x08
 	} wait_for_interrupt = WAIT_NOTHING;
 
 	while(true)
@@ -4102,6 +4114,12 @@ break;
 							}
 							x86_return_interrupt16(emu);
 							break;
+						case 0x07:
+							wait_for_interrupt = WAIT_MSDOS_21_07;
+							break;
+						case 0x08:
+							wait_for_interrupt = WAIT_MSDOS_21_08;
+							break;
 						case 0x09:
 							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
 							{
@@ -4111,6 +4129,17 @@ break;
 								dos_putchar(emu, value);
 							}
 							_display_screen(emu);
+							x86_return_interrupt16(emu);
+							break;
+						case 0x0B:
+							if(dos_key_available())
+							{
+								emu->al = 0xFF;
+							}
+							else
+							{
+								emu->al = 0x00;
+							}
 							x86_return_interrupt16(emu);
 							break;
 						case 0x4C:
@@ -4138,9 +4167,33 @@ break;
 							fprintf(stderr, "CP/M-86 exit\n");
 							exit(0);
 							break;
+						case 0x01:
+							wait_for_interrupt = WAIT_CPM86_E0_01;
+							break;
 						case 0x02:
 							dos_putchar(emu, emu->dl);
 							_display_screen(emu);
+							x86_return_interrupt16(emu);
+							break;
+						case 0x06:
+							if(emu->dl != 0xFF)
+							{
+								dos_putchar(emu, emu->dl);
+								_display_screen(emu);
+							}
+							else
+							{
+								if(dos_key_available())
+								{
+									emu->al = dos_key_get();
+								}
+								else
+								{
+									emu->al = 0;
+								}
+								emu->bx = emu->ax;
+							}
+							x86_return_interrupt16(emu);
 							break;
 						case 0x09:
 							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
@@ -4151,12 +4204,24 @@ break;
 								dos_putchar(emu, value);
 							}
 							_display_screen(emu);
+							x86_return_interrupt16(emu);
+							break;
+						case 0x0B:
+							if(dos_key_available())
+							{
+								emu->al = 0x01;
+							}
+							else
+							{
+								emu->al = 0x00;
+							}
+							emu->bx = emu->ax;
+							x86_return_interrupt16(emu);
 							break;
 						default:
 							fprintf(stderr, "CP/M-86 API call CL=%02X\n", emu->cl);
 							exit(0);
 						}
-						x86_return_interrupt16(emu);
 					}
 					break;
 				}
@@ -4194,9 +4259,34 @@ break;
 						fprintf(stderr, "CP/M-80 exit\n");
 						exit(0);
 						break;
+					case 0x01:
+						wait_for_interrupt = WAIT_CPM80_0005_01;
+						break;
 					case 0x02:
 						dos_putchar(emu, emu->x80.e);
 						_display_screen(emu);
+						x80_return(emu);
+						break;
+					case 0x06:
+						if(emu->x80.e != 0xFF)
+						{
+							dos_putchar(emu, emu->x80.e);
+							_display_screen(emu);
+						}
+						else
+						{
+							if(dos_key_available())
+							{
+								emu->x80.a = dos_key_get();
+							}
+							else
+							{
+								emu->x80.a = 0;
+							}
+							emu->x80.l = emu->x80.a;
+							emu->x80.h = emu->x80.b;
+						}
+						x80_return(emu);
 						break;
 					case 0x09:
 						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
@@ -4207,14 +4297,25 @@ break;
 							dos_putchar(emu, value);
 						}
 						_display_screen(emu);
+						x80_return(emu);
+						break;
+					case 0x0B:
+						if(dos_key_available())
+						{
+							emu->x80.a = 0x01;
+						}
+						else
+						{
+							emu->x80.a = 0x00;
+						}
+						emu->x80.l = emu->x80.a;
+						emu->x80.h = emu->x80.b;
+						x80_return(emu);
 						break;
 					default:
 						fprintf(stderr, "CP/M-80 API call C=%02X\n", emu->x80.c);
 						exit(0);
 					}
-					// RET
-					emu->x80.pc = x86_memory_read16(emu, emu->ds_cache.base + emu->x80.sp);
-					emu->x80.sp += 2;
 					break;
 				};
 			}
@@ -4316,16 +4417,43 @@ break;
 		case WAIT_NOTHING:
 			break;
 		case WAIT_CPM80_0005_01:
-			// TODO
+			if(dos_key_available())
+			{
+				emu->x80.a = dos_key_get();
+				dos_putchar(emu, emu->x80.a);
+				_display_screen(emu);
+				emu->x80.l = emu->x80.a;
+				emu->x80.h = emu->x80.b;
+				wait_for_interrupt = WAIT_NOTHING;
+				x80_return(emu);
+			}
 			break;
 		case WAIT_CPM86_E0_01:
-			// TODO
+			if(dos_key_available())
+			{
+				emu->al = dos_key_get();
+				dos_putchar(emu, emu->al);
+				_display_screen(emu);
+				emu->bx = emu->ax;
+				wait_for_interrupt = WAIT_NOTHING;
+				x86_return_interrupt16(emu);
+			}
 			break;
 		case WAIT_MSDOS_21_01:
 			if(dos_key_available())
 			{
 				emu->al = dos_key_get();
 				dos_putchar(emu, emu->al);
+				_display_screen(emu);
+				wait_for_interrupt = WAIT_NOTHING;
+				x86_return_interrupt16(emu);
+			}
+			break;
+		case WAIT_MSDOS_21_07:
+		case WAIT_MSDOS_21_08:
+			if(dos_key_available())
+			{
+				emu->al = dos_key_get();
 				_display_screen(emu);
 				wait_for_interrupt = WAIT_NOTHING;
 				x86_return_interrupt16(emu);
