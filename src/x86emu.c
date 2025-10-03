@@ -2967,7 +2967,7 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 	registers->ip_given = true;
 	registers->ip = freadword(input_file);
 	registers->sp_given = true;
-	registers->sp = ei_class == ELFCLASS32 ? 0x40800000 : 0x000040000080000;
+	registers->sp = ei_class == ELFCLASS32 ? 0x40800000 : 0x000002AAAAC00000;
 
 	uint64_t phoff = freadword(input_file);
 	uint64_t shoff = freadword(input_file);
@@ -3040,6 +3040,25 @@ static void dos_putchar(x86_state_t * emu, int c)
 			bios_screen_putchar(emu, c);
 		else
 			screen_cursor_x = 0;
+		break;
+	default:
+		bios_screen_putchar(emu, c);
+		break;
+	}
+}
+
+static void unix_putchar(x86_state_t * emu, int c)
+{
+	(void) emu;
+
+	switch(c)
+	{
+	case 0x0A:
+		screen_cursor_y ++;
+		screen_cursor_x = 0;
+		break;
+	case 0x0D:
+		screen_cursor_x = 0;
 		break;
 	default:
 		bios_screen_putchar(emu, c);
@@ -4493,6 +4512,15 @@ int main(int argc, char * argv[])
 							exit(emu->ebx);
 							break;
 						case X86_32_SYS_WRITE:
+							if(emu->ebx == 1 && pc_type != X86_PCTYPE_NONE)
+							{
+								for(size_t offset = 0; offset < emu->edx; offset++)
+								{
+									unix_putchar(emu, x86_memory_read8(emu, emu->ecx + offset));
+								}
+								_display_screen(emu);
+							}
+							else
 							{
 								char * buffer = malloc(emu->edx);
 								for(size_t offset = 0; offset < emu->edx; offset++)
@@ -4622,6 +4650,15 @@ int main(int argc, char * argv[])
 						exit(emu->rdi);
 						break;
 					case X86_64_SYS_WRITE:
+						if(emu->rdi == 1 && pc_type != X86_PCTYPE_NONE)
+						{
+							for(size_t offset = 0; offset < emu->rdx; offset++)
+							{
+								unix_putchar(emu, x86_memory_read8(emu, emu->rsi + offset));
+							}
+							_display_screen(emu);
+						}
+						else
 						{
 							char * buffer = malloc(emu->rdx);
 							for(size_t offset = 0; offset < emu->rdx; offset++)
