@@ -1886,8 +1886,248 @@ static inline uint32_t fread32le(FILE * input)
 	return le32toh(value);
 }
 
+static inline uint64_t fread64le(FILE * input)
+{
+	uint64_t value;
+	if(fread(&value, 8, 1, input) != 1)
+		fread_failed();
+	return le64toh(value);
+}
+
+typedef enum exec_mode_t
+{
+	// 16-bit real mode (all CPUs)
+	EXEC_RM16 = 1,
+	// 8080 emulation mode (V20, µPD9002 only)
+	EXEC_EM80,
+	// 32-bit real mode (386 and later)
+	EXEC_RM32,
+	// 16-bit protected mode (286 and later)
+	EXEC_PM16,
+	// 32-bit protected mode (386 and later)
+	EXEC_PM32,
+	// 16-bit compatibility mode (x86-64 and later)
+	EXEC_CM16,
+	// 32-bit compatibility mode (x86-64 and later)
+	EXEC_CM32,
+	// 64-bit long mode (x86-64 and later)
+	EXEC_LM64,
+	// full Z80 emulation mode (µPD9002 only)
+	EXEC_FEM80,
+	// 8089 emulation
+	EXEC_I89,
+} exec_mode_t;
+#define EXEC_DEFAULT ((exec_mode_t)0)
+
+static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
+{
+	if(exec_mode == EXEC_DEFAULT)
+	{
+		// leave state as it was in the beginning
+		if(x86_is_emulation_mode(emu))
+		{
+			exec_mode = emu->full_z80_emulation ? EXEC_FEM80 : EXEC_EM80;
+		}
+		else if(x86_is_real_mode(emu))
+		{
+			switch(x86_get_code_size(emu))
+			{
+			case SIZE_32BIT:
+				exec_mode = EXEC_RM32;
+				break;
+			default:
+			case SIZE_16BIT:
+				exec_mode = EXEC_RM16;
+				break;
+			}
+		}
+		else if(x86_is_long_mode_supported(emu))
+		{
+			switch(x86_get_code_size(emu))
+			{
+			default:
+			case SIZE_64BIT:
+				exec_mode = EXEC_LM64;
+				break;
+			case SIZE_32BIT:
+				exec_mode = EXEC_CM32;
+				break;
+			case SIZE_16BIT:
+				exec_mode = EXEC_CM16;
+				break;
+			}
+		}
+		else
+		{
+			switch(x86_get_code_size(emu))
+			{
+			default:
+			case SIZE_32BIT:
+				exec_mode = EXEC_PM32;
+				break;
+			case SIZE_16BIT:
+				exec_mode = EXEC_PM16;
+				break;
+			}
+		}
+	}
+
+	switch(exec_mode)
+	{
+	case EXEC_RM16:
+		// make the segment 16-bit (286)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access &= ~X86_DESC_D;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn off 8080 emulation mode (v20/9002)
+		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+			emu->md = X86_FL_MD;
+		else if(emu->cpu_type == X86_CPU_EXTENDED)
+			emu->md = 0;
+		// turn off protected mode (286)
+		emu->cr[0] &= ~X86_CR0_PE;
+		// turn off long mode (x64)
+		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_EM80:
+		// make the segment 16-bit (286)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access &= ~X86_DESC_D;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn on 8080 emulation mode (v20/9002)
+		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+			emu->md = 0;
+		else if(emu->cpu_type == X86_CPU_EXTENDED)
+			emu->md = X86_FL_MD;
+		emu->md_enabled = true;
+		// turn off protected mode (286)
+		emu->cr[0] &= ~X86_CR0_PE;
+		// turn off long mode (x64)
+		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_RM32:
+		// make the segment 32-bit (386)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access |= X86_DESC_D;
+			emu->sr[segnum].limit = 0xFFFFFFFF;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn off protected mode (286)
+		emu->cr[0] &= ~X86_CR0_PE;
+		// turn off long mode (x64)
+		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_PM16:
+		// make the segment 16-bit (286)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access &= ~X86_DESC_D;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn off virtual 8086 mode (386)
+		emu->vm = 0;
+		// turn on protected mode (286)
+		emu->cr[0] |= X86_CR0_PE;
+		// turn off long mode (x64)
+		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_PM32:
+		// make the segment 32-bit (386)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access |= X86_DESC_D;
+			emu->sr[segnum].limit = 0xFFFFFFFF;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn off virtual 8086 mode (386)
+		emu->vm = 0;
+		// turn on protected mode (286)
+		emu->cr[0] |= X86_CR0_PE;
+		// turn off long mode (x64)
+		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_CM16:
+		// make the segment 16-bit (286)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access &= ~X86_DESC_D;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn off virtual 8086 mode (386)
+		emu->vm = 0;
+		// turn on protected mode (286)
+		emu->cr[0] |= X86_CR0_PE;
+		// turn on long mode (x64)
+		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
+		break;
+	case EXEC_CM32:
+		// make the segment 32-bit (386)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access |= X86_DESC_D;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn off virtual 8086 mode (386)
+		emu->vm = 0;
+		// turn on protected mode (286)
+		emu->cr[0] |= X86_CR0_PE;
+		// turn on long mode (x64)
+		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
+		break;
+	case EXEC_LM64:
+		// make the segment 64-bit (x64)
+		emu->sr[X86_R_CS].access &= ~X86_DESC_D;
+		emu->sr[X86_R_CS].access |= X86_DESC_L;
+		// turn off virtual 8086 mode (386)
+		emu->vm = 0;
+		// turn on protected mode (286)
+		emu->cr[0] |= X86_CR0_PE;
+		// turn on long mode (x64)
+		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
+		break;
+	case EXEC_FEM80:
+		// make the segment 16-bit (286)
+		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].access &= ~X86_DESC_D;
+		}
+		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
+		// turn on 8080 emulation mode (v20/9002)
+		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+			emu->md = 0;
+		else if(emu->cpu_type == X86_CPU_EXTENDED)
+			emu->md = X86_FL_MD;
+		emu->md_enabled = true;
+		emu->full_z80_emulation = true;
+		// turn off protected mode (286)
+		emu->cr[0] &= ~X86_CR0_PE;
+		// turn off long mode (x64)
+		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_I89:
+		setup_x89(emu, 0x00500);
+
+		// place CPU in infinite loop
+		emu->xip = 0;
+		emu->sr[X86_R_CS].selector = 0x40;
+		emu->sr[X86_R_CS].base = 0x40 << 4;
+		x86_memory_write8_external(emu, 0x400, 0xF4); // hlt
+		x86_memory_write8_external(emu, 0x401, 0xEB); // jmp
+		x86_memory_write8_external(emu, 0x402, 0xFD); // -3
+		break;
+	}
+
+	return exec_mode;
+}
+
 struct load_registers
 {
+	exec_mode_t exec_mode;
 	bool cs_given;
 	uoff_t cs;
 	bool ss_given;
@@ -1965,6 +2205,9 @@ uaddr_t load_apricot_disk(x86_state_t * emu, FILE * input, long file_offset, str
 		x86_memory_write8(emu, address++, c);
 	}
 
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_RM16;
+
 	return address;
 }
 
@@ -1988,9 +2231,13 @@ uaddr_t load_pcjr(x86_state_t * emu, FILE * input, long file_offset, struct load
 		x86_memory_write8(emu, address++, c);
 	}
 
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_RM16;
+
 	return address;
 }
 
+// for either CP/M-80 or MS-DOS
 uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_registers * registers)
 {
 	uaddr_t address;
@@ -2051,14 +2298,20 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		x86_memory_write8(emu, address++, c);
 	}
 
-	if(x86_is_emulation_mode(emu))
-		system_type |= X86_SYSTEM_TYPE_CPM80;
-	else
+	if(registers->exec_mode != EXEC_EM80 && registers->exec_mode != EXEC_FEM80)
+	{
+		registers->exec_mode = EXEC_RM16;
 		system_type |= X86_SYSTEM_TYPE_MSDOS;
+	}
+	else
+	{
+		system_type |= X86_SYSTEM_TYPE_CPM80;
+	}
 
 	return address;
 }
 
+// for CP/M
 void load_prl_body(x86_state_t * emu, FILE * input, long file_offset, uoff_t address, uint16_t relocation_address, uint16_t length)
 {
 	fseek(input, file_offset, SEEK_SET);
@@ -2138,6 +2391,9 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	uint16_t image_size = fread16le(input);
 
 	load_prl_body(emu, input, file_offset + 0x100L, address, registers->ip, image_size);
+
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_EM80;
 
 	system_type |= X86_SYSTEM_TYPE_CPM80;
 
@@ -2228,11 +2484,15 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 		registers->sp = 0;
 	}
 
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_EM80;
+
 	system_type |= X86_SYSTEM_TYPE_CPM80;
 
 	return address;
 }
 
+// for MS-DOS
 uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct load_registers * registers)
 {
 	uaddr_t address;
@@ -2319,6 +2579,9 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 	registers->ip = ip;
 
 	system_type |= X86_SYSTEM_TYPE_MSDOS;
+
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_RM16;
 
 	return address + image_size;
 }
@@ -2550,7 +2813,201 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 	system_type |= X86_SYSTEM_TYPE_CPM86;
 
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_RM16;
+
 	return address;
+}
+
+// for ELF
+
+enum
+{
+	EV_CURRENT = 1,
+};
+
+enum ei_class_t
+{
+	ELFCLASSNONE,
+	ELFCLASS32,
+	ELFCLASS64,
+};
+static enum ei_class_t ei_class;
+
+enum ei_data_t
+{
+	ELFDATANONE,
+	ELFDATA2LSB,
+	ELFDATA2MSB,
+};
+
+enum e_machine_t
+{
+	EM_386 = 3,
+	EM_X86_64 = 62,
+	EM_Z80 = 220,
+};
+
+enum
+{
+	PT_LOAD = 1,
+};
+
+enum
+{
+	X86_32_SYS_EXIT = 1,
+	X86_32_SYS_READ = 3,
+	X86_32_SYS_WRITE = 4,
+	X86_32_SYS_OPEN = 5,
+	X86_32_SYS_CLOSE = 6,
+	X86_32_SYS_CREAT = 8,
+	X86_32_SYS_UNLINK = 10,
+	X86_32_SYS_EXECVE = 11,
+	X86_32_SYS_CHDIR = 12,
+	X86_32_SYS_LSEEK = 19,
+	X86_32_SYS_TIMES = 43,
+	X86_32_SYS_BRK = 45,
+
+	X86_64_SYS_EXIT = 60,
+	X86_64_SYS_READ = 0,
+	X86_64_SYS_WRITE = 1,
+	X86_64_SYS_OPEN = 2,
+	X86_64_SYS_CLOSE = 3,
+	X86_64_SYS_UNLINK = 87,
+	X86_64_SYS_EXECVE = 59,
+	X86_64_SYS_CHDIR = 80,
+	X86_64_SYS_LSEEK = 8,
+	X86_64_SYS_TIMES = 100,
+	X86_64_SYS_BRK = 12,
+};
+
+static inline uint16_t freadword(FILE * input)
+{
+	return ei_class == ELFCLASS64 ? fread64le(input) : fread32le(input);
+}
+
+uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct load_registers * registers)
+{
+	fseek(input_file, file_offset + 4, SEEK_SET);
+
+	ei_class = fgetc(input_file);
+
+	switch(ei_class)
+	{
+	case ELFCLASS32:
+		// 32-bit
+		break;
+	case ELFCLASS64:
+		// 64-bit
+		break;
+	default:
+		fprintf(stderr, "Invalid ELF class\n");
+		exit(1);
+	}
+
+	if(fgetc(input_file) != ELFDATA2LSB)
+	{
+		fprintf(stderr, "Invalid ELF data format\n");
+		exit(1);
+	}
+
+	if(fgetc(input_file) != EV_CURRENT)
+	{
+		fprintf(stderr, "Invalid ELF header version\n");
+		exit(1);
+	}
+
+	fseek(input_file, 0x10L, SEEK_SET);
+
+	uint16_t type = fread16le(input_file);
+
+	if(type != 2)
+	{
+		fprintf(stderr, "Not executable\n");
+		exit(1);
+	}
+
+	enum e_machine_t e_machine = fread16le(input_file);
+
+	switch(e_machine)
+	{
+	case EM_386:
+		// 32-bit (or 16-bit)
+		if(registers->exec_mode == EXEC_DEFAULT)
+			registers->exec_mode = EXEC_PM32;
+		break;
+	case EM_X86_64:
+		// 64-bit
+		if(registers->exec_mode == EXEC_DEFAULT)
+			registers->exec_mode = EXEC_LM64;
+		break;
+	case EM_Z80:
+		// 8-bit
+		if(registers->exec_mode == EXEC_DEFAULT)
+			registers->exec_mode = EXEC_EM80;
+		break;
+	default:
+		fprintf(stderr, "Invalid machine type\n");
+		exit(1);
+	}
+
+	if(fread32le(input_file) != EV_CURRENT)
+	{
+		fprintf(stderr, "Invalid object version\n");
+		exit(1);
+	}
+
+	registers->ip_given = true;
+	registers->ip = freadword(input_file);
+	registers->sp_given = true;
+	registers->sp = ei_class == ELFCLASS32 ? 0x40800000 : 0x000040000080000;
+
+	uint64_t phoff = freadword(input_file);
+	uint64_t shoff = freadword(input_file);
+	(void) shoff;
+
+	uint32_t flags = fread32le(input_file);
+	(void) flags;
+
+	fseek(input_file, 2L, SEEK_CUR);
+
+	uint16_t phentsize = fread16le(input_file);
+	uint16_t phnum = fread16le(input_file);
+	uint16_t shentsize = fread16le(input_file);
+	(void) shentsize;
+	uint16_t shnum = fread16le(input_file);
+	(void) shnum;
+
+	for(uint16_t i = 0; i < phnum; i++)
+	{
+		fseek(input_file, phoff + i * phentsize, SEEK_SET);
+		uint32_t type = fread32le(input_file);
+		if(type == PT_LOAD)
+		{
+			if(ei_class == ELFCLASS64)
+				fseek(input_file, 4, SEEK_CUR); // skip flags
+
+			uint64_t offset = freadword(input_file);
+			uint64_t v_address = freadword(input_file);
+
+			fseek(input_file, ei_class == ELFCLASS32 ? 4 : 8, SEEK_CUR); // skip p_address
+
+			uint64_t filesize = freadword(input_file);
+
+			fseek(input_file, offset, SEEK_SET);
+
+			for(uint64_t offset = 0; offset < filesize; offset++)
+			{
+				uint64_t address = v_address + offset;
+
+				char c = fgetc(input_file);
+
+				x86_memory_write8(emu, address, c);
+			}
+		}
+	}
+
+	return 0;
 }
 
 static void dos_putchar(x86_state_t * emu, int c)
@@ -2731,30 +3188,9 @@ int main(int argc, char * argv[])
 {
 	x86_state_t emu[1];
 	bool option_debug = false;
-	enum
-	{
-		EXEC_DEFAULT,
-		// 16-bit real mode (all CPUs)
-		EXEC_RM16,
-		// 8080 emulation mode (V20, µPD9002 only)
-		EXEC_EM80,
-		// 32-bit real mode (386 and later)
-		EXEC_RM32,
-		// 16-bit protected mode (286 and later)
-		EXEC_PM16,
-		// 32-bit protected mode (386 and later)
-		EXEC_PM32,
-		// 16-bit compatibility mode (x86-64 and later)
-		EXEC_CM16,
-		// 32-bit compatibility mode (x86-64 and later)
-		EXEC_CM32,
-		// 64-bit long mode (x86-64 and later)
-		EXEC_LM64,
-		// full Z80 emulation mode (µPD9002 only)
-		EXEC_FEM80,
-		// 8089 emulation
-		EXEC_I89,
-	} exec_mode = EXEC_DEFAULT;
+	struct load_registers registers;
+	memset(&registers, 0, sizeof registers);
+	registers.exec_mode = EXEC_DEFAULT;
 
 	const char * inputfile = NULL;
 
@@ -2926,46 +3362,46 @@ int main(int argc, char * argv[])
 				char * arg = argv[argi][2] ? &argv[argi][2] : argv[++argi];
 				if(strcasecmp(arg, "rm16") == 0)
 				{
-					exec_mode = EXEC_RM16;
+					registers.exec_mode = EXEC_RM16;
 				}
 				else if(strcasecmp(arg, "em80") == 0)
 				{
-					exec_mode = EXEC_EM80;
+					registers.exec_mode = EXEC_EM80;
 				}
 				else if(strcasecmp(arg, "rm32") == 0)
 				{
-					exec_mode = EXEC_RM32;
+					registers.exec_mode = EXEC_RM32;
 				}
 				else if(strcasecmp(arg, "pm16") == 0)
 				{
-					exec_mode = EXEC_PM16;
+					registers.exec_mode = EXEC_PM16;
 				}
 				else if(strcasecmp(arg, "pm32") == 0)
 				{
-					exec_mode = EXEC_PM32;
+					registers.exec_mode = EXEC_PM32;
 				}
 				else if(strcasecmp(arg, "cm16") == 0)
 				{
-					exec_mode = EXEC_CM16;
+					registers.exec_mode = EXEC_CM16;
 				}
 				else if(strcasecmp(arg, "cm32") == 0)
 				{
-					exec_mode = EXEC_CM32;
+					registers.exec_mode = EXEC_CM32;
 				}
 				else if(strcasecmp(arg, "lm64") == 0)
 				{
-					exec_mode = EXEC_LM64;
+					registers.exec_mode = EXEC_LM64;
 				}
 				else if(strcasecmp(arg, "fem80") == 0)
 				{
-					exec_mode = EXEC_FEM80;
+					registers.exec_mode = EXEC_FEM80;
 				}
 				else if(strcasecmp(arg, "8089") == 0
 				|| strcasecmp(arg, "i8089") == 0
 				|| strcasecmp(arg, "89") == 0
 				|| strcasecmp(arg, "i89") == 0)
 				{
-					exec_mode = EXEC_I89;
+					registers.exec_mode = EXEC_I89;
 				}
 				else
 				{
@@ -3263,204 +3699,7 @@ int main(int argc, char * argv[])
 
 		x80_reset(&emu->x80, true);
 	}
-
-	switch(exec_mode)
-	{
-	case EXEC_DEFAULT:
-		// leave state as it was in the beginning
-		if(x86_is_emulation_mode(emu))
-		{
-			exec_mode = emu->full_z80_emulation ? EXEC_FEM80 : EXEC_EM80;
-		}
-		else if(x86_is_real_mode(emu))
-		{
-			switch(x86_get_code_size(emu))
-			{
-			case SIZE_32BIT:
-				exec_mode = EXEC_RM32;
-				break;
-			default:
-			case SIZE_16BIT:
-				exec_mode = EXEC_RM16;
-				break;
-			}
-		}
-		else if(x86_is_long_mode_supported(emu))
-		{
-			switch(x86_get_code_size(emu))
-			{
-			default:
-			case SIZE_64BIT:
-				exec_mode = EXEC_LM64;
-				break;
-			case SIZE_32BIT:
-				exec_mode = EXEC_CM32;
-				break;
-			case SIZE_16BIT:
-				exec_mode = EXEC_CM16;
-				break;
-			}
-		}
-		else
-		{
-			switch(x86_get_code_size(emu))
-			{
-			default:
-			case SIZE_32BIT:
-				exec_mode = EXEC_PM32;
-				break;
-			case SIZE_16BIT:
-				exec_mode = EXEC_PM16;
-				break;
-			}
-		}
-		break;
-	case EXEC_RM16:
-		// make the segment 16-bit (286)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access &= ~X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn off 8080 emulation mode (v20/9002)
-		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
-			emu->md = X86_FL_MD;
-		else if(emu->cpu_type == X86_CPU_EXTENDED)
-			emu->md = 0;
-		// turn off protected mode (286)
-		emu->cr[0] &= ~X86_CR0_PE;
-		// turn off long mode (x64)
-		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
-		break;
-	case EXEC_EM80:
-		// make the segment 16-bit (286)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access &= ~X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn on 8080 emulation mode (v20/9002)
-		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
-			emu->md = 0;
-		else if(emu->cpu_type == X86_CPU_EXTENDED)
-			emu->md = X86_FL_MD;
-		emu->md_enabled = true;
-		// turn off protected mode (286)
-		emu->cr[0] &= ~X86_CR0_PE;
-		// turn off long mode (x64)
-		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
-		break;
-	case EXEC_RM32:
-		// make the segment 32-bit (386)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access |= X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn off protected mode (286)
-		emu->cr[0] &= ~X86_CR0_PE;
-		// turn off long mode (x64)
-		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
-		break;
-	case EXEC_PM16:
-		// make the segment 16-bit (286)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access &= ~X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn off virtual 8086 mode (386)
-		emu->vm = 0;
-		// turn on protected mode (286)
-		emu->cr[0] |= X86_CR0_PE;
-		// turn off long mode (x64)
-		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
-		break;
-	case EXEC_PM32:
-		// make the segment 32-bit (386)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access |= X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn off virtual 8086 mode (386)
-		emu->vm = 0;
-		// turn on protected mode (286)
-		emu->cr[0] |= X86_CR0_PE;
-		// turn off long mode (x64)
-		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
-		break;
-	case EXEC_CM16:
-		// make the segment 16-bit (286)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access &= ~X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn off virtual 8086 mode (386)
-		emu->vm = 0;
-		// turn on protected mode (286)
-		emu->cr[0] |= X86_CR0_PE;
-		// turn on long mode (x64)
-		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
-		break;
-	case EXEC_CM32:
-		// make the segment 32-bit (386)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access |= X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn off virtual 8086 mode (386)
-		emu->vm = 0;
-		// turn on protected mode (286)
-		emu->cr[0] |= X86_CR0_PE;
-		// turn on long mode (x64)
-		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
-		break;
-	case EXEC_LM64:
-		// make the segment 64-bit (x64)
-		emu->sr[X86_R_CS].access &= ~X86_DESC_D;
-		emu->sr[X86_R_CS].access |= X86_DESC_L;
-		// turn off virtual 8086 mode (386)
-		emu->vm = 0;
-		// turn on protected mode (286)
-		emu->cr[0] |= X86_CR0_PE;
-		// turn on long mode (x64)
-		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
-		break;
-	case EXEC_FEM80:
-		// make the segment 16-bit (286)
-		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].access &= ~X86_DESC_D;
-		}
-		emu->sr[X86_R_CS].access &= ~X86_DESC_L;
-		// turn on 8080 emulation mode (v20/9002)
-		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
-			emu->md = 0;
-		else if(emu->cpu_type == X86_CPU_EXTENDED)
-			emu->md = X86_FL_MD;
-		emu->md_enabled = true;
-		emu->full_z80_emulation = true;
-		// turn off protected mode (286)
-		emu->cr[0] &= ~X86_CR0_PE;
-		// turn off long mode (x64)
-		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
-		break;
-	case EXEC_I89:
-		setup_x89(emu, 0x00500);
-
-		// place CPU in infinite loop
-		emu->xip = 0;
-		emu->sr[X86_R_CS].selector = 0x40;
-		emu->sr[X86_R_CS].base = 0x40 << 4;
-		x86_memory_write8_external(emu, 0x400, 0xF4); // hlt
-		x86_memory_write8_external(emu, 0x401, 0xEB); // jmp
-		x86_memory_write8_external(emu, 0x402, 0xFD); // -3
-		break;
-	}
-
+ 
 	FILE * input;
 
 	input = fopen(inputfile, "rb");
@@ -3471,15 +3710,12 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	struct load_registers registers;
-	memset(&registers, 0, sizeof registers);
-
 	uint32_t image_offset = 0;
 
 	switch(load_mode)
 	{
 	case LOAD_AUTO:
-		if(exec_mode == EXEC_I89)
+		if(registers.exec_mode == EXEC_I89)
 		{
 			registers.ip_given = true;
 			registers.ip = 0x1000;
@@ -3493,21 +3729,21 @@ int main(int argc, char * argv[])
 			if(strlen(inputfile) >= 3)
 			{
 				if(strcasecmp(inputfile + strlen(inputfile) - 4, ".com") == 0
-				|| ((exec_mode == EXEC_EM80 || exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".prl") == 0)
-				|| (!(exec_mode == EXEC_EM80 || exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".exe") == 0)
-				|| (!(exec_mode == EXEC_EM80 || exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".cmd") == 0))
+				|| ((registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".prl") == 0)
+				|| (!(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".exe") == 0)
+				|| (!(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".cmd") == 0))
 				{
 					load_mode = LOAD_RUN;
 					goto case_load_run;
 				}
 			}
 			load_mode = LOAD_BOOT;
-			goto case_load_boot;
+			goto check_signature;
 		}
 		break;
 
 	case LOAD_INIT:
-		if(exec_mode == EXEC_EM80 || exec_mode == EXEC_FEM80)
+		if(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80)
 		{
 			registers.ip_given = true;
 			registers.ip = 0x0000;
@@ -3570,7 +3806,7 @@ int main(int argc, char * argv[])
 			registers.cs_given = true;
 			registers.sp_given = true;
 			registers.ss_given = true;
-			if(exec_mode != EXEC_FEM80)
+			if(registers.exec_mode != EXEC_FEM80)
 			{
 				registers.ip = 0x0000;
 				registers.cs = 0x3000;
@@ -3597,8 +3833,8 @@ int main(int argc, char * argv[])
 		case X86_PCTYPE_DEC_RAINBOW:
 //			fprintf(stderr, "DEC Rainbow not yet implemented\n");
 //			exit(1);
-				load_bin(emu, input, 0, &registers, 0x100);
-break;
+			load_bin(emu, input, 0, &registers, 0x100);
+			break;
 		}
 		break;
 
@@ -3617,7 +3853,7 @@ break;
 		switch(exe_fmt)
 		{
 		case FMT_AUTO:
-			if(exec_mode == EXEC_EM80 || exec_mode == EXEC_FEM80)
+			if(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80)
 			{
 				int c = fgetc(input);
 				if(c == 0)
@@ -3638,8 +3874,13 @@ break;
 			}
 			else
 			{
+				exe_fmt = FMT_COM;
+
+			check_signature:
+				;
+
 				uint8_t magic[4];
-				size_t bytes = fread(magic, 4, 1, input);
+				size_t bytes = fread(magic, 1, 4, input);
 				if((bytes >= 2 && magic[0] == 'M' && magic[1] == 'Z')
 				|| (bytes >= 2 && magic[0] == 'Z' && magic[1] == 'M'))
 				{
@@ -3719,8 +3960,10 @@ break;
 				}
 				else
 				{
-					exe_fmt = FMT_COM;
-					goto case_fmt_com;
+					if(exe_fmt == FMT_COM)
+						goto case_fmt_com;
+					else
+						goto case_load_boot;
 				}
 			}
 			break;
@@ -3774,9 +4017,8 @@ break;
 			exit(1);
 		case FMT_ELF:
 		case_fmt_elf:
-			(void) image_offset;
-			fprintf(stderr, "ELF support not yet implemented\n");
-			exit(1);
+			load_elf(emu, input, 0, &registers);
+			break;
 		default:
 			break;
 		}
@@ -3788,13 +4030,13 @@ break;
 	}
 
 	machine_setup(emu, pc_type);
+ 
+	registers.exec_mode = set_exec_mode(emu, registers.exec_mode);
 
 	uint16_t selector;
 
-	switch(exec_mode)
+	switch(registers.exec_mode)
 	{
-	case EXEC_DEFAULT:
-		assert(false); // already changed
 	case EXEC_RM16:
 	case EXEC_RM32:
 		if(!registers.cs_given)
@@ -3921,6 +4163,14 @@ break;
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
+
+		for(unsigned int_num = 0; int_num < 256; int_num++)
+		{
+			x86_memory_write16(emu, emu->idtr.base + int_num * 8,     0x0000);
+			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 2, 0x0008);
+			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 4, 0xEE00);
+			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 6, 0x0000);
+		}
 		break;
 
 	case EXEC_LM64:
