@@ -4258,6 +4258,12 @@ emu->sr[X86_R_GS].base = emu->kernel_gs_base;
 emu->kernel_gs_base = gs;
 
 @instruction SYSCALL
+if(emu->capture_transitions)
+{
+	emu->emulation_result = X86_RESULT(X86_RESULT_SYSCALL, 0);
+	longjmp(emu->exc[emu->fetch_mode], 1);
+}
+
 if(x86_is_long_mode(emu))
 {
 	$rcx = $rip;
@@ -4296,6 +4302,12 @@ else
 }
 
 @instruction SYSENTER
+if(emu->capture_transitions)
+{
+	emu->emulation_result = X86_RESULT(X86_RESULT_SYSENTER, 0);
+	longjmp(emu->exc[emu->fetch_mode], 1);
+}
+
 if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sysenter_cs & ~7) == 0)
 {
 	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
@@ -4326,6 +4338,12 @@ x86_set_cpl(emu, 0);
 //emu->via_ace = 0;
 
 @instruction SYSEXIT
+if(emu->capture_transitions)
+{
+	emu->emulation_result = X86_RESULT(X86_RESULT_SYSEXIT, 0);
+	longjmp(emu->exc[emu->fetch_mode], 1);
+}
+
 PRIVILEGED();
 if((emu->cr[0] & X86_CR0_PE) == 0 || (emu->sysenter_cs & ~7) == 0)
 	x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0);
@@ -4355,6 +4373,12 @@ emu->sr[X86_R_SS].limit    = 0xFFFFFFFF;
 x86_set_cpl(emu, 0);
 
 @instruction SYSRET
+if(emu->capture_transitions)
+{
+	emu->emulation_result = X86_RESULT(X86_RESULT_SYSRET, 0);
+	longjmp(emu->exc[emu->fetch_mode], 1);
+}
+
 PRIVILEGED();
 if(x86_is_long_mode(emu))
 {

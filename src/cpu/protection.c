@@ -1402,6 +1402,11 @@ static inline void x86_jump_far(x86_state_t * emu, uint16_t selector, uoff_t off
 		x86_segment_load_real_mode(emu, X86_R_CS, selector);
 		x86_set_xip(emu, offset);
 	}
+	else if(emu->capture_transitions)
+	{
+		emu->emulation_result = X86_RESULT(X86_RESULT_FAR_JUMP, 0);
+		longjmp(emu->exc[emu->fetch_mode], 1);
+	}
 	else
 	{
 		uint8_t descriptor[16];
@@ -1787,6 +1792,12 @@ static inline void x86_call_far##__size(x86_state_t * emu, uint16_t selector, uo
 		} \
 		else \
 	)) \
+	if(emu->capture_transitions) \
+	{ \
+		emu->emulation_result = X86_RESULT(X86_RESULT_FAR_CALL, 0); \
+		longjmp(emu->exc[emu->fetch_mode], 1); \
+	} \
+	else \
 	{ \
 		if(x86_selector_is_null(selector)) \
 			x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
@@ -2345,6 +2356,12 @@ static inline _Noreturn void x86_trigger_interrupt(x86_state_t * emu, int except
 	if(emu->fetch_mode == FETCH_MODE_PREFETCH)
 		longjmp(emu->exc[emu->fetch_mode], 1); // simply return to the prefetch start
 
+	if(emu->capture_transitions)
+	{
+		emu->emulation_result = X86_RESULT(X86_RESULT_CPU_INTERRUPT, exception & 0xFF);
+		longjmp(emu->exc[emu->fetch_mode], 1);
+	}
+
 	if(emu->cpu_type == X86_CPU_V60)
 	{
 		switch(exception & 0xFF)
@@ -2547,7 +2564,16 @@ void x86_return_interrupt##__size(x86_state_t * emu) \
 				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
 			} \
 		} \
-		else if(emu->nt) \
+	else \
+	)) \
+	if(emu->capture_transitions) \
+	{ \
+		emu->emulation_result = X86_RESULT(X86_RESULT_INTERRUPT_RETURN, 0); \
+		longjmp(emu->exc[emu->fetch_mode], 1); \
+	} \
+	else \
+	_IF_NOT64(__size, ( \
+		if(emu->nt) \
 		{ \
 			if(x86_is_long_mode(emu)) \
 				x86_trigger_interrupt(emu, X86_EXC_GP | X86_EXC_FAULT | X86_EXC_VALUE, 0); \
@@ -2775,6 +2801,12 @@ static inline void x86_return_far##__size(x86_state_t * emu, unsigned bytes) \
 		} \
 		else \
 	)) \
+	if(emu->capture_transitions) \
+	{ \
+		emu->emulation_result = X86_RESULT(X86_RESULT_FAR_RETURN, 0); \
+		longjmp(emu->exc[emu->fetch_mode], 1); \
+	} \
+	else \
 	{ \
 		/* protected mode */ \
 		_IF_NOT64(__size, ( \

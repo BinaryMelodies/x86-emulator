@@ -1314,7 +1314,7 @@ enum x86_result_t
 	X86_RESULT_STRING,
 	/* Execution halted (also includes stopped) */
 	X86_RESULT_HALT,
-	/* An interrupt was invoked, interrupt number is value, execution will continue */
+	/* An interrupt was invoked, interrupt number is value, execution will continue; if catch_transitions is set to true, aborted interrupt */
 	X86_RESULT_CPU_INTERRUPT,
 	/* An ICE interrupt occured via software */
 	X86_RESULT_ICE_INTERRUPT,
@@ -1326,6 +1326,23 @@ enum x86_result_t
 	X86_RESULT_INHIBIT_INTERRUPTS,
 	/* An undefined instruction occured, however 186+ would report an X86_CPU_INTERRUPT instead */
 	X86_RESULT_UNDEFINED,
+
+	/* Aborted far jump */
+	X86_RESULT_FAR_JUMP,
+	/* Aborted far call */
+	X86_RESULT_FAR_CALL,
+	/* Aborted far return */
+	X86_RESULT_FAR_RETURN,
+	/* Aborted return from interrupt */
+	X86_RESULT_INTERRUPT_RETURN,
+	/* Aborted SYSENTER */
+	X86_RESULT_SYSENTER,
+	/* Aborted SYSEXIT */
+	X86_RESULT_SYSEXIT,
+	/* Aborted SYSCALL */
+	X86_RESULT_SYSCALL,
+	/* Aborted SYSRET */
+	X86_RESULT_SYSRET,
 };
 typedef enum x86_result_t x86_result_t;
 
@@ -2566,7 +2583,12 @@ struct x86_state_t
 		x86_rep_prefix_t rep_prefix;
 	} restarted_instruction;
 
-	bool option_disassemble; // set to true to fill parser->debug_output with a disassembled instruction
+	// set to true to fill parser->debug_output with a disassembled instruction
+	bool option_disassemble;
+
+	// abort all instructions that can potentially change the privilege level and report them back to the monitor
+	// this includes long jumps, long calls, long returns, interrupts, returns from interrupt, as well as the SYSCALL/SYSRET/SYSENTER/SYSEXIT instructions
+	bool capture_transitions;
 };
 
 //// Emulator interface
