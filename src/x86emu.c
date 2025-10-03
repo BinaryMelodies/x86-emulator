@@ -4503,7 +4503,7 @@ int main(int argc, char * argv[])
 							}
 							break;
 						default:
-							fprintf(stderr, "Linux system call EAH=%08X\n", emu->eax);
+							fprintf(stderr, "Linux system call EAX=%08X\n", emu->eax);
 							exit(0);
 							break;
 						}
@@ -4614,8 +4614,35 @@ int main(int argc, char * argv[])
 				fprintf(stderr, "Captured far SYSEXIT\n");
 				exit(0);
 			case X86_RESULT_SYSCALL:
-				fprintf(stderr, "Captured far SYSCALL\n");
-				exit(0);
+				if((system_type & X86_SYSTEM_TYPE_LINUX))
+				{
+					switch(emu->rax)
+					{
+					case X86_64_SYS_EXIT:
+						exit(emu->rdi);
+						break;
+					case X86_64_SYS_WRITE:
+						{
+							char * buffer = malloc(emu->rdx);
+							for(size_t offset = 0; offset < emu->rdx; offset++)
+							{
+								buffer[offset] = x86_memory_read8(emu, emu->rsi + offset);
+							}
+							emu->rax = write(emu->rdi, buffer, emu->rdx);
+						}
+						break;
+					default:
+						fprintf(stderr, "Linux system call RAX=%016lX\n", emu->rax);
+						exit(0);
+						break;
+					}
+				}
+				else
+				{
+					fprintf(stderr, "Captured far SYSCALL\n");
+					exit(0);
+				}
+				break;
 			case X86_RESULT_SYSRET:
 				fprintf(stderr, "Captured far SYSRET\n");
 				exit(0);
