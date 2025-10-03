@@ -1529,11 +1529,111 @@ static void bios_screen_putchar(x86_state_t * emu, int c)
 	}
 }
 
+static int ibmpc_convert_scancode(int k)
+{
+	for(size_t c = 0; c < sizeof ibmpc_scancodes / sizeof ibmpc_scancodes[0]; c++)
+	{
+		if(ibmpc_scancodes[c] == k)
+			return c;
+	}
+	return 0;
+}
+
+static int necpc98_convert_scancode(int k)
+{
+	for(unsigned c = 0; c < sizeof necpc98_scancodes / sizeof necpc98_scancodes[0]; c++)
+	{
+		if(necpc98_scancodes[c] == k)
+			return c;
+	}
+	return 0;
+}
+
+static struct
+{
+	bool shift, caps;
+	struct
+	{
+		size_t pointer, length;
+		char data[16];
+	} buffer;
+} dos_kbd_state;
+
+static void _dos_insert_key(int c)
+{
+	if(dos_kbd_state.buffer.length >= sizeof dos_kbd_state.buffer.data)
+	{
+		// make a beep sound
+		putchar('\a'); fflush(stdout);
+		return;
+	}
+
+	dos_kbd_state.buffer.data[(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length) % sizeof dos_kbd_state.buffer.data] = c;
+	dos_kbd_state.buffer.length ++;
+}
+
+static bool dos_key_available(void)
+{
+	return dos_kbd_state.buffer.length > 0;
+}
+
+static int dos_key_peek(void)
+{
+	if(dos_key_available())
+	{
+		return dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer] & 0xFF;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+static int dos_key_get(void)
+{
+	if(dos_key_available())
+	{
+		int c = dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer] & 0xFF;
+		dos_kbd_state.buffer.pointer = (dos_kbd_state.buffer.pointer + 1) % sizeof dos_kbd_state.buffer.data;
+		dos_kbd_state.buffer.length --;
+		return c;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+static const char _shifted[256] =
+{
+	['`']  = '~',
+	['1']  = '!',
+	['2']  = '@',
+	['3']  = '#',
+	['4']  = '$',
+	['5']  = '%',
+	['6']  = '^',
+	['7']  = '&',
+	['8']  = '*',
+	['9']  = '(',
+	['0']  = ')',
+	['-']  = '_',
+	['=']  = '+',
+	['[']  = '{',
+	[']']  = '}',
+	['\\'] = '|',
+	[';']  = ':',
+	['\''] = '"',
+	[',']  = '<',
+	['.']  = '>',
+	['/']  = '?',
+};
+
 static void _dos_process_keys(x86_state_t * emu)
 {
 	(void) emu;
 
-	int key;
+	unsigned key, c;
 	switch(pc_type)
 	{
 	case X86_PCTYPE_IBM_PC_MDA:
@@ -1543,6 +1643,32 @@ static void _dos_process_keys(x86_state_t * emu)
 		{
 			key = i8042.buffer[0];
 			i8042_acknowledge();
+
+			c = ibmpc_convert_scancode(key & 0x7F);
+			switch(c)
+			{
+			case KEY_SHIFT:
+				dos_kbd_state.shift = !(key & 0x80);
+				break;
+			case KEY_CAPS:
+				dos_kbd_state.caps = !(key & 0x80);
+				break;
+			default:
+				if(!(key & 0x80))
+				{
+					if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
+					{
+						c += 'A' - 'a';
+					}
+					else if(c < sizeof _shifted && _shifted[c] != 0 && dos_kbd_state.shift)
+					{
+						c = _shifted[c];
+					}
+
+					_dos_insert_key(c);
+				}
+				break;
+			}
 		}
 		break;
 	case X86_PCTYPE_NEC_PC98:
@@ -1550,10 +1676,11 @@ static void _dos_process_keys(x86_state_t * emu)
 		{
 			key = i8251.buffer[0];
 			i8042_acknowledge();
+			// TODO
 		}
 		break;
 	default:
-		// TODO
+		// TODO: other computers
 		break;
 	}
 	// TODO
@@ -3959,11 +4086,9 @@ break;
 							else
 							{
 								//wait_for_interrupt = WAIT_MSDOS_21_06_FF;
-								// TODO
-								if(false)
+								if(dos_key_available())
 								{
-									// TODO
-									emu->al = 0;
+									emu->al = dos_key_get();
 									emu->zf = 0;
 								}
 								else
