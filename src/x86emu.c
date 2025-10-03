@@ -4278,7 +4278,6 @@ int main(int argc, char * argv[])
 
 	case EXEC_PM16:
 	case EXEC_CM16:
-		// TODO: must make GDT, otherwise segment registers cannot be popped/pushed
 		if(!registers.cpl_given)
 		{
 			registers.cpl = 0;
@@ -4316,6 +4315,35 @@ int main(int argc, char * argv[])
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
+
+		// must create GDT, otherwise segment registers cannot be popped/pushed
+
+		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_CS].selector & ~7),
+			emu->sr[X86_R_CS].limit);
+		x86_memory_write32(emu, emu->gdtr.base + (emu->sr[X86_R_CS].selector & ~7) + 2,
+			(emu->sr[X86_R_CS].base & 0x00FFFFFF) | ((emu->sr[X86_R_CS].access & 0x0000FF00) << 16));
+		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_CS].selector & ~7) + 6,
+			0);
+
+		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_SS].selector & ~7),
+			emu->sr[X86_R_SS].limit);
+		x86_memory_write32(emu, emu->gdtr.base + (emu->sr[X86_R_SS].selector & ~7) + 2,
+			(emu->sr[X86_R_SS].base & 0x00FFFFFF) | ((emu->sr[X86_R_SS].access & 0x0000FF00) << 16));
+		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_SS].selector & ~7) + 6,
+			0);
+
+		if(registers.ss_given && registers.ds_given)
+		{
+			x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_DS].selector & ~7),
+				emu->sr[X86_R_DS].limit);
+			x86_memory_write32(emu, emu->gdtr.base + (emu->sr[X86_R_DS].selector & ~7) + 2,
+				(emu->sr[X86_R_DS].base & 0x00FFFFFF) | ((emu->sr[X86_R_DS].access & 0x0000FF00) << 16));
+			x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_DS].selector & ~7) + 6,
+				0);
+		}
+
+		emu->gdtr.limit = registers.ss_given && registers.ds_given ? 0x1F : 0x17;
+
 		break;
 
 	case EXEC_PM32:
@@ -4540,6 +4568,7 @@ int main(int argc, char * argv[])
 				switch(X86_RESULT_VALUE(result))
 				{
 				default:
+				undefined_interrupt:
 					fprintf(stderr, "Interrupt 0x%02X\n", X86_RESULT_VALUE(result));
 					break;
 				case 0x20:
@@ -4664,7 +4693,7 @@ int main(int argc, char * argv[])
 								break;
 							}
 						}
-						else
+						else if(x86_is_32bit_mode(emu))
 						{
 							switch(emu->eax)
 							{
@@ -4695,6 +4724,11 @@ int main(int argc, char * argv[])
 								exit(0);
 								break;
 							}
+						}
+						else
+						{
+							// we will disallow using the int 0x80 interface from 64-bit mode
+							goto undefined_interrupt;
 						}
 					}
 					break;
