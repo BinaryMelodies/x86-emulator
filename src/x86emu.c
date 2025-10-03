@@ -1351,7 +1351,103 @@ static void _x80_port_write(x80_state_t * emu, uint16_t port, uint8_t value)
 static uint8_t screen_cursor_x = 0, screen_cursor_y = 0;
 //static uint8_t screen_attribute; // TODO
 
-static inline void _screen_fix_cursor_location(x86_state_t * emu)
+static inline void bios_screen_scroll(x86_state_t * emu, int lines)
+{
+	(void) emu;
+
+	if(lines == 0)
+		return;
+	else if(lines > 25)
+		lines = 25;
+
+	switch(pc_type)
+	{
+	case X86_PCTYPE_NONE:
+		break;
+	case X86_PCTYPE_IBM_PC_MDA:
+	case X86_PCTYPE_IBM_PC_CGA:
+	case X86_PCTYPE_IBM_PCJR:
+		{
+			uint8_t * memory = *_get_page(pc_type == X86_PCTYPE_IBM_PC_MDA ? 0xB0000 : 0xB8000);
+			uint16_t offset;
+			for(offset = 0; offset < (25 - lines) * 160; offset++)
+			{
+				memory[offset] = memory[offset + lines * 160];
+			}
+			for(; offset < 25 * 160; offset += 2)
+			{
+				memory[offset] = ' ';
+				memory[offset + 1] = 0x07;
+			}
+		}
+		break;
+	case X86_PCTYPE_NEC_PC98:
+		{
+			uint8_t * char_memory = *_get_page(0xA0000);
+			uint8_t * attr_memory = *_get_page(0xA2000);
+			uint16_t offset;
+			for(offset = 0; offset < (25 - lines) * 160; offset++)
+			{
+				char_memory[offset] = char_memory[offset + lines * 160];
+				attr_memory[offset] = attr_memory[offset + lines * 160];
+			}
+			for(; offset < 25 * 160; offset += 2)
+			{
+				char_memory[offset] = ' ';
+				attr_memory[offset] = 0xE1;
+			}
+		}
+		break;
+	case X86_PCTYPE_NEC_PC88_VA:
+		{
+			uint8_t * char_memory = *_get_page(0xA6000);
+			uint8_t * attr_memory = necpc88va_v3_memory_mode ? *_get_page(0xAE000) : NULL;
+			uint16_t offset;
+			for(offset = 0; offset < (25 - lines) * 160; offset++)
+			{
+				char_memory[offset] = char_memory[offset + lines * 160];
+			}
+			if(necpc88va_v3_memory_mode)
+			{
+				for(offset = 0; offset < (25 - lines) * 160; offset++)
+				{
+					attr_memory[offset] = attr_memory[offset + lines * 160];
+				}
+			}
+			for(; offset < 25 * 160; offset += 2)
+			{
+				char_memory[offset] = ' ';
+				if(!necpc88va_v3_memory_mode)
+				{
+					char_memory[offset + 1] = 0x07;
+				}
+				else
+				{
+					attr_memory[offset] = 0x07;
+				}
+			}
+		}
+		break;
+	case X86_PCTYPE_APRICOT:
+		{
+			uint16_t * memory = (uint16_t *)*_get_page(0xF0000);
+			uint16_t offset;
+			for(offset = 0; offset < (25 - lines) * 80; offset++)
+			{
+				memory[offset] = memory[offset + lines * 80];
+			}
+			for(; offset < 25 * 80; offset += 2)
+			{
+				memory[offset] = ' ' + 0x40;
+			}
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+static inline void bios_screen_fix_cursor_location(x86_state_t * emu)
 {
 	(void) emu;
 
@@ -1361,45 +1457,50 @@ static inline void _screen_fix_cursor_location(x86_state_t * emu)
 		screen_cursor_x %= 80;
 		if(screen_cursor_y >= 25)
 		{
-			screen_cursor_y %= 25;
+			bios_screen_scroll(emu, screen_cursor_y - 24);
+			screen_cursor_y = 24;
 		}
 	}
 }
 
-static void _screen_putchar(x86_state_t * emu, int c)
+static void bios_screen_putchar(x86_state_t * emu, int c)
 {
 	(void) emu;
 
 	switch(pc_type)
 	{
+	case X86_PCTYPE_NONE:
+		// use the terminal
+		putchar(c);
+		break;
 	case X86_PCTYPE_IBM_PC_MDA:
 	case X86_PCTYPE_IBM_PC_CGA:
 	case X86_PCTYPE_IBM_PCJR:
 		{
 			uint8_t * memory = *_get_page(pc_type == X86_PCTYPE_IBM_PC_MDA ? 0xB0000 : 0xB8000);
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 			memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
 			memory[screen_cursor_y * 160 + screen_cursor_x * 2 + 1] = 0x07;
 			screen_cursor_x ++;
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 		}
 		break;
 	case X86_PCTYPE_NEC_PC98:
 		{
 			uint8_t * char_memory = *_get_page(0xA0000);
 			uint8_t * attr_memory = *_get_page(0xA2000);
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 			char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
 			attr_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = 0xE1;
 			screen_cursor_x ++;
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 		}
 		break;
 	case X86_PCTYPE_NEC_PC88_VA:
 		{
 			uint8_t * char_memory = *_get_page(0xA6000);
 			uint8_t * attr_memory = necpc88va_v3_memory_mode ? *_get_page(0xAE000) : NULL;
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 			if(!necpc88va_v3_memory_mode)
 			{
 				char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
@@ -1411,21 +1512,51 @@ static void _screen_putchar(x86_state_t * emu, int c)
 				attr_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = 0x07;
 			}
 			screen_cursor_x ++;
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 		}
 		break;
 	case X86_PCTYPE_APRICOT:
 		{
 			uint16_t * memory = (uint16_t *)*_get_page(0xF0000);
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 			memory[screen_cursor_y * 80 + screen_cursor_x] = c + 0x40;
 			screen_cursor_x ++;
-			_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location(emu);
 		}
 		break;
 	default:
 		break;
 	}
+}
+
+static void _dos_process_keys(x86_state_t * emu)
+{
+	(void) emu;
+
+	int key;
+	switch(pc_type)
+	{
+	case X86_PCTYPE_IBM_PC_MDA:
+	case X86_PCTYPE_IBM_PC_CGA:
+	case X86_PCTYPE_IBM_PCJR:
+		while(i8042.data_available)
+		{
+			key = i8042.buffer[0];
+			i8042_acknowledge();
+		}
+		break;
+	case X86_PCTYPE_NEC_PC98:
+		while(i8251.data_available)
+		{
+			key = i8251.buffer[0];
+			i8042_acknowledge();
+		}
+		break;
+	default:
+		// TODO
+		break;
+	}
+	// TODO
 }
 
 #include "cpu/x86.list.c"
@@ -2282,7 +2413,7 @@ static void _dos_putchar(x86_state_t * emu, int c)
 		screen_cursor_x = 0;
 		break;
 	default:
-		_screen_putchar(emu, c);
+		bios_screen_putchar(emu, c);
 		break;
 	}
 }
@@ -2968,7 +3099,7 @@ int main(int argc, char * argv[])
 
 	x86_reset(emu, true);
 
-printf("ok %d\n", emu->x80.cpu_method);
+//printf("ok %d\n", emu->x80.cpu_method);
 
 	if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 	{
@@ -3693,8 +3824,18 @@ break;
 
 	_display_screen(emu);
 
+	/**** The main loop ****/
+
 	bool continuous = false;
 	uint64_t breakpoint = 0;
+	enum
+	{
+		WAIT_NOTHING,
+		WAIT_CPM80_0005_06_FF, // waiting in CALL 0x0005/C=0x06/E=0xFF
+		WAIT_CPM86_E0_06_FF, // waiting in INT 0xE0/CL=0x06/DL=0xFF
+		WAIT_MSDOS_21_06_FF, // waiting in INT 0x21/AH=0x06/DL=0xFF
+	} wait_for_interrupt = WAIT_NOTHING;
+
 	while(true)
 	{
 		if(option_debug && !continuous && emu->xip >= breakpoint)
@@ -3773,158 +3914,184 @@ break;
 
 		_screen_printed = false;
 		emu->parser->debug_output[0] = '\0';
-		x86_result_t result = x86_step(emu);
-		switch(X86_RESULT_TYPE(result))
+		if(wait_for_interrupt == WAIT_NOTHING)
 		{
-		case X86_RESULT_SUCCESS:
-			break;
-		case X86_RESULT_STRING:
-			break;
-		case X86_RESULT_HALT:
-//			fprintf(stderr, "CPU halted\n");
-			break;
-		case X86_RESULT_CPU_INTERRUPT:
-			fprintf(stderr, "Interrupt 0x%02X\n", X86_RESULT_VALUE(result));
-			switch(X86_RESULT_VALUE(result))
+			x86_result_t result = x86_step(emu);
+			switch(X86_RESULT_TYPE(result))
 			{
-			case 0x20:
-				if((system_type & X86_SYSTEM_TYPE_MSDOS))
-				{
-					fprintf(stderr, "MS-DOS exit\n");
-					exit(0);
-				}
+			case X86_RESULT_SUCCESS:
 				break;
-			case 0x21:
-				if((system_type & X86_SYSTEM_TYPE_MSDOS))
+			case X86_RESULT_STRING:
+				break;
+			case X86_RESULT_HALT:
+	//			fprintf(stderr, "CPU halted\n");
+				break;
+			case X86_RESULT_CPU_INTERRUPT:
+				fprintf(stderr, "Interrupt 0x%02X\n", X86_RESULT_VALUE(result));
+				switch(X86_RESULT_VALUE(result))
 				{
-					switch(emu->ah)
+				case 0x20:
+					if((system_type & X86_SYSTEM_TYPE_MSDOS))
 					{
-					case 0x00:
 						fprintf(stderr, "MS-DOS exit\n");
 						exit(0);
-						break;
-					case 0x02:
-						_dos_putchar(emu, emu->dl);
-						_display_screen(emu);
-						break;
-					case 0x09:
-						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
-						{
-							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
-							if(value == '$')
-								break;
-							_dos_putchar(emu, value);
-						}
-						_display_screen(emu);
-						break;
-					case 0x4C:
-						fprintf(stderr, "MS-DOS exit\n");
-						exit(emu->al);
-						break;
-					default:
-						fprintf(stderr, "MS-DOS API call AH=%02X\n", emu->ah);
-						exit(0);
 					}
-					x86_return_interrupt16(emu);
-				}
-				break;
-			case 0x80:
-				if((system_type & X86_SYSTEM_TYPE_LINUX))
-				{
-					exit(0);
-				}
-				break;
-			case 0xE0:
-				if((system_type & X86_SYSTEM_TYPE_CPM86))
-				{
-					switch(emu->cl)
+					break;
+				case 0x21:
+					if((system_type & X86_SYSTEM_TYPE_MSDOS))
 					{
-					case 0x00:
-						fprintf(stderr, "CP/M-86 exit\n");
-						exit(0);
-						break;
-					case 0x02:
-						_dos_putchar(emu, emu->dl);
-						_display_screen(emu);
-						break;
-					case 0x09:
-						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+						switch(emu->ah)
 						{
-							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
-							if(value == '$')
-								break;
-							_dos_putchar(emu, value);
+						case 0x00:
+							fprintf(stderr, "MS-DOS exit\n");
+							exit(0);
+							break;
+						case 0x02:
+							_dos_putchar(emu, emu->dl);
+							_display_screen(emu);
+							break;
+						case 0x06:
+							if(emu->dl != 0xFF)
+							{
+								_dos_putchar(emu, emu->dl);
+								_display_screen(emu);
+							}
+							else
+							{
+								//wait_for_interrupt = WAIT_MSDOS_21_06_FF;
+								// TODO
+								if(false)
+								{
+									// TODO
+									emu->al = 0;
+									emu->zf = 0;
+								}
+								else
+								{
+									emu->al = 0;
+									emu->zf = X86_FL_ZF;
+								}
+							}
+							break;
+						case 0x09:
+							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+							{
+								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
+								if(value == '$')
+									break;
+								_dos_putchar(emu, value);
+							}
+							_display_screen(emu);
+							break;
+						case 0x4C:
+							fprintf(stderr, "MS-DOS exit\n");
+							exit(emu->al);
+							break;
+						default:
+							fprintf(stderr, "MS-DOS API call AH=%02X\n", emu->ah);
+							exit(0);
 						}
-						_display_screen(emu);
-						break;
-					default:
-						fprintf(stderr, "CP/M-86 API call CL=%02X\n", emu->cl);
+						x86_return_interrupt16(emu);
+					}
+					break;
+				case 0x80:
+					if((system_type & X86_SYSTEM_TYPE_LINUX))
+					{
 						exit(0);
 					}
-					x86_return_interrupt16(emu);
+					break;
+				case 0xE0:
+					if((system_type & X86_SYSTEM_TYPE_CPM86))
+					{
+						switch(emu->cl)
+						{
+						case 0x00:
+							fprintf(stderr, "CP/M-86 exit\n");
+							exit(0);
+							break;
+						case 0x02:
+							_dos_putchar(emu, emu->dl);
+							_display_screen(emu);
+							break;
+						case 0x09:
+							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+							{
+								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
+								if(value == '$')
+									break;
+								_dos_putchar(emu, value);
+							}
+							_display_screen(emu);
+							break;
+						default:
+							fprintf(stderr, "CP/M-86 API call CL=%02X\n", emu->cl);
+							exit(0);
+						}
+						x86_return_interrupt16(emu);
+					}
+					break;
 				}
+				break;
+			case X86_RESULT_ICE_INTERRUPT:
+				break;
+			case X86_RESULT_IRQ:
+				i8259[X86_RESULT_VALUE(result) >> 3].interrupt_requested[X86_RESULT_VALUE(result) & 7] = true;
+				break;
+			case X86_RESULT_TRIPLE_FAULT:
+				fprintf(stderr, "Triple fault\n");
+				break;
+			case X86_RESULT_INHIBIT_INTERRUPTS:
+				inhibit_interrupts = true;
 				break;
 			}
-			break;
-		case X86_RESULT_ICE_INTERRUPT:
-			break;
-		case X86_RESULT_IRQ:
-			i8259[X86_RESULT_VALUE(result) >> 3].interrupt_requested[X86_RESULT_VALUE(result) & 7] = true;
-			break;
-		case X86_RESULT_TRIPLE_FAULT:
-			fprintf(stderr, "Triple fault\n");
-			break;
-		case X86_RESULT_INHIBIT_INTERRUPTS:
-			inhibit_interrupts = true;
-			break;
-		}
-		x87_step(emu);
-		x89_step(emu);
-		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
-		{
-			x80_step(&emu->x80, NULL);
-		}
-
-		if(x86_is_emulation_mode(emu) && (system_type & X86_SYSTEM_TYPE_CPM80))
-		{
-			switch(emu->x80.pc)
+			if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 			{
-			case 0x0000:
-				fprintf(stderr, "CP/M-80 exit\n");
-				exit(0);
-				break;
-			case 0x0005:
-				// BDOS call
-				switch(emu->x80.c)
+				x80_step(&emu->x80, NULL);
+			}
+
+			if(x86_is_emulation_mode(emu) && (system_type & X86_SYSTEM_TYPE_CPM80))
+			{
+				switch(emu->x80.pc)
 				{
-				case 0x00:
+				case 0x0000:
 					fprintf(stderr, "CP/M-80 exit\n");
 					exit(0);
 					break;
-				case 0x02:
-					_dos_putchar(emu, emu->x80.e);
-					_display_screen(emu);
-					break;
-				case 0x09:
-					for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+				case 0x0005:
+					// BDOS call
+					switch(emu->x80.c)
 					{
-						uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
-						if(value == '$')
-							break;
-						_dos_putchar(emu, value);
+					case 0x00:
+						fprintf(stderr, "CP/M-80 exit\n");
+						exit(0);
+						break;
+					case 0x02:
+						_dos_putchar(emu, emu->x80.e);
+						_display_screen(emu);
+						break;
+					case 0x09:
+						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+						{
+							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
+							if(value == '$')
+								break;
+							_dos_putchar(emu, value);
+						}
+						_display_screen(emu);
+						break;
+					default:
+						fprintf(stderr, "CP/M-80 API call C=%02X\n", emu->x80.c);
+						exit(0);
 					}
-					_display_screen(emu);
+					// RET
+					emu->x80.pc = x86_memory_read16(emu, emu->ds_cache.base + emu->x80.sp);
+					emu->x80.sp += 2;
 					break;
-				default:
-					fprintf(stderr, "CP/M-80 API call C=%02X\n", emu->x80.c);
-					exit(0);
-				}
-				// RET
-				emu->x80.pc = x86_memory_read16(emu, emu->ds_cache.base + emu->x80.sp);
-				emu->x80.sp += 2;
-				break;
-			};
+				};
+			}
 		}
+		x87_step(emu);
+		x89_step(emu);
 
 		if(option_debug && !continuous && breakpoint == 0 && !_screen_printed)
 			_display_screen(emu);
@@ -3970,41 +4137,49 @@ break;
 			}
 		}
 
-		switch(pc_type)
+		if(system_type != X86_SYSTEM_TYPE_NONE)
 		{
-		case X86_PCTYPE_IBM_PC_MDA:
-		case X86_PCTYPE_IBM_PC_CGA:
-		case X86_PCTYPE_IBM_PCJR:
-			if(i8042.data_available)
+			_dos_process_keys(emu);
+		}
+		else
+		{
+			// otherwise, the emulated system handles it
+			switch(pc_type)
 			{
-				i8259[X86_IBMPC_IRQ_KEYBOARD >> 3].interrupt_requested[X86_IBMPC_IRQ_KEYBOARD & 7] = true;
+			case X86_PCTYPE_IBM_PC_MDA:
+			case X86_PCTYPE_IBM_PC_CGA:
+			case X86_PCTYPE_IBM_PCJR:
+				if(i8042.data_available)
+				{
+					i8259[X86_IBMPC_IRQ_KEYBOARD >> 3].interrupt_requested[X86_IBMPC_IRQ_KEYBOARD & 7] = true;
+				}
+				// TODO: other peripherals
+				break;
+			case X86_PCTYPE_NEC_PC98:
+				if(i8042.data_available)
+				{
+					i8259[X86_NECPC98_IRQ_KEYBOARD >> 3].interrupt_requested[X86_NECPC98_IRQ_KEYBOARD & 7] = true;
+				}
+				// TODO: other peripherals
+				break;
+			case X86_PCTYPE_APRICOT:
+				if((emu->x89.channel[0].psw & X89_PSW_IS) != 0)
+				{
+					// TODO: make the 8089 interrupts available on non-Apricot machines; issue: which IRQ?
+					// TODO: should "acknowledge" clear this bit?
+					i8259[X86_APRICOT_IRQ_SINTR1 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR1 & 7] = true;
+				}
+				if((emu->x89.channel[1].psw & X89_PSW_IS) != 0)
+				{
+					// TODO: same as channel 0
+					i8259[X86_APRICOT_IRQ_SINTR2 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR2 & 7] = true;
+				}
+				// TODO: other peripherals
+				break;
+			// TODO: other PCs
+			default:
+				break;
 			}
-			// TODO: other peripherals
-			break;
-		case X86_PCTYPE_NEC_PC98:
-			if(i8042.data_available)
-			{
-				i8259[X86_NECPC98_IRQ_KEYBOARD >> 3].interrupt_requested[X86_NECPC98_IRQ_KEYBOARD & 7] = true;
-			}
-			// TODO: other peripherals
-			break;
-		case X86_PCTYPE_APRICOT:
-			if((emu->x89.channel[0].psw & X89_PSW_IS) != 0)
-			{
-				// TODO: make the 8089 interrupts available on non-Apricot machines; issue: which IRQ?
-				// TODO: should "acknowledge" clear this bit?
-				i8259[X86_APRICOT_IRQ_SINTR1 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR1 & 7] = true;
-			}
-			if((emu->x89.channel[1].psw & X89_PSW_IS) != 0)
-			{
-				// TODO: same as channel 0
-				i8259[X86_APRICOT_IRQ_SINTR2 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR2 & 7] = true;
-			}
-			// TODO: other peripherals
-			break;
-		// TODO: other PCs
-		default:
-			break;
 		}
 
 		if(!inhibit_interrupts)
