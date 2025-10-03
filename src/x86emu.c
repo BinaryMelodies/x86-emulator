@@ -2527,7 +2527,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	return address;
 }
 
-static void _dos_putchar(x86_state_t * emu, int c)
+static void dos_putchar(x86_state_t * emu, int c)
 {
 	(void) emu;
 
@@ -3958,9 +3958,9 @@ break;
 	enum
 	{
 		WAIT_NOTHING,
-		WAIT_CPM80_0005_06_FF, // waiting in CALL 0x0005/C=0x06/E=0xFF
-		WAIT_CPM86_E0_06_FF, // waiting in INT 0xE0/CL=0x06/DL=0xFF
-		WAIT_MSDOS_21_06_FF, // waiting in INT 0x21/AH=0x06/DL=0xFF
+		WAIT_CPM80_0005_01, // waiting in CALL 0x0005/C=0x01
+		WAIT_CPM86_E0_01, // waiting in INT 0xE0/CL=0x01
+		WAIT_MSDOS_21_01, // waiting in INT 0x21/AH=0x01
 	} wait_for_interrupt = WAIT_NOTHING;
 
 	while(true)
@@ -4073,19 +4073,22 @@ break;
 							fprintf(stderr, "MS-DOS exit\n");
 							exit(0);
 							break;
+						case 0x01:
+							wait_for_interrupt = WAIT_MSDOS_21_01;
+							break;
 						case 0x02:
-							_dos_putchar(emu, emu->dl);
+							dos_putchar(emu, emu->dl);
 							_display_screen(emu);
+							x86_return_interrupt16(emu);
 							break;
 						case 0x06:
 							if(emu->dl != 0xFF)
 							{
-								_dos_putchar(emu, emu->dl);
+								dos_putchar(emu, emu->dl);
 								_display_screen(emu);
 							}
 							else
 							{
-								//wait_for_interrupt = WAIT_MSDOS_21_06_FF;
 								if(dos_key_available())
 								{
 									emu->al = dos_key_get();
@@ -4097,6 +4100,7 @@ break;
 									emu->zf = X86_FL_ZF;
 								}
 							}
+							x86_return_interrupt16(emu);
 							break;
 						case 0x09:
 							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
@@ -4104,9 +4108,10 @@ break;
 								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
 								if(value == '$')
 									break;
-								_dos_putchar(emu, value);
+								dos_putchar(emu, value);
 							}
 							_display_screen(emu);
+							x86_return_interrupt16(emu);
 							break;
 						case 0x4C:
 							fprintf(stderr, "MS-DOS exit\n");
@@ -4116,7 +4121,6 @@ break;
 							fprintf(stderr, "MS-DOS API call AH=%02X\n", emu->ah);
 							exit(0);
 						}
-						x86_return_interrupt16(emu);
 					}
 					break;
 				case 0x80:
@@ -4135,7 +4139,7 @@ break;
 							exit(0);
 							break;
 						case 0x02:
-							_dos_putchar(emu, emu->dl);
+							dos_putchar(emu, emu->dl);
 							_display_screen(emu);
 							break;
 						case 0x09:
@@ -4144,7 +4148,7 @@ break;
 								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
 								if(value == '$')
 									break;
-								_dos_putchar(emu, value);
+								dos_putchar(emu, value);
 							}
 							_display_screen(emu);
 							break;
@@ -4191,7 +4195,7 @@ break;
 						exit(0);
 						break;
 					case 0x02:
-						_dos_putchar(emu, emu->x80.e);
+						dos_putchar(emu, emu->x80.e);
 						_display_screen(emu);
 						break;
 					case 0x09:
@@ -4200,7 +4204,7 @@ break;
 							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
 							if(value == '$')
 								break;
-							_dos_putchar(emu, value);
+							dos_putchar(emu, value);
 						}
 						_display_screen(emu);
 						break;
@@ -4305,6 +4309,28 @@ break;
 			default:
 				break;
 			}
+		}
+
+		switch(wait_for_interrupt)
+		{
+		case WAIT_NOTHING:
+			break;
+		case WAIT_CPM80_0005_01:
+			// TODO
+			break;
+		case WAIT_CPM86_E0_01:
+			// TODO
+			break;
+		case WAIT_MSDOS_21_01:
+			if(dos_key_available())
+			{
+				emu->al = dos_key_get();
+				dos_putchar(emu, emu->al);
+				_display_screen(emu);
+				wait_for_interrupt = WAIT_NOTHING;
+				x86_return_interrupt16(emu);
+			}
+			break;
 		}
 
 		if(!inhibit_interrupts)
