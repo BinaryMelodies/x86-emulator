@@ -2881,7 +2881,7 @@ enum
 	X86_64_SYS_BRK = 12,
 };
 
-static inline uint16_t freadword(FILE * input)
+static inline uint64_t freadword(FILE * input)
 {
 	return ei_class == ELFCLASS64 ? fread64le(input) : fread32le(input);
 }
@@ -3008,6 +3008,7 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 	}
 
 	system_type |= X86_SYSTEM_TYPE_LINUX;
+	emu->capture_transitions = true; // do not execute interrupts
 
 	return 0;
 }
@@ -4165,28 +4166,6 @@ int main(int argc, char * argv[])
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
-
-		for(unsigned int_num = 0; int_num < 256; int_num++)
-		{
-			x86_memory_write16(emu, emu->idtr.base + int_num * 8,     0x0000);
-			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 2, 0x0008);
-			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 4, 0xEE00);
-			x86_memory_write16(emu, emu->idtr.base + int_num * 8 + 6, 0x0000);
-		}
-		emu->gdtr.base = emu->idtr.base + 256 * 8;
-		emu->gdtr.limit = registers.ss_given && registers.ds_given ? 0x1F : 0x17;
-		x86_memory_write16(emu, emu->gdtr.base + 8,     0x0000);
-		x86_memory_write32(emu, emu->gdtr.base + 8 + 2, (emu->sr[X86_R_CS].base & 0x00FFFFFF) | 0x9A000000);
-		x86_memory_write16(emu, emu->gdtr.base + 8 + 6, ((emu->sr[X86_R_CS].base & 0xFF000000) >> 16) | 0x00CF);
-		x86_memory_write16(emu, emu->gdtr.base + 16,     0x0000);
-		x86_memory_write32(emu, emu->gdtr.base + 16 + 2, (emu->sr[X86_R_SS].base & 0x00FFFFFF) | 0x92000000);
-		x86_memory_write16(emu, emu->gdtr.base + 16 + 6, ((emu->sr[X86_R_SS].base & 0xFF000000) >> 16) | 0x00CF);
-		if(registers.ss_given && registers.ds_given)
-		{
-			x86_memory_write16(emu, emu->gdtr.base + 24,     0x0000);
-			x86_memory_write32(emu, emu->gdtr.base + 24 + 2, (emu->sr[X86_R_DS].base & 0x00FFFFFF) | 0x92000000);
-			x86_memory_write16(emu, emu->gdtr.base + 24 + 6, ((emu->sr[X86_R_DS].base & 0xFF000000) >> 16) | 0x00CF);
-		}
 		break;
 
 	case EXEC_LM64:
@@ -4439,8 +4418,26 @@ int main(int argc, char * argv[])
 				case 0x80:
 					if((system_type & X86_SYSTEM_TYPE_LINUX))
 					{
-						fprintf(stderr, "Linux system call EAH=%08X\n", emu->eax);
-						exit(0);
+						switch(emu->eax)
+						{
+						case X86_32_SYS_EXIT:
+							exit(emu->ebx);
+							break;
+						case X86_32_SYS_WRITE:
+							{
+								char * buffer = malloc(emu->edx);
+								for(size_t offset = 0; offset < emu->edx; offset++)
+								{
+									buffer[offset] = x86_memory_read8(emu, emu->ecx + offset);
+								}
+								emu->eax = write(emu->ebx, buffer, emu->edx);
+							}
+							break;
+						default:
+							fprintf(stderr, "Linux system call EAH=%08X\n", emu->eax);
+							exit(0);
+							break;
+						}
 					}
 					break;
 				case 0xE0:
