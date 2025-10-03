@@ -5,6 +5,7 @@ all:
 	make -C pc all
 	make -C msdos all
 	make -C cpm80 all
+	make -C linux all
 
 clean:
 	make -C boot clean
@@ -12,6 +13,7 @@ clean:
 	make -C pc clean
 	make -C msdos clean
 	make -C cpm80 clean
+	make -C linux clean
 
 distclean: clean
 	rm -rf *~
@@ -20,64 +22,7 @@ distclean: clean
 	make -C pc distclean
 	make -C msdos distclean
 	make -C cpm80 distclean
-
-86.img: boot.asm
-	nasm -fbin $< -o $@ -DOS86=1
-
-286.img: boot.asm
-	nasm -fbin $< -o $@ -DOS286=1
-
-386.img: boot.asm
-	nasm -fbin $< -o $@ -DOS386=1
-
-x64.img: boot.asm
-	nasm -fbin $< -o $@ -DOSX64=1
-
-cpu.com: cpu.asm
-	nasm -fbin $< -o $@
-
-testi89.bin: testi89.asm
-	asi89 $< -o $(basename $@ .bin).hex
-	hex2bin -e bin $(basename $@ .bin).hex
-
-testv20.img: testv20.asm
-	nasm -fbin $< -o $@
-
-testv33.img: testv33.asm
-	nasm -fbin $< -o $@
-
-testv25.img: testv25.asm
-	nasm -fbin $< -o $@
-
-testv55.img: testv55.asm
-	nasm -fbin $< -o $@
-
-testx87.com: testx87.asm
-	nasm -fbin $< -o $@
-
-testscr.com: testscr.asm
-	nasm -fbin $< -o $@
-
-testtext.com: testtext.asm
-	nasm -fbin $< -o $@
-
-testkbd.com: testkbd.asm
-	nasm -fbin $< -o $@
-
-testpcjr.jrc: testpcjr.asm
-	nasm -fbin $< -o $@
-
-testact.img: testact.asm
-	nasm -fbin $< -o $@
-
-testpc88.img: testpc88.asm
-	nasm -fbin $< -o $@
-
-testrel.bin: testrel.asm
-	nasm -fbin $< -o $@
-
-dos.com: dos.asm
-	nasm -fbin $< -o $@
+	make -C linux distclean
 
 .PHONY: all clean distclean
 
