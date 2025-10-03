@@ -2826,6 +2826,131 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	return address;
 }
 
+// for ELKS
+
+enum
+{
+	MINIX_A_EXEC   = 0x10,
+	MINIX_A_SEP    = 0x20,
+	MINIX_A_I8086  = 0x04,
+	MINIX_A_I80386 = 0x10, // unused
+};
+
+uaddr_t load_minix(x86_state_t * emu, FILE * input_file, long file_offset, struct load_registers * registers)
+{
+	fseek(input_file, file_offset + 2, SEEK_SET);
+
+	uint8_t flags = fgetc(input_file);
+
+	if(flags != MINIX_A_EXEC && flags != MINIX_A_SEP)
+	{
+		fprintf(stderr, "Not executable\n");
+		exit(1);
+	}
+
+	if(fgetc(input_file) != MINIX_A_I8086)
+	{
+		fprintf(stderr, "Invalid machine type\n");
+		exit(1);
+	}
+
+	uint8_t header_size = fgetc(input_file);
+	if(header_size != 0x20)
+	{
+		fprintf(stderr, "Unrecognized header format\n");
+		exit(1);
+	}
+
+	fseek(input_file, 1L, SEEK_CUR);
+
+	uint16_t version = fread16le(input_file);
+
+	if(!(version == 0 || (version == 1 && flags == MINIX_A_SEP)))
+	{
+		fprintf(stderr, "Invalid object version\n");
+		exit(1);
+	}
+
+	if(registers->exec_mode == EXEC_DEFAULT)
+		registers->exec_mode = EXEC_PM16;
+
+	uint32_t text_size = fread32le(input_file);
+	uint32_t data_size = fread32le(input_file);
+	uint32_t bss_size = fread32le(input_file);
+	uint32_t entry = fread32le(input_file);
+
+	registers->ip_given = true;
+	registers->ip = entry;
+
+	uint32_t total_size = 0;
+	switch(version)
+	{
+	case 0:
+		total_size = fread32le(input_file);
+		if(total_size == 0)
+		{
+			total_size = data_size + bss_size + 0x2000;
+			if(flags == MINIX_A_EXEC)
+				total_size += text_size;
+		}
+		break;
+	case 1:
+		{
+			uint16_t heap_size = fread16le(input_file);
+			uint16_t stack_size = fread16le(input_file);
+			if(stack_size == 0)
+				stack_size = 0x1000;
+			if(heap_size == 0)
+				heap_size = 0x1000;
+			total_size = data_size + bss_size + stack_size;
+			if(heap_size < 0xFFF0)
+				total_size += heap_size;
+			else if(total_size < 0xFFF0)
+				total_size = 0xFFF0;
+		}
+		break;
+	}
+
+	registers->sp = total_size;
+
+	registers->cs_given = true;
+	registers->cs = 0x10000 >> 4;
+
+	if(flags == MINIX_A_SEP)
+	{
+		registers->ss_given = true;
+		registers->ss = registers->cs + (0x10000 >> 4);
+	}
+
+	fseek(input_file, file_offset + header_size, SEEK_SET);
+	if(flags == MINIX_A_EXEC)
+	{
+		for(uint32_t offset = 0; offset < text_size + data_size; offset ++)
+		{
+			x86_memory_write8(emu, (registers->cs << 4) + offset, fgetc(input_file));
+		}
+	}
+	else
+	{
+		for(uint32_t offset = 0; offset < text_size; offset ++)
+		{
+			x86_memory_write8(emu, (registers->cs << 4) + offset, fgetc(input_file));
+		}
+		for(uint32_t offset = 0; offset < data_size; offset ++)
+		{
+			x86_memory_write8(emu, (registers->ss << 4) + offset, fgetc(input_file));
+		}
+	}
+
+	system_type |= X86_SYSTEM_TYPE_LINUX;
+
+	registers->cpl_given = true;
+	registers->cpl = 3;
+	emu->capture_transitions = true; // do not execute interrupts
+
+	return 0;
+}
+
 // for ELF
 
 enum
@@ -4042,8 +4167,8 @@ int main(int argc, char * argv[])
 			exit(1);
 		case FMT_MINIX:
 		case_fmt_minix:
-			fprintf(stderr, "MINIX support not yet implemented\n");
-			exit(1);
+			load_minix(emu, input, 0, &registers);
+			break;
 		case FMT_AOUT:
 		case_fmt_aout:
 			fprintf(stderr, "a.out support not yet implemented\n");
@@ -4080,7 +4205,7 @@ int main(int argc, char * argv[])
 		if(!registers.cs_given)
 		{
 			registers.cs = (registers.ip >> 4) & ~0x0FFF;
-			registers.ip &= 0xFFFF;
+			registers.ip &= 0x000F;
 		}
 
 		emu->xip = registers.ip & 0xFFFF;
@@ -4153,6 +4278,7 @@ int main(int argc, char * argv[])
 
 	case EXEC_PM16:
 	case EXEC_CM16:
+		// TODO: must make GDT, otherwise segment registers cannot be popped/pushed
 		if(!registers.cpl_given)
 		{
 			registers.cpl = 0;
@@ -4506,34 +4632,69 @@ int main(int argc, char * argv[])
 				case 0x80:
 					if((system_type & X86_SYSTEM_TYPE_LINUX))
 					{
-						switch(emu->eax)
+						if(x86_is_16bit_mode(emu))
 						{
-						case X86_32_SYS_EXIT:
-							exit(emu->ebx);
-							break;
-						case X86_32_SYS_WRITE:
-							if(emu->ebx == 1 && pc_type != X86_PCTYPE_NONE)
+							switch(emu->ax)
 							{
-								for(size_t offset = 0; offset < emu->edx; offset++)
+							case X86_32_SYS_EXIT:
+								exit(emu->bx);
+								break;
+							case X86_32_SYS_WRITE:
+								if(emu->bx == 1 && pc_type != X86_PCTYPE_NONE)
 								{
-									unix_putchar(emu, x86_memory_read8(emu, emu->ecx + offset));
+									for(size_t offset = 0; offset < emu->dx; offset++)
+									{
+										unix_putchar(emu, x86_memory_read8(emu, emu->ds_cache.base + emu->cx + offset));
+									}
+									_display_screen(emu);
 								}
-								_display_screen(emu);
+								else
+								{
+									char * buffer = malloc(emu->dx);
+									for(size_t offset = 0; offset < emu->dx; offset++)
+									{
+										buffer[offset] = x86_memory_read8(emu, emu->ds_cache.base + emu->cx + offset);
+									}
+									emu->eax = write(emu->bx, buffer, emu->dx);
+								}
+								break;
+							default:
+								fprintf(stderr, "Linux system call AX=%04X\n", emu->ax);
+								exit(0);
+								break;
 							}
-							else
+						}
+						else
+						{
+							switch(emu->eax)
 							{
-								char * buffer = malloc(emu->edx);
-								for(size_t offset = 0; offset < emu->edx; offset++)
+							case X86_32_SYS_EXIT:
+								exit(emu->ebx);
+								break;
+							case X86_32_SYS_WRITE:
+								if(emu->ebx == 1 && pc_type != X86_PCTYPE_NONE)
 								{
-									buffer[offset] = x86_memory_read8(emu, emu->ecx + offset);
+									for(size_t offset = 0; offset < emu->edx; offset++)
+									{
+										unix_putchar(emu, x86_memory_read8(emu, emu->ecx + offset));
+									}
+									_display_screen(emu);
 								}
-								emu->eax = write(emu->ebx, buffer, emu->edx);
+								else
+								{
+									char * buffer = malloc(emu->edx);
+									for(size_t offset = 0; offset < emu->edx; offset++)
+									{
+										buffer[offset] = x86_memory_read8(emu, emu->ecx + offset);
+									}
+									emu->eax = write(emu->ebx, buffer, emu->edx);
+								}
+								break;
+							default:
+								fprintf(stderr, "Linux system call EAX=%08X\n", emu->eax);
+								exit(0);
+								break;
 							}
-							break;
-						default:
-							fprintf(stderr, "Linux system call EAX=%08X\n", emu->eax);
-							exit(0);
-							break;
 						}
 					}
 					break;
