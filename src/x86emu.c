@@ -1535,6 +1535,7 @@ static void bios_screen_putchar(x86_state_t * emu, int c)
 	}
 }
 
+// quick simple functions to reverse the scancode lookup
 static int ibmpc_convert_scancode(int k)
 {
 	for(size_t c = 0; c < sizeof ibmpc_scancodes / sizeof ibmpc_scancodes[0]; c++)
@@ -1545,7 +1546,6 @@ static int ibmpc_convert_scancode(int k)
 	return 0;
 }
 
-#if 0
 static int necpc98_convert_scancode(int k)
 {
 	for(unsigned c = 0; c < sizeof necpc98_scancodes / sizeof necpc98_scancodes[0]; c++)
@@ -1555,7 +1555,6 @@ static int necpc98_convert_scancode(int k)
 	}
 	return 0;
 }
-#endif
 
 static struct
 {
@@ -1685,8 +1684,33 @@ static void _dos_process_keys(x86_state_t * emu)
 		while(i8251.data_available)
 		{
 			key = i8251.buffer[0];
-			i8042_acknowledge();
-			// TODO
+			i8251_acknowledge();
+
+			c = necpc98_convert_scancode(key & 0x7F);
+			switch(c)
+			{
+			case KEY_SHIFT:
+				dos_kbd_state.shift = !(key & 0x80);
+				break;
+			case KEY_CAPS:
+				dos_kbd_state.caps = !(key & 0x80);
+				break;
+			default:
+				if(!(key & 0x80))
+				{
+					if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
+					{
+						c += 'A' - 'a';
+					}
+					else if(c < sizeof _shifted && _shifted[c] != 0 && dos_kbd_state.shift)
+					{
+						c = _shifted[c];
+					}
+
+					_dos_insert_key(c);
+				}
+				break;
+			}
 		}
 		break;
 	default:
