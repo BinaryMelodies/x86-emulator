@@ -1240,7 +1240,8 @@ x86_result_t x86_step(x86_state_t * emu)
 			emu->parser->address_size = emu->parser->code_size = x86_get_code_size(emu);
 			emu->parser->operation_size = emu->parser->code_size == X86_SIZE_WORD ? X86_SIZE_WORD : X86_SIZE_DWORD;
 
-			emu->parser->rex_prefix = emu->parser->rex_w = false;
+			emu->parser->rex_prefix = 0;
+			emu->parser->rex_w = false;
 			emu->parser->rex_r = emu->parser->rex_x = emu->parser->rex_b = 0;
 			emu->parser->opcode_map = 0;
 			emu->parser->vex_l = emu->parser->vex_v = emu->parser->evex_vb = emu->parser->evex_vx = emu->parser->evex_a = 0;
@@ -1298,7 +1299,8 @@ void x86_disassemble(x86_parser_t * prs, x86_state_t * emu)
 		prs->address_size = prs->code_size = x86_get_code_size(emu);
 		prs->operation_size = prs->code_size == X86_SIZE_WORD ? X86_SIZE_WORD : X86_SIZE_DWORD;
 
-		prs->rex_prefix = prs->rex_w = false;
+		prs->rex_prefix = 0;
+		prs->rex_w = false;
 		prs->rex_r = prs->rex_x = prs->rex_b = 0;
 		prs->opcode_map = 0;
 		prs->vex_l = prs->vex_v = prs->evex_vb = prs->evex_vx = prs->evex_a = 0;

@@ -164,6 +164,8 @@
   name: extended
   predecessors:
   - amd
+  modes:
+  - 64
 
 #### 8-bit architectures
 # Intel 8080
@@ -394,7 +396,8 @@ X86S	CPUID.EAX=00000007.ECX=00000001:ECX.2
 63	86	JNB	Jb
 63	v20	NOP	Ew
 63	v25	BRKN	Ib	feature:	V25S
-63	v55,ext	DS2:
+#63	v55,ext	DS2:	# TODO
+63	v55	DS2
 63	v60	exit_v20_emulation
 63	!64,286+,!ext	ARPL	Ew, Gw
 63	64,586+	MOVSXD	Gv, Ed
