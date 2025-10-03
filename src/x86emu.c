@@ -818,11 +818,17 @@ int necpc98_scancodes[] =
 	[' '] = 0x34,
 };
 
+static void _dos_process_char(x86_state_t * emu, unsigned c, bool press);
+
 static inline void kbd_issue(x86_state_t * emu, int key, bool press)
 {
 	int scancode;
 	switch(pc_type)
 	{
+	case X86_PCTYPE_NONE:
+		// directly channel through to the emulated OS
+		_dos_process_char(emu, key, press);
+		break;
 	case X86_PCTYPE_IBM_PC_MDA:
 	case X86_PCTYPE_IBM_PC_CGA:
 	case X86_PCTYPE_IBM_PCJR:
@@ -1478,6 +1484,7 @@ static void bios_screen_putchar(x86_state_t * emu, int c)
 	case X86_PCTYPE_NONE:
 		// use the terminal
 		putchar(c);
+		fflush(stdout);
 		break;
 	case X86_PCTYPE_IBM_PC_MDA:
 	case X86_PCTYPE_IBM_PC_CGA:
@@ -1638,6 +1645,37 @@ static const char _shifted[256] =
 	['/']  = '?',
 };
 
+static void _dos_process_char(x86_state_t * emu, unsigned c, bool press)
+{
+	(void) emu;
+
+	switch(c)
+	{
+	case KEY_SHIFT:
+		dos_kbd_state.shift = press;
+		break;
+	case KEY_CAPS:
+		if(press)
+			dos_kbd_state.caps = !dos_kbd_state.caps;
+		break;
+	default:
+		if(press)
+		{
+			if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
+			{
+				c += 'A' - 'a';
+			}
+			else if(c < sizeof _shifted && _shifted[c] != 0 && dos_kbd_state.shift)
+			{
+				c = _shifted[c];
+			}
+
+			_dos_insert_key(c);
+		}
+		break;
+	}
+}
+
 static void _dos_process_keys(x86_state_t * emu)
 {
 	(void) emu;
@@ -1654,30 +1692,7 @@ static void _dos_process_keys(x86_state_t * emu)
 			i8042_acknowledge();
 
 			c = ibmpc_convert_scancode(key & 0x7F);
-			switch(c)
-			{
-			case KEY_SHIFT:
-				dos_kbd_state.shift = !(key & 0x80);
-				break;
-			case KEY_CAPS:
-				dos_kbd_state.caps = !(key & 0x80);
-				break;
-			default:
-				if(!(key & 0x80))
-				{
-					if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
-					{
-						c += 'A' - 'a';
-					}
-					else if(c < sizeof _shifted && _shifted[c] != 0 && dos_kbd_state.shift)
-					{
-						c = _shifted[c];
-					}
-
-					_dos_insert_key(c);
-				}
-				break;
-			}
+			_dos_process_char(emu, c, !(key & 0x80));
 		}
 		break;
 	case X86_PCTYPE_NEC_PC98:
@@ -1687,30 +1702,7 @@ static void _dos_process_keys(x86_state_t * emu)
 			i8251_acknowledge();
 
 			c = necpc98_convert_scancode(key & 0x7F);
-			switch(c)
-			{
-			case KEY_SHIFT:
-				dos_kbd_state.shift = !(key & 0x80);
-				break;
-			case KEY_CAPS:
-				dos_kbd_state.caps = !(key & 0x80);
-				break;
-			default:
-				if(!(key & 0x80))
-				{
-					if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
-					{
-						c += 'A' - 'a';
-					}
-					else if(c < sizeof _shifted && _shifted[c] != 0 && dos_kbd_state.shift)
-					{
-						c = _shifted[c];
-					}
-
-					_dos_insert_key(c);
-				}
-				break;
-			}
+			_dos_process_char(emu, c, !(key & 0x80));
 		}
 		break;
 	default:
@@ -4090,9 +4082,11 @@ break;
 	//			fprintf(stderr, "CPU halted\n");
 				break;
 			case X86_RESULT_CPU_INTERRUPT:
-				fprintf(stderr, "Interrupt 0x%02X\n", X86_RESULT_VALUE(result));
 				switch(X86_RESULT_VALUE(result))
 				{
+				default:
+					fprintf(stderr, "Interrupt 0x%02X\n", X86_RESULT_VALUE(result));
+					break;
 				case 0x20:
 					if((system_type & X86_SYSTEM_TYPE_MSDOS))
 					{
