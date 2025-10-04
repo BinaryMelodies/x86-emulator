@@ -3143,22 +3143,27 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 
 	registers->ip_given = true;
 	registers->ip = freadword(input_file);
-	registers->sp_given = true;
 
 	switch(get_exec_mode_size(registers->exec_mode))
 	{
 	case CODE_8_BIT:
-		// TODO
+		registers->cs_given = true;
+		registers->cs = 0x10000;
+		registers->sp_given = true;
+		registers->sp = 0;
 		break;
 	case CODE_16_BIT:
 		registers->cs_given = true;
 		registers->cs = 0x10000;
+		registers->sp_given = true;
 		registers->sp = 0xFFF0;
 		break;
 	case CODE_32_BIT:
+		registers->sp_given = true;
 		registers->sp = 0x40800000;
 		break;
 	case CODE_64_BIT:
+		registers->sp_given = true;
 		registers->sp = 0x000002AAAAC00000;
 		break;
 	}
@@ -3191,7 +3196,7 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 			uint64_t offset = freadword(input_file);
 			uint64_t v_address = freadword(input_file);
 
-			if(get_exec_mode_size(registers->exec_mode) == CODE_16_BIT)
+			if(get_exec_mode_size(registers->exec_mode) <= CODE_16_BIT)
 			{
 				// load ELF file as ELKS binary binary
 				if(i == 0) // TODO: check segment flags instead
@@ -3237,7 +3242,10 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 		}
 	}
 
-	system_type |= X86_SYSTEM_TYPE_LINUX;
+	if(get_exec_mode_size(registers->exec_mode) == CODE_8_BIT)
+		system_type |= X86_SYSTEM_TYPE_UZI;
+	else
+		system_type |= X86_SYSTEM_TYPE_LINUX;
 
 	registers->cpl_given = true;
 	registers->cpl = 3;
@@ -3422,6 +3430,25 @@ void usage_pctype(void)
 		"\t\tDEC Rainbow 100\n");
 }
 
+void usage_systype(void)
+{
+	printf(
+		"x86emu - A versatile x86 emulator and rudimentay PC emulator\n"
+		"Supported system types:\n"
+		"\tmsdos\n"
+		"\t\tMS-DOS, runs in 16-bit real mode\n"
+		"\tcpm86\n"
+		"\t\tCP/M-86, runs in 16-bit real mode\n"
+		"\tlinux\n"
+		"\t\tLinux, runs in 32-bit protected mode or 64-bit long mode\n"
+		"\telks\n"
+		"\t\tELKS (Embedded Linux Kernel Subset), runs in 16-bit real and protected mode\n"
+		"\tcpm, cpm80\n"
+		"\t\tCP/M-80, runs in 8080/Z80 emulation\n"
+		"\tuzi\n"
+		"\t\tDoug Braun's UZI (Unix: Z80 Implementation), runs in 8080/Z80 emulation\n");
+}
+
 void usage(char * argv0)
 {
 	printf(
@@ -3436,6 +3463,7 @@ void usage(char * argv0)
 		"\t-l <adr>\tloads image at specified address, address can be hexadecimal or a <segment>:<offset> pair of hexadecimal numbers\n"
 		"\t-F <fmt>\ttreat image as specific format, write -hF to display list of all supported formats\n"
 		"\t-P <type>\tset PC type, write -hP to display list of all supported types\n"
+		"\t-S <sys>\tset system type, write -hS to display list of all supported systems\n"
 		"\t-O blink\tenable blinking (PC specific)\n"
 		"\t-O noblink\tdisable blinking (PC specific)\n"
 		"\t-D\tenable disassembly\n"
@@ -3548,6 +3576,10 @@ int main(int argc, char * argv[])
 				else if(strcmp(arg, "P") == 0 || strcmp(arg, "-P") == 0)
 				{
 					usage_pctype();
+				}
+				else if(strcmp(arg, "S") == 0 || strcmp(arg, "-S") == 0)
+				{
+					usage_systype();
 				}
 				else
 				{
