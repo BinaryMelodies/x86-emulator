@@ -2164,7 +2164,7 @@ uaddr_t load_bin(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		registers->ip = 0;
 	}
 
-	address = ((uaddr_t)registers->cs << 4) + registers->ip;
+	address = registers->cs + registers->ip;
 
 	fseek(input, file_offset, SEEK_SET);
 	for(size_t i = 0; i < maximum; i++)
@@ -2201,7 +2201,7 @@ uaddr_t load_apricot_disk(x86_state_t * emu, FILE * input, long file_offset, str
 	registers->ip = fread16le(input);
 
 	registers->cs_given = true;
-	registers->cs = fread16le(input);
+	registers->cs = (uint32_t)fread16le(input) << 4;
 
 	fseek(input, file_offset + boot_sector_number * sector_size, SEEK_SET);
 	for(unsigned i = 0; i < boot_sector_count * sector_size; i++)
@@ -2223,11 +2223,11 @@ uaddr_t load_pcjr(x86_state_t * emu, FILE * input, long file_offset, struct load
 	fseek(input, file_offset + 0x1CE, SEEK_SET);
 
 	registers->cs_given = true;
-	registers->cs = fread16le(input);
+	registers->cs = (uint32_t)fread16le(input) << 4;
 	registers->ip_given = true;
 	registers->ip = 0x0003;
 
-	uaddr_t address = (uaddr_t)registers->cs << 4;
+	uaddr_t address = registers->cs;
 
 	fseek(input, file_offset + 0x200, SEEK_SET);
 	for(int i = 0; ; i++)
@@ -2251,7 +2251,7 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	if(!registers->cs_given)
 	{
 		registers->cs_given = true;
-		registers->cs = 0x0100;
+		registers->cs = 0x0100 << 4;
 	}
 	if(!registers->ip_given)
 	{
@@ -2272,7 +2272,7 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 			registers->ss_given = true;
 			registers->ss = registers->ds;
 		}
-		else if(registers->ss_given != registers->ds_given)
+		else if(registers->ss != registers->ds)
 		{
 			fprintf(stderr, "Error: DS != SS\n");
 		}
@@ -2289,7 +2289,7 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		registers->es = registers->ds;
 	}
 
-	address = ((uaddr_t)registers->cs << 4) + registers->ip;
+	address = registers->cs + registers->ip;
 
 	if(address < 0x100)
 	{
@@ -2354,7 +2354,7 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	if(!registers->cs_given)
 	{
 		registers->cs_given = true;
-		registers->cs = 0x0100;
+		registers->cs = 0x0100 << 4;
 	}
 	if(!registers->ip_given)
 	{
@@ -2366,7 +2366,7 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		fprintf(stderr, "Error: Invalid load address, IP must be 256-byte page aligned\n");
 	}
 
-	address = ((uaddr_t)registers->cs << 4) + registers->ip;
+	address = registers->cs + registers->ip;
 
 	if(address < 0x100)
 	{
@@ -2384,7 +2384,7 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		registers->ss_given = true;
 		registers->ss = registers->ds;
 	}
-	else if(registers->ss_given != registers->ds_given)
+	else if(registers->ss != registers->ds)
 	{
 		fprintf(stderr, "Error: DS != SS\n");
 	}*/
@@ -2413,7 +2413,7 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 	if(!registers->cs_given)
 	{
 		registers->cs_given = true;
-		registers->cs = 0x0100;
+		registers->cs = 0x0100 << 4;
 	}
 	if(!registers->ip_given)
 	{
@@ -2436,12 +2436,12 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 		registers->ss_given = true;
 		registers->ss = registers->ds;
 	}
-	else if(registers->ss_given != registers->ds_given)
+	else if(registers->ss != registers->ds)
 	{
 		fprintf(stderr, "Error: DS != SS\n");
 	}*/
 
-	address = ((uaddr_t)registers->cs << 4) + registers->ip;
+	address = registers->cs + registers->ip;
 
 	if(address < 0x100)
 	{
@@ -2481,7 +2481,7 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 	for(uint8_t rsx_index = 0; rsx_index < rsx_count; rsx_index++)
 	{
 		address = (address + 0x1FF) & 0xFF00;
-		load_prl_body(emu, input, file_offset + rsx_records[rsx_index].offset, ((uaddr_t)registers->cs << 4) + address, address, rsx_records[rsx_index].length);
+		load_prl_body(emu, input, file_offset + rsx_records[rsx_index].offset, registers->cs + address, address, rsx_records[rsx_index].length);
 		address += 0x100 + rsx_records[rsx_index].length;
 	}
 
@@ -2507,14 +2507,14 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 	// Note: the CS:IP values are used to load the image, the actual CS:IP values are read from file
 	if(!registers->cs_given)
 	{
-		registers->cs = registers->ds_given ? registers->ds + 0x0010 : 0x0100;
+		registers->cs = registers->ds_given ? registers->ds + (0x0010 << 4) : (0x0100 << 4);
 	}
 	if(!registers->ip_given)
 	{
 		registers->ip = 0x0000;
 	}
 
-	address = ((uaddr_t)registers->cs << 4) + registers->ip;
+	address = registers->cs + registers->ip;
 
 	if(address < 0x100)
 	{
@@ -2529,10 +2529,10 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 	uint32_t data_start = (uint32_t)fread16le(input) << 4;
 	fseek(input, 4L, SEEK_CUR); // skip minimum and maximum supplementary memory size
 	uint16_t sp = fread16le(input);
-	uint16_t ss = fread16le(input);
+	uint32_t ss = (uint32_t)fread16le(input) << 4;
 	fseek(input, 2L, SEEK_CUR); // skip checksum
 	uint16_t ip = fread16le(input);
-	uint16_t cs = fread16le(input);
+	uint32_t cs = (uint32_t)fread16le(input) << 4;
 	uint16_t relocation_offset = fread16le(input);
 
 	fseek(input, file_offset + data_start, SEEK_SET);
@@ -2550,10 +2550,10 @@ uaddr_t load_mz_exe(x86_state_t * emu, FILE * input, long file_offset, struct lo
 		uint32_t offset = fread16le(input);
 		offset += (uint16_t)fread16le(input) << 4;
 		x86_memory_write16(emu, address + offset,
-			x86_memory_read16(emu, address + offset) + registers->cs);
+			x86_memory_read16(emu, address + offset) + (registers->cs >> 4));
 	}
 
-	if(registers->ds_given && registers->ds != registers->cs - 0x0010)
+	if(registers->ds_given && registers->ds != registers->cs - (0x0010 << 4))
 	{
 		fprintf(stderr, "Error: DS != load segment - 0x0010, overriding\n");
 	}
@@ -2654,7 +2654,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 		if(!registers->cs_given)
 		{
-			registers->cs = 0x0100;
+			registers->cs = 0x0100 << 4;
 		}
 		if(!registers->ip_given)
 		{
@@ -2665,7 +2665,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		{
 			fprintf(stderr, "Error: IP != 0x0100\n");
 		}
-		address = ((uaddr_t)registers->cs << 4) + registers->ip - 0x0100;
+		address = registers->cs + registers->ip - 0x0100;
 	}
 	else
 	{
@@ -2674,7 +2674,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 		if(!registers->cs_given)
 		{
-			registers->cs = 0x0100;
+			registers->cs = 0x0100 << 4;
 		}
 		if(!registers->ip_given)
 		{
@@ -2685,7 +2685,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		{
 			fprintf(stderr, "Error: IP != 0x0000\n");
 		}
-		address = ((uaddr_t)registers->cs << 4) + registers->ip;
+		address = registers->cs + registers->ip;
 	}
 
 	if((address & 0xF) != 0)
@@ -2728,24 +2728,24 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		}
 	}
 
-	uint16_t cs;
+	uint32_t cs;
 	if(descriptor_indexes[CODE] == 0 && descriptor_indexes[PURE_CODE] == 0)
 	{
 		fprintf(stderr, "Error: no code segment provided\n");
-		cs = descriptors[0].base >> 4;
+		cs = descriptors[0].base;
 	}
 	else if(descriptor_indexes[CODE] != 0 && descriptor_indexes[PURE_CODE] != 0)
 	{
 		fprintf(stderr, "Error: both code and pure code segment provided\n");
-		cs = descriptors[min(descriptor_indexes[CODE ] - 1, descriptor_indexes[PURE_CODE ] - 1)].base >> 4;
+		cs = descriptors[min(descriptor_indexes[CODE ] - 1, descriptor_indexes[PURE_CODE ] - 1)].base;
 	}
 	else if(descriptor_indexes[CODE] != 0)
 	{
-		cs = descriptors[descriptor_indexes[CODE] - 1].base >> 4;
+		cs = descriptors[descriptor_indexes[CODE] - 1].base;
 	}
 	else
 	{
-		cs = descriptors[descriptor_indexes[PURE_CODE] - 1].base >> 4;
+		cs = descriptors[descriptor_indexes[PURE_CODE] - 1].base;
 	}
 
 	registers->cs_given = true;
@@ -2753,7 +2753,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 	if(registers->ds_given)
 	{
-		registers->ds += descriptors[0].base >> 4;
+		registers->ds += descriptors[0].base;
 	}
 	else
 	{
@@ -2763,22 +2763,22 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 
 	if(registers->es_given)
 	{
-		registers->es += descriptors[0].base >> 4;
+		registers->es += descriptors[0].base;
 	}
 	else
 	{
 		registers->es_given = true;
-		registers->es = descriptor_indexes[EXTRA] != 0 ? descriptors[descriptor_indexes[EXTRA] - 1].base >> 4 : registers->ds;
+		registers->es = descriptor_indexes[EXTRA] != 0 ? descriptors[descriptor_indexes[EXTRA] - 1].base : registers->ds;
 	}
 
 	if(registers->ss_given)
 	{
-		registers->ss += descriptors[0].base >> 4;
+		registers->ss += descriptors[0].base;
 	}
 	else
 	{
 		registers->ss_given = true;
-		registers->ss = address >> 4;
+		registers->ss = address;
 	}
 
 	if(!registers->sp_given)
@@ -2813,7 +2813,7 @@ uaddr_t load_cmd(x86_state_t * emu, FILE * input, long file_offset, struct load_
 			struct load_registers _registers;
 			memset(&_registers, 0, sizeof _registers);
 			_registers.cs_given = true;
-			_registers.cs = address >> 4;
+			_registers.cs = address;
 			address = load_cmd(emu, input, file_offset + rsx_records[rsx_index], &_registers);
 		}
 	}
@@ -2914,12 +2914,12 @@ uaddr_t load_minix(x86_state_t * emu, FILE * input_file, long file_offset, struc
 	registers->sp = total_size;
 
 	registers->cs_given = true;
-	registers->cs = 0x10000 >> 4;
+	registers->cs = 0x10000;
 
 	if(flags == MINIX_A_SEP)
 	{
 		registers->ss_given = true;
-		registers->ss = registers->cs + (0x10000 >> 4);
+		registers->ss = registers->cs + 0x10000;
 	}
 
 	fseek(input_file, file_offset + header_size, SEEK_SET);
@@ -2927,18 +2927,18 @@ uaddr_t load_minix(x86_state_t * emu, FILE * input_file, long file_offset, struc
 	{
 		for(uint32_t offset = 0; offset < text_size + data_size; offset ++)
 		{
-			x86_memory_write8(emu, (registers->cs << 4) + offset, fgetc(input_file));
+			x86_memory_write8(emu, registers->cs + offset, fgetc(input_file));
 		}
 	}
 	else
 	{
 		for(uint32_t offset = 0; offset < text_size; offset ++)
 		{
-			x86_memory_write8(emu, (registers->cs << 4) + offset, fgetc(input_file));
+			x86_memory_write8(emu, registers->cs + offset, fgetc(input_file));
 		}
 		for(uint32_t offset = 0; offset < data_size; offset ++)
 		{
-			x86_memory_write8(emu, (registers->ss << 4) + offset, fgetc(input_file));
+			x86_memory_write8(emu, registers->ss + offset, fgetc(input_file));
 		}
 	}
 
@@ -3919,7 +3919,7 @@ int main(int argc, char * argv[])
 			registers.ip_given = true;
 			registers.ip = emu->xip;
 			registers.cs_given = true;
-			registers.cs = emu->sr[X86_R_CS].base >> 4;
+			registers.cs = emu->sr[X86_R_CS].base;
 		}
 		// TODO
 		break;
@@ -3929,6 +3929,7 @@ int main(int argc, char * argv[])
 		if(pc_type == X86_PCTYPE_DEFAULT || pc_type == X86_PCTYPE_IBM_PCJR)
 		{
 			char signature[4];
+			fseek(input, 0L, SEEK_SET);
 			if(fread(signature, 1, 4, input) == 4 && memcmp(signature, "PCjr", 4) == 0)
 			{
 				if(pc_type == X86_PCTYPE_DEFAULT)
@@ -3961,7 +3962,7 @@ int main(int argc, char * argv[])
 			registers.ip_given = true;
 			registers.ip = 0x0000;
 			registers.cs_given = true;
-			registers.cs = 0x1FE0; // TODO: sometimes 0x1FC0
+			registers.cs = 0x1FE0 << 4; // TODO: sometimes 0x1FC0
 			load_bin(emu, input, 0, &registers, 0x200);
 			break;
 		case X86_PCTYPE_NEC_PC88_VA:
@@ -3972,17 +3973,17 @@ int main(int argc, char * argv[])
 			if(registers.exec_mode != EXEC_FEM80)
 			{
 				registers.ip = 0x0000;
-				registers.cs = 0x3000;
+				registers.cs = 0x3000 << 4;
 				registers.sp = 0xFFFE;
-				registers.ss = 0x3000;
+				registers.ss = 0x3000 << 4;
 				load_bin(emu, input, 0, &registers, 0x200);
 			}
 			else
 			{
 				registers.ip = 0x3000;
-				registers.cs = 0x1000;
+				registers.cs = 0x1000 << 4;
 				registers.sp = 0xFFFE;
-				registers.ss = 0x1000;
+				registers.ss = 0x1000 << 4;
 				load_bin(emu, input, 0, &registers, 0x100);
 			}
 			break;
@@ -4043,6 +4044,7 @@ int main(int argc, char * argv[])
 				;
 
 				uint8_t magic[4];
+				fseek(input, 0L, SEEK_SET);
 				size_t bytes = fread(magic, 1, 4, input);
 				if((bytes >= 2 && magic[0] == 'M' && magic[1] == 'Z')
 				|| (bytes >= 2 && magic[0] == 'Z' && magic[1] == 'M'))
@@ -4204,23 +4206,23 @@ int main(int argc, char * argv[])
 	case EXEC_RM32:
 		if(!registers.cs_given)
 		{
-			registers.cs = (registers.ip >> 4) & ~0x0FFF;
+			registers.cs = registers.ip & ~0xF;
 			registers.ip &= 0x000F;
 		}
 
 		emu->xip = registers.ip & 0xFFFF;
-		emu->sr[X86_R_CS].selector = registers.cs;
-		emu->sr[X86_R_CS].base = registers.cs << 4;
+		emu->sr[X86_R_CS].selector = registers.cs >> 4;
+		emu->sr[X86_R_CS].base = registers.cs;
 		if(!registers.ss_given)
 			registers.ss = registers.ds_given ? registers.ds : registers.cs;
-		emu->sr[X86_R_SS].selector = registers.ss;
-		emu->sr[X86_R_SS].base = registers.ss << 4;
+		emu->sr[X86_R_SS].selector = registers.ss >> 4;
+		emu->sr[X86_R_SS].base = registers.ss;
 		if(!registers.ds_given)
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
-			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 4 : registers.ds;
-			emu->sr[segnum].base = registers.ds << 4;
+			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 8 : registers.ds >> 4;
+			emu->sr[segnum].base = registers.ds;
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
@@ -4230,50 +4232,26 @@ int main(int argc, char * argv[])
 	case EXEC_FEM80:
 		if(!registers.cs_given)
 		{
-			registers.cs = (registers.ip >> 4) & 0xF000;
+			registers.cs = registers.ip & ~0xFFFF;
 			registers.ip &= 0xFFFF;
 		}
 
 		emu->x80.pc = emu->xip = registers.ip & 0xFFFF;
-		emu->sr[X86_R_CS].selector = registers.cs;
-		emu->sr[X86_R_CS].base = registers.cs << 4;
+		emu->sr[X86_R_CS].selector = registers.cs >> 4;
+		emu->sr[X86_R_CS].base = registers.cs;
 		if(!registers.ss_given)
 			registers.ss = registers.ds_given ? registers.ds : registers.cs;
-		emu->sr[X86_R_SS].selector = registers.ss;
-		emu->sr[X86_R_SS].base = registers.ss << 4;
+		emu->sr[X86_R_SS].selector = registers.ss >> 4;
+		emu->sr[X86_R_SS].base = registers.ss;
 		if(!registers.ds_given)
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
-			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 4 : registers.ds;
-			emu->sr[segnum].base = registers.ds << 4;
+			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 8 : registers.ds >> 4;
+			emu->sr[segnum].base = registers.ds;
 		}
 		if(registers.sp_given)
 			emu->x80.sp = emu->gpr[X86_R_BP] = registers.sp;
-		break;
-
-		if(!registers.cs_given)
-		{
-			registers.cs = (registers.ip >> 4) & 0xF000;
-			registers.ip &= 0xFFFF;
-		}
-
-		emu->xip = registers.ip & 0xFFFF;
-		emu->sr[X86_R_CS].selector = registers.cs;
-		emu->sr[X86_R_CS].base = registers.cs << 4;
-		if(!registers.ss_given)
-			registers.ss = registers.ds_given ? registers.ds : registers.cs;
-		emu->sr[X86_R_SS].selector = registers.ss;
-		emu->sr[X86_R_SS].base = registers.ss << 4;
-		if(!registers.ds_given)
-			registers.ds = registers.ss_given ? registers.ss : registers.cs;
-		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].selector = registers.ds;
-			emu->sr[segnum].base = registers.ds << 4;
-		}
-		if(registers.sp_given)
-			emu->gpr[X86_R_SP] = registers.sp;
 		break;
 
 	case EXEC_PM16:
@@ -4289,25 +4267,25 @@ int main(int argc, char * argv[])
 
 		if(!registers.cs_given)
 		{
-			registers.cs = 0x1000;
+			registers.cs = 0x1000 << 4;
 		}
 
 		emu->cpl = registers.cpl;
 
 		emu->xip = registers.ip & 0xFFFF;
 		emu->sr[X86_R_CS].selector = 0x08 | registers.cpl;
-		emu->sr[X86_R_CS].base = registers.cs << 4;
+		emu->sr[X86_R_CS].base = registers.cs;
 		if(!registers.ss_given)
 			registers.ss = registers.ds_given ? registers.ds : registers.cs;
 		emu->sr[X86_R_SS].selector = 0x10 | registers.cpl;
-		emu->sr[X86_R_SS].base = registers.ss << 4;
+		emu->sr[X86_R_SS].base = registers.ss;
 		if(!registers.ds_given)
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
 		selector = (registers.ss_given && registers.ds_given ? 0x18 : 0x10) | registers.cpl;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
 			emu->sr[segnum].selector = selector;
-			emu->sr[segnum].base = registers.ds << 4;
+			emu->sr[segnum].base = registers.ds;
 		}
 		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
 		{
@@ -4366,18 +4344,18 @@ int main(int argc, char * argv[])
 
 		emu->xip = registers.ip & 0xFFFFFFFF;
 		emu->sr[X86_R_CS].selector = 0x08 | registers.cpl;
-		emu->sr[X86_R_CS].base = registers.cs << 4;
+		emu->sr[X86_R_CS].base = registers.cs;
 		if(!registers.ss_given)
 			registers.ss = registers.ds_given ? registers.ds : registers.cs;
 		emu->sr[X86_R_SS].selector = 0x10 | registers.cpl;
-		emu->sr[X86_R_SS].base = registers.ss << 4;
+		emu->sr[X86_R_SS].base = registers.ss;
 		if(!registers.ds_given)
 			registers.ds = registers.ss_given ? registers.ss : registers.cs;
 		selector = (registers.ss_given && registers.ds_given ? 0x18 : 0x10) | registers.cpl;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
 		{
 			emu->sr[segnum].selector = selector;
-			emu->sr[segnum].base = registers.ds << 4;
+			emu->sr[segnum].base = registers.ds;
 		}
 		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
 		{
@@ -4409,7 +4387,7 @@ int main(int argc, char * argv[])
 
 		emu->cpl = registers.cpl;
 
-		emu->xip = registers.ip + (registers.cs_given ? registers.cs << 4 : 0);
+		emu->xip = registers.ip;
 		emu->sr[X86_R_CS].selector = 0x08 | registers.cpl;
 		emu->sr[X86_R_SS].selector = 0x10 | registers.cpl;
 		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
@@ -4427,7 +4405,7 @@ int main(int argc, char * argv[])
 	case EXEC_I89:
 		if(!registers.cs_given)
 		{
-			registers.cs = (registers.ip >> 4) & ~0x0FFF;
+			registers.cs = registers.ip & ~0xFFFF;
 			registers.ip &= 0xFFFF;
 		}
 
@@ -4437,9 +4415,9 @@ int main(int argc, char * argv[])
 		x86_memory_write16_external(emu, emu->x89.cp + 8 * 0 + 4, 0x0000); // segment
 
 		x86_memory_write16_external(emu, emu->x89.cp + 0x10, registers.ip); // offset
-		x86_memory_write16_external(emu, emu->x89.cp + 0x12, registers.cs); // segment
+		x86_memory_write16_external(emu, emu->x89.cp + 0x12, registers.cs >> 4); // segment
 
-		emu->x89.channel[0].r[X89_R_TP].address = ((uint32_t)registers.cs << 4) + registers.ip;
+		emu->x89.channel[0].r[X89_R_TP].address = registers.cs + registers.ip;
 		emu->x89.channel[0].r[X89_R_TP].tag = 0;
 		emu->x89.channel[0].pp = emu->x89.cp + 0x10;
 		emu->x89.channel[0].psw = 0x80; // interrupts enabled
@@ -5008,7 +4986,7 @@ int main(int argc, char * argv[])
 			}
 		}
 
-		if(system_type != X86_SYSTEM_TYPE_NONE)
+		if(system_type != X86_SYSTEM_TYPE_NONE) // TODO: the application might replace the keyboard handler
 		{
 			_dos_process_keys(emu);
 		}
