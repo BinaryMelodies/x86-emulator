@@ -16,5 +16,5 @@ distclean: clean
 	make -C test $@
 	rm -rf *~
 
-.PHONY: all clean distclean tests
+.PHONY: all clean distclean x86emu tests
 
