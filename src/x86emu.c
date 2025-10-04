@@ -1938,6 +1938,37 @@ typedef enum exec_mode_t
 } exec_mode_t;
 #define EXEC_DEFAULT ((exec_mode_t)0)
 
+typedef enum code_size_t
+{
+	CODE_8_BIT = 1,
+	CODE_16_BIT = 2,
+	CODE_32_BIT = 4,
+	CODE_64_BIT = 8,
+} code_size_t;
+
+static inline code_size_t get_exec_mode_size(exec_mode_t exec_mode)
+{
+	switch(exec_mode)
+	{
+	case EXEC_EM80:
+	case EXEC_FEM80:
+		return CODE_8_BIT;
+	case EXEC_RM16:
+	case EXEC_PM16:
+	case EXEC_CM16:
+	case EXEC_I89: // not meaningful, but this is as close as it gets
+		return CODE_16_BIT;
+	case EXEC_RM32:
+	case EXEC_PM32:
+	case EXEC_CM32:
+		return CODE_32_BIT;
+	case EXEC_LM64:
+		return CODE_64_BIT;
+	default:
+		return (code_size_t)0;
+	}
+}
+
 static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 {
 	if(exec_mode == EXEC_DEFAULT)
@@ -3111,7 +3142,24 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 	registers->ip_given = true;
 	registers->ip = freadword(input_file);
 	registers->sp_given = true;
-	registers->sp = ei_class == ELFCLASS32 ? 0x40800000 : 0x000002AAAAC00000;
+
+	switch(get_exec_mode_size(registers->exec_mode))
+	{
+	case CODE_8_BIT:
+		// TODO
+		break;
+	case CODE_16_BIT:
+		registers->cs_given = true;
+		registers->cs = 0x10000;
+		registers->sp = 0xFFF0;
+		break;
+	case CODE_32_BIT:
+		registers->sp = 0x40800000;
+		break;
+	case CODE_64_BIT:
+		registers->sp = 0x000002AAAAC00000;
+		break;
+	}
 
 	uint64_t phoff = freadword(input_file);
 	uint64_t shoff = freadword(input_file);
@@ -3140,6 +3188,35 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 
 			uint64_t offset = freadword(input_file);
 			uint64_t v_address = freadword(input_file);
+
+			if(get_exec_mode_size(registers->exec_mode) == CODE_16_BIT)
+			{
+				// load ELF file as ELKS binary binary
+				if(i == 0) // TODO: check segment flags instead
+				{
+					v_address += registers->cs;
+				}
+				else
+				{
+					if(i == 1 && v_address == 0)
+					{
+						// split ELKS executable
+						registers->ss_given = true;
+						registers->ss = registers->cs + 0x10000;
+					}
+
+					if(registers->ss_given)
+					{
+						// split ELKS executable
+						v_address += registers->ss;
+					}
+					else
+					{
+						// combined ELKS executable
+						v_address += registers->cs;
+					}
+				}
+			}
 
 			fseek(input_file, ei_class == ELFCLASS32 ? 4 : 8, SEEK_CUR); // skip p_address
 
@@ -3429,10 +3506,10 @@ int main(int argc, char * argv[])
 		FMT_NE_EXE, // NE (286) executable // TODO: not yet implemented
 		FMT_LE_EXE, // LE/LX (386) executable // TODO: not yet implemented
 		FMT_PE_EXE, // PE (386/x86-64) executable // TODO: not yet implemented
-		FMT_MINIX, // Minix (8086/386) executable // TODO: not yet implemented
+		FMT_MINIX, // Minix (8086/386) executable
 		FMT_AOUT, // Linux a.out (386) executable // TODO: not yet implemented
 		FMT_COFF, // COFF (386) executable // TODO: not yet implemented
-		FMT_ELF, // ELF (386/x86-64) executable // TODO: not yet implemented
+		FMT_ELF, // ELF (386/x86-64) executable
 	} exe_fmt = FMT_AUTO;
 
 	bool load_with_cs = false;

@@ -1,5 +1,5 @@
 
-all: hello.32.bin hello.64.bin
+all: hello.32.elf hello.64.elf
 
 clean:
 	rm -rf *.bin *.elf
@@ -15,9 +15,9 @@ distclean: clean
 	ia16-elf-gcc -o $(patsubst %.bin,%.elf,$@) $< -nostdlib -T../../external/combined.ld -mprotected-mode
 	../../external/elf2elks $(patsubst %.bin,%.elf,$@) $@
 
-%.32.bin: %.c
+%.32.elf: %.c
 	i686-elf-gcc -o $@ $< -nostdlib
 
-%.64.bin: %.c
+%.64.elf: %.c
 	x86_64-elf-gcc -o $@ $< -nostdlib
 
