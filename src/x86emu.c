@@ -1124,11 +1124,15 @@ static void _display_screen(x86_state_t * emu)
 	}
 }
 
+static bool _dos_kbd_int_handler = false;
+
 static void _memory_write_devices(x86_state_t * emu, x86_cpu_level_t memory_space, uaddr_t address, const void * buffer, size_t size)
 {
 //	fprintf(stderr, "W%X:%d=%02X ...\n", address, size, *(char *)buffer);
 	//memcpy(&memory[address & 0xFFFFF], buffer, size);
 	_memory_write_direct(memory_space, address, buffer, size);
+
+	int kbd_int_num = -1;
 
 	switch(pc_type)
 	{
@@ -1140,6 +1144,8 @@ static void _memory_write_devices(x86_state_t * emu, x86_cpu_level_t memory_spac
 			_screen_printed = false;
 			_display_screen(emu);
 		}
+
+		kbd_int_num = ((i8259[X86_IBMPC_IRQ_KEYBOARD >> 3].service_routine_address >> 8) & 0xF8) | (X86_IBMPC_IRQ_KEYBOARD & 7);
 		break;
 	case X86_PCTYPE_IBM_PC_CGA:
 	case X86_PCTYPE_IBM_PCJR:
@@ -1150,6 +1156,8 @@ static void _memory_write_devices(x86_state_t * emu, x86_cpu_level_t memory_spac
 			_screen_printed = false;
 			_display_screen(emu);
 		}
+
+		kbd_int_num = ((i8259[X86_IBMPC_IRQ_KEYBOARD >> 3].service_routine_address >> 8) & 0xF8) | (X86_IBMPC_IRQ_KEYBOARD & 7);
 		break;
 	case X86_PCTYPE_NEC_PC98:
 		if((address < 0xA0000 && address + size >= 0xA0FA0)
@@ -1162,6 +1170,8 @@ static void _memory_write_devices(x86_state_t * emu, x86_cpu_level_t memory_spac
 			_screen_printed = false;
 			_display_screen(emu);
 		}
+
+		kbd_int_num = ((i8259[X86_NECPC98_IRQ_KEYBOARD >> 3].service_routine_address >> 8) & 0xF8) | (X86_NECPC98_IRQ_KEYBOARD & 7);
 		break;
 	case X86_PCTYPE_NEC_PC88_VA:
 		if((address < 0xA6000 && address + size >= 0xA6FA0)
@@ -1186,6 +1196,15 @@ static void _memory_write_devices(x86_state_t * emu, x86_cpu_level_t memory_spac
 		break;
 	default:
 		break;
+	}
+
+	// very rough check for whether the keyboard interrupt handler has been replaced
+	if(kbd_int_num != -1
+	&& ((address < (unsigned)kbd_int_num * 4 && address + size >= (unsigned)kbd_int_num * 4 + 4)
+		|| ((unsigned)kbd_int_num * 4 <= address && address < (unsigned)kbd_int_num * 4 + 4)
+		|| ((unsigned)kbd_int_num * 4 < address + size && address + size <= (unsigned)kbd_int_num * 4 + 4)))
+	{
+		_dos_kbd_int_handler = false;
 	}
 //	printf("%X:%d\n", address, *(uint16_t*)&memory[address & 0xFFFFE]);
 }
@@ -4195,6 +4214,11 @@ int main(int argc, char * argv[])
 	}
 
 	machine_setup(emu, pc_type);
+
+	if(system_type != X86_SYSTEM_TYPE_NONE)
+	{
+		_dos_kbd_int_handler = true;
+	}
  
 	registers.exec_mode = set_exec_mode(emu, registers.exec_mode);
 
@@ -4537,7 +4561,7 @@ int main(int argc, char * argv[])
 			case X86_RESULT_STRING:
 				break;
 			case X86_RESULT_HALT:
-	//			fprintf(stderr, "CPU halted\n");
+//				fprintf(stderr, "CPU halted\n");
 				break;
 			case X86_RESULT_CPU_INTERRUPT:
 				is_cpu_interrupt = true;
@@ -4986,7 +5010,7 @@ int main(int argc, char * argv[])
 			}
 		}
 
-		if(system_type != X86_SYSTEM_TYPE_NONE) // TODO: the application might replace the keyboard handler
+		if(_dos_kbd_int_handler)
 		{
 			_dos_process_keys(emu);
 		}
