@@ -3366,6 +3366,33 @@ void usage(char * argv0)
 		argv0);
 }
 
+static inline uint16_t allocate_gdt_entry(x86_state_t * emu, uint32_t base, uint32_t limit, uint32_t access)
+{
+	uint16_t selector = (emu->gdtr.limit + 8) & ~7;
+
+	if(limit > 0x000FFFFF)
+	{
+		access |= X86_DESC_G;
+	}
+	else if((limit & 0x00000FFF) != 0)
+	{
+		access &= ~X86_DESC_G;
+	}
+
+	if((access & X86_DESC_G))
+	{
+		limit >>= 12;
+	}
+
+	x86_memory_write16(emu, emu->gdtr.base + selector,     limit);
+	x86_memory_write32(emu, emu->gdtr.base + selector + 2, (base & 0x00FFFFFF) | ((access & 0x0000FF00) << 16));
+	x86_memory_write16(emu, emu->gdtr.base + selector + 6, ((base & 0xFF000000) >> 16) | ((access & 0x00F00000) >> 16) | ((limit & 0x000F0000) >> 16));
+
+	emu->gdtr.limit = selector + 7;
+
+	return selector;
+}
+
 int main(int argc, char * argv[])
 {
 	x86_state_t emu[1];
@@ -4320,31 +4347,13 @@ int main(int argc, char * argv[])
 
 		// must create GDT, otherwise segment registers cannot be popped/pushed
 
-		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_CS].selector & ~7),
-			emu->sr[X86_R_CS].limit);
-		x86_memory_write32(emu, emu->gdtr.base + (emu->sr[X86_R_CS].selector & ~7) + 2,
-			(emu->sr[X86_R_CS].base & 0x00FFFFFF) | ((emu->sr[X86_R_CS].access & 0x0000FF00) << 16));
-		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_CS].selector & ~7) + 6,
-			0);
-
-		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_SS].selector & ~7),
-			emu->sr[X86_R_SS].limit);
-		x86_memory_write32(emu, emu->gdtr.base + (emu->sr[X86_R_SS].selector & ~7) + 2,
-			(emu->sr[X86_R_SS].base & 0x00FFFFFF) | ((emu->sr[X86_R_SS].access & 0x0000FF00) << 16));
-		x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_SS].selector & ~7) + 6,
-			0);
-
+		emu->gdtr.limit = 0;
+		allocate_gdt_entry(emu, emu->sr[X86_R_CS].base, emu->sr[X86_R_CS].limit, emu->sr[X86_R_CS].access);
+		allocate_gdt_entry(emu, emu->sr[X86_R_SS].base, emu->sr[X86_R_SS].limit, emu->sr[X86_R_SS].access);
 		if(registers.ss_given && registers.ds_given)
 		{
-			x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_DS].selector & ~7),
-				emu->sr[X86_R_DS].limit);
-			x86_memory_write32(emu, emu->gdtr.base + (emu->sr[X86_R_DS].selector & ~7) + 2,
-				(emu->sr[X86_R_DS].base & 0x00FFFFFF) | ((emu->sr[X86_R_DS].access & 0x0000FF00) << 16));
-			x86_memory_write16(emu, emu->gdtr.base + (emu->sr[X86_R_DS].selector & ~7) + 6,
-				0);
+			allocate_gdt_entry(emu, emu->sr[X86_R_DS].base, emu->sr[X86_R_DS].limit, emu->sr[X86_R_DS].access);
 		}
-
-		emu->gdtr.limit = registers.ss_given && registers.ds_given ? 0x1F : 0x17;
 
 		break;
 
@@ -4387,6 +4396,16 @@ int main(int argc, char * argv[])
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
+
+		// must create GDT, otherwise segment registers cannot be popped/pushed
+
+		emu->gdtr.limit = 0;
+		allocate_gdt_entry(emu, emu->sr[X86_R_CS].base, emu->sr[X86_R_CS].limit, emu->sr[X86_R_CS].access);
+		allocate_gdt_entry(emu, emu->sr[X86_R_SS].base, emu->sr[X86_R_SS].limit, emu->sr[X86_R_SS].access);
+		if(registers.ss_given && registers.ds_given)
+		{
+			allocate_gdt_entry(emu, emu->sr[X86_R_DS].base, emu->sr[X86_R_DS].limit, emu->sr[X86_R_DS].access);
+		}
 		break;
 
 	case EXEC_LM64:
@@ -4424,6 +4443,16 @@ int main(int argc, char * argv[])
 		}
 		if(registers.sp_given)
 			emu->gpr[X86_R_SP] = registers.sp;
+
+		// must create GDT, otherwise segment registers cannot be popped/pushed
+
+		emu->gdtr.limit = 0;
+		allocate_gdt_entry(emu, emu->sr[X86_R_CS].base, emu->sr[X86_R_CS].limit, emu->sr[X86_R_CS].access);
+		allocate_gdt_entry(emu, emu->sr[X86_R_SS].base, emu->sr[X86_R_SS].limit, emu->sr[X86_R_SS].access);
+		if(registers.ss_given && registers.ds_given)
+		{
+			allocate_gdt_entry(emu, emu->sr[X86_R_DS].base, emu->sr[X86_R_DS].limit, emu->sr[X86_R_DS].access);
+		}
 		break;
 
 	case EXEC_I89:
