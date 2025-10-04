@@ -16,3 +16,5 @@ testtext.com: testtext.asm
 testkbd.com: testkbd.asm
 	nasm -fbin $< -o $@
 
+.PHONY: all clean distclean
+

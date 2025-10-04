@@ -12,3 +12,4 @@ verify/8088
 verify/v20
 x86emu
 *~
+tools/elf2elks

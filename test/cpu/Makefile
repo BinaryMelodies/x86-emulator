@@ -1,6 +1,6 @@
 
 all: cpu.com testv20.img testv33.img testv25.img testv55.img testx87.com testrel.bin
-# testi89.bin
+optional: testi89.bin
 
 clean:
 	rm -rf *.img *.com *.hex *.bin
@@ -32,4 +32,6 @@ testx87.com: testx87.asm
 
 testrel.bin: testrel.asm
 	nasm -fbin $< -o $@
+
+.PHONY: all optional clean distclean
 

@@ -10,3 +10,6 @@ distclean: clean
 %.com: %.asm
 	nasm -fbin $< -o $@
 
+.PHONY: all clean distclean
+
+

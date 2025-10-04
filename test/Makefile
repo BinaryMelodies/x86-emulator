@@ -7,6 +7,10 @@ all:
 	make -C cpm80 all
 	make -C linux all
 
+optional:
+	make -C cpu optional
+	make -C linux optional
+
 clean:
 	make -C boot clean
 	make -C cpu clean
@@ -24,5 +28,5 @@ distclean: clean
 	make -C cpm80 distclean
 	make -C linux distclean
 
-.PHONY: all clean distclean
+.PHONY: all optional clean distclean
 
