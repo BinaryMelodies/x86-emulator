@@ -824,7 +824,6 @@ static void x86_debug_nec(FILE * file, x86_state_t * emu)
 
 static void x86_debug_v20(FILE * file, x86_state_t * emu)
 {
-	x86_store_x80_registers(emu);
 	fprintf(file, "AW=%04"PRIX16",CW=%04"PRIX16",DW=%04"PRIX16",BW=%04"PRIX16",SP=%04"PRIX16",BP=%04"PRIX16",IX=%04"PRIX16",IY=%04"PRIX16"\n",
 		(uint16_t)emu->gpr[X86_R_AX], (uint16_t)emu->gpr[X86_R_CX], (uint16_t)emu->gpr[X86_R_DX], (uint16_t)emu->gpr[X86_R_BX],
 		(uint16_t)emu->gpr[X86_R_SP], (uint16_t)emu->gpr[X86_R_BP], (uint16_t)emu->gpr[X86_R_SI], (uint16_t)emu->gpr[X86_R_DI]);
@@ -844,7 +843,6 @@ static void x86_debug_v20(FILE * file, x86_state_t * emu)
 
 static void x86_debug_upd9002(FILE * file, x86_state_t * emu)
 {
-	x86_store_x80_registers(emu);
 	fprintf(file, "AW0=%04"PRIX16",CW0=%04"PRIX16",DW0=%04"PRIX16",BW0=%04"PRIX16",SP =%04"PRIX16",BP =%04"PRIX16",IX =%04"PRIX16",IY =%04"PRIX16"\n",
 		(uint16_t)emu->gpr[X86_R_AX], (uint16_t)emu->gpr[X86_R_CX], (uint16_t)emu->gpr[X86_R_DX], (uint16_t)emu->gpr[X86_R_BX],
 		(uint16_t)emu->gpr[X86_R_SP], (uint16_t)emu->gpr[X86_R_BP], (uint16_t)emu->gpr[X86_R_SI], (uint16_t)emu->gpr[X86_R_DI]);
@@ -1064,6 +1062,9 @@ void x86_debug(FILE * file, x86_state_t * emu)
 		fprintf(file, ", 64-bit\n");
 		break;
 	}
+
+	if(x86_is_emulation_mode(emu))
+		x86_store_x80_registers(emu);
 
 	switch(emu->cpu_type)
 	{

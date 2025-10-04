@@ -3297,6 +3297,33 @@ static void unix_putchar(x86_state_t * emu, int c)
 	}
 }
 
+/* A wrapper for the UNIX write system call
+ * base: typically the segment base for the buffer, this would be 0 in 32-bit and 64-bit mode
+ * address: the starting address of the buffer
+ * mask: where the wrap-around happens for the buffer, 0xFFFF in 8/16-bit modes, 0xFFFFFFFF in 32-bit mode, 0xFFFFFFFFFFFFFFFF (-1) in 64-bit mode
+ */
+static uoff_t unix_write(x86_state_t * emu, uoff_t fd, uoff_t base, uoff_t address, uoff_t mask, uoff_t count)
+{
+	if(fd == 1 && pc_type != X86_PCTYPE_NONE)
+	{
+		for(size_t offset = 0; offset < count; offset++)
+		{
+			unix_putchar(emu, x86_memory_read8(emu, base + ((address + offset) & mask)));
+		}
+		_display_screen(emu);
+		return count;
+	}
+	else
+	{
+		char * buffer = malloc(count);
+		for(size_t offset = 0; offset < count; offset++)
+		{
+			buffer[offset] = x86_memory_read8(emu, base + ((address + offset) & mask));
+		}
+		return write(fd, buffer, count);
+	}
+}
+
 void usage_cpu(void)
 {
 	x86_cpu_version_t last_cpu_version = (x86_cpu_version_t)-1;
@@ -4321,6 +4348,13 @@ int main(int argc, char * argv[])
 				}
 				else
 				{
+					if((system_type & X86_SYSTEM_TYPE_UZI) && (registers.exec_mode == EXEC_DEFAULT || registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80))
+					{
+						exe_fmt = FMT_COM;
+						if(registers.exec_mode == EXEC_DEFAULT)
+							registers.exec_mode = EXEC_EM80;
+					}
+
 					if(exe_fmt == FMT_COM)
 						goto case_fmt_com;
 					else
@@ -4850,23 +4884,7 @@ int main(int argc, char * argv[])
 								exit(emu->bx);
 								break;
 							case X86_32_SYS_WRITE:
-								if(emu->bx == 1 && pc_type != X86_PCTYPE_NONE)
-								{
-									for(size_t offset = 0; offset < emu->dx; offset++)
-									{
-										unix_putchar(emu, x86_memory_read8(emu, emu->ds_cache.base + emu->cx + offset));
-									}
-									_display_screen(emu);
-								}
-								else
-								{
-									char * buffer = malloc(emu->dx);
-									for(size_t offset = 0; offset < emu->dx; offset++)
-									{
-										buffer[offset] = x86_memory_read8(emu, emu->ds_cache.base + emu->cx + offset);
-									}
-									emu->eax = write(emu->bx, buffer, emu->dx);
-								}
+								emu->ax = unix_write(emu, emu->bx, emu->ds_cache.base, emu->cx, 0xFFFF, emu->dx);
 								break;
 							default:
 								fprintf(stderr, "Linux system call AX=%04X\n", emu->ax);
@@ -4882,23 +4900,7 @@ int main(int argc, char * argv[])
 								exit(emu->ebx);
 								break;
 							case X86_32_SYS_WRITE:
-								if(emu->ebx == 1 && pc_type != X86_PCTYPE_NONE)
-								{
-									for(size_t offset = 0; offset < emu->edx; offset++)
-									{
-										unix_putchar(emu, x86_memory_read8(emu, emu->ecx + offset));
-									}
-									_display_screen(emu);
-								}
-								else
-								{
-									char * buffer = malloc(emu->edx);
-									for(size_t offset = 0; offset < emu->edx; offset++)
-									{
-										buffer[offset] = x86_memory_read8(emu, emu->ecx + offset);
-									}
-									emu->eax = write(emu->ebx, buffer, emu->edx);
-								}
+								emu->eax = unix_write(emu, emu->ebx, 0, emu->ecx, 0xFFFFFFFF, emu->edx);
 								break;
 							default:
 								fprintf(stderr, "Linux system call EAX=%08X\n", emu->eax);
@@ -5026,23 +5028,7 @@ int main(int argc, char * argv[])
 						exit(emu->rdi);
 						break;
 					case X86_64_SYS_WRITE:
-						if(emu->rdi == 1 && pc_type != X86_PCTYPE_NONE)
-						{
-							for(size_t offset = 0; offset < emu->rdx; offset++)
-							{
-								unix_putchar(emu, x86_memory_read8(emu, emu->rsi + offset));
-							}
-							_display_screen(emu);
-						}
-						else
-						{
-							char * buffer = malloc(emu->rdx);
-							for(size_t offset = 0; offset < emu->rdx; offset++)
-							{
-								buffer[offset] = x86_memory_read8(emu, emu->rsi + offset);
-							}
-							emu->rax = write(emu->rdi, buffer, emu->rdx);
-						}
+						emu->rax = unix_write(emu, emu->rdi, 0, emu->rsi, -1, emu->rdx);
 						break;
 					default:
 						fprintf(stderr, "Linux system call RAX=%016lX\n", emu->rax);
@@ -5154,7 +5140,6 @@ int main(int argc, char * argv[])
 						switch(syscallnum)
 						{
 						case 0x00:
-							fprintf(stderr, "UZI exit\n");
 							exit(x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 6) & 0xFFFF)));
 							break;
 						case 0x08:
@@ -5163,23 +5148,7 @@ int main(int argc, char * argv[])
 								uint16_t buf = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 8) & 0xFFFF));
 								uint16_t count = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 6) & 0xFFFF));
 
-								if(fd == 1 && pc_type != X86_PCTYPE_NONE)
-								{
-									for(size_t offset = 0; offset < count; offset++)
-									{
-										unix_putchar(emu, x86_memory_read8(emu, emu->ds_cache.base + ((buf + offset) & 0xFFFF)));
-									}
-									_display_screen(emu);
-								}
-								else
-								{
-									char * buffer = malloc(count);
-									for(size_t offset = 0; offset < count; offset++)
-									{
-										buffer[offset] = x86_memory_read8(emu, emu->ds_cache.base + ((buf + offset) & 0xFFFF));
-									}
-									emu->rax = write(fd, buffer, count);
-								}
+								emu->x80.hl = unix_write(emu, fd, emu->ds_cache.base, buf, 0xFFFF, count);
 							}
 							x80_return(emu);
 							break;
