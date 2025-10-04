@@ -5012,6 +5012,7 @@ int main(int argc, char * argv[])
 
 		if(_dos_kbd_int_handler)
 		{
+			// keyboard handling is done by the OS simulation
 			_dos_process_keys(emu);
 		}
 		else
@@ -5026,33 +5027,48 @@ int main(int argc, char * argv[])
 				{
 					i8259[X86_IBMPC_IRQ_KEYBOARD >> 3].interrupt_requested[X86_IBMPC_IRQ_KEYBOARD & 7] = true;
 				}
-				// TODO: other peripherals
 				break;
 			case X86_PCTYPE_NEC_PC98:
 				if(i8042.data_available)
 				{
 					i8259[X86_NECPC98_IRQ_KEYBOARD >> 3].interrupt_requested[X86_NECPC98_IRQ_KEYBOARD & 7] = true;
 				}
-				// TODO: other peripherals
-				break;
-			case X86_PCTYPE_APRICOT:
-				if((emu->x89.channel[0].psw & X89_PSW_IS) != 0)
-				{
-					// TODO: make the 8089 interrupts available on non-Apricot machines; issue: which IRQ?
-					// TODO: should "acknowledge" clear this bit?
-					i8259[X86_APRICOT_IRQ_SINTR1 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR1 & 7] = true;
-				}
-				if((emu->x89.channel[1].psw & X89_PSW_IS) != 0)
-				{
-					// TODO: same as channel 0
-					i8259[X86_APRICOT_IRQ_SINTR2 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR2 & 7] = true;
-				}
-				// TODO: other peripherals
 				break;
 			// TODO: other PCs
 			default:
 				break;
 			}
+		}
+
+
+		// otherwise, the emulated system handles it
+		switch(pc_type)
+		{
+		case X86_PCTYPE_IBM_PC_MDA:
+		case X86_PCTYPE_IBM_PC_CGA:
+		case X86_PCTYPE_IBM_PCJR:
+			// TODO: other peripherals
+			break;
+		case X86_PCTYPE_NEC_PC98:
+			// TODO: other peripherals
+			break;
+		case X86_PCTYPE_APRICOT:
+			if((emu->x89.channel[0].psw & X89_PSW_IS) != 0)
+			{
+				// TODO: make the 8089 interrupts available on non-Apricot machines; issue: which IRQ?
+				// TODO: should "acknowledge" clear this bit?
+				i8259[X86_APRICOT_IRQ_SINTR1 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR1 & 7] = true;
+			}
+			if((emu->x89.channel[1].psw & X89_PSW_IS) != 0)
+			{
+				// TODO: same as channel 0
+				i8259[X86_APRICOT_IRQ_SINTR2 >> 3].interrupt_requested[X86_APRICOT_IRQ_SINTR2 & 7] = true;
+			}
+			// TODO: other peripherals
+			break;
+		// TODO: other PCs
+		default:
+			break;
 		}
 
 		switch(wait_for_interrupt)
