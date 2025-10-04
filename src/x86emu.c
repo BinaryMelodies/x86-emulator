@@ -1861,7 +1861,8 @@ enum
 	_X86_SYSTEM_TYPE_CPM80,
 	_X86_SYSTEM_TYPE_CPM86,
 	_X86_SYSTEM_TYPE_MSDOS,
-	_X86_SYSTEM_TYPE_LINUX,
+	_X86_SYSTEM_TYPE_UZI, // Doug Braun's Unix: "Z80 Implementation"
+	_X86_SYSTEM_TYPE_LINUX, // also ELKS
 };
 
 typedef enum x86_system_type_t
@@ -1870,6 +1871,7 @@ typedef enum x86_system_type_t
 	X86_SYSTEM_TYPE_CPM80 = 1 << _X86_SYSTEM_TYPE_CPM80,
 	X86_SYSTEM_TYPE_CPM86 = 1 << _X86_SYSTEM_TYPE_CPM86,
 	X86_SYSTEM_TYPE_MSDOS = 1 << _X86_SYSTEM_TYPE_MSDOS,
+	X86_SYSTEM_TYPE_UZI = 1 << _X86_SYSTEM_TYPE_UZI,
 	X86_SYSTEM_TYPE_LINUX = 1 << _X86_SYSTEM_TYPE_LINUX,
 } x86_system_type_t;
 
@@ -3794,6 +3796,45 @@ int main(int argc, char * argv[])
 					exit(1);
 				}
 			}
+			else if(argv[argi][1] == 'S')
+			{
+				char * arg = argv[argi][2] ? &argv[argi][2] : argv[++argi];
+				if(strcasecmp(arg, "cpm") == 0
+				|| strcasecmp(arg, "cpm80") == 0)
+				{
+					system_type |= X86_SYSTEM_TYPE_CPM80;
+				}
+				else if(strcasecmp(arg, "cpm86") == 0)
+				{
+					system_type |= X86_SYSTEM_TYPE_CPM86;
+				}
+				else if(strcasecmp(arg, "dos") == 0
+				|| strcasecmp(arg, "msdos") == 0)
+				{
+					system_type |= X86_SYSTEM_TYPE_MSDOS;
+				}
+				else if(strcasecmp(arg, "linux") == 0)
+				{
+					system_type |= X86_SYSTEM_TYPE_LINUX;
+				}
+				else if(strcasecmp(arg, "elks") == 0)
+				{
+					system_type |= X86_SYSTEM_TYPE_LINUX;
+					if(registers.exec_mode == EXEC_DEFAULT)
+						registers.exec_mode = EXEC_PM16;
+				}
+				else if(strcasecmp(arg, "uzi") == 0)
+				{
+					system_type |= X86_SYSTEM_TYPE_UZI;
+					if(registers.exec_mode == EXEC_DEFAULT)
+						registers.exec_mode = EXEC_EM80;
+				}
+				else
+				{
+					fprintf(stderr, "Unknown system emulation: %s\n", arg);
+					exit(1);
+				}
+			}
 			else if(argv[argi][1] == 'P')
 			{
 				char * arg = argv[argi][2] ? &argv[argi][2] : argv[++argi];
@@ -4992,81 +5033,132 @@ int main(int argc, char * argv[])
 				x80_step(&emu->x80, NULL);
 			}
 
-			if(x86_is_emulation_mode(emu) && (system_type & X86_SYSTEM_TYPE_CPM80))
+			if(x86_is_emulation_mode(emu))
 			{
 				switch(emu->x80.pc)
 				{
 				case 0x0000:
-					fprintf(stderr, "CP/M-80 exit\n");
-					exit(0);
-					break;
-				case 0x0005:
-					// BDOS call
-					switch(emu->x80.c)
+					if((system_type & X86_SYSTEM_TYPE_CPM80))
 					{
-					case 0x00:
 						fprintf(stderr, "CP/M-80 exit\n");
-						exit(0);
-						break;
-					case 0x01:
-						wait_for_interrupt = WAIT_CPM80_0005_01;
-						break;
-					case 0x02:
-						dos_putchar(emu, emu->x80.e);
-						_display_screen(emu);
-						x80_return(emu);
-						break;
-					case 0x06:
-						if(emu->x80.e != 0xFF)
-						{
-							dos_putchar(emu, emu->x80.e);
-							_display_screen(emu);
-						}
-						else
-						{
-							if(dos_key_available())
-							{
-								emu->x80.a = dos_key_get();
-							}
-							else
-							{
-								emu->x80.a = 0;
-							}
-							emu->x80.l = emu->x80.a;
-							emu->x80.h = emu->x80.b;
-						}
-						x80_return(emu);
-						break;
-					case 0x09:
-						for(uint16_t offset = 0; offset < 0xFFFF; offset++)
-						{
-							uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
-							if(value == '$')
-								break;
-							dos_putchar(emu, value);
-						}
-						_display_screen(emu);
-						x80_return(emu);
-						break;
-					case 0x0B:
-						if(dos_key_available())
-						{
-							emu->x80.a = 0x01;
-						}
-						else
-						{
-							emu->x80.a = 0x00;
-						}
-						emu->x80.l = emu->x80.a;
-						emu->x80.h = emu->x80.b;
-						x80_return(emu);
-						break;
-					default:
-						fprintf(stderr, "CP/M-80 API call C=%02X\n", emu->x80.c);
 						exit(0);
 					}
 					break;
-				};
+				case 0x0005:
+					// BDOS call
+					if((system_type & X86_SYSTEM_TYPE_CPM80))
+					{
+						switch(emu->x80.c)
+						{
+						case 0x00:
+							fprintf(stderr, "CP/M-80 exit\n");
+							exit(0);
+							break;
+						case 0x01:
+							wait_for_interrupt = WAIT_CPM80_0005_01;
+							break;
+						case 0x02:
+							dos_putchar(emu, emu->x80.e);
+							_display_screen(emu);
+							x80_return(emu);
+							break;
+						case 0x06:
+							if(emu->x80.e != 0xFF)
+							{
+								dos_putchar(emu, emu->x80.e);
+								_display_screen(emu);
+							}
+							else
+							{
+								if(dos_key_available())
+								{
+									emu->x80.a = dos_key_get();
+								}
+								else
+								{
+									emu->x80.a = 0;
+								}
+								emu->x80.l = emu->x80.a;
+								emu->x80.h = emu->x80.b;
+							}
+							x80_return(emu);
+							break;
+						case 0x09:
+							for(uint16_t offset = 0; offset < 0xFFFF; offset++)
+							{
+								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
+								if(value == '$')
+									break;
+								dos_putchar(emu, value);
+							}
+							_display_screen(emu);
+							x80_return(emu);
+							break;
+						case 0x0B:
+							if(dos_key_available())
+							{
+								emu->x80.a = 0x01;
+							}
+							else
+							{
+								emu->x80.a = 0x00;
+							}
+							emu->x80.l = emu->x80.a;
+							emu->x80.h = emu->x80.b;
+							x80_return(emu);
+							break;
+						default:
+							fprintf(stderr, "CP/M-80 API call C=%02X\n", emu->x80.c);
+							exit(0);
+						}
+						break;
+					}
+					break;
+				case 0x0030:
+					// UZI system call
+					if((system_type & X86_SYSTEM_TYPE_UZI))
+					{
+						uint16_t syscallnum = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 2) & 0xFFFF));
+						switch(syscallnum)
+						{
+						case 0x00:
+							fprintf(stderr, "UZI exit\n");
+							exit(x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 6) & 0xFFFF)));
+							break;
+						case 0x08:
+							{
+								uint16_t fd = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 10) & 0xFFFF));
+								uint16_t buf = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 8) & 0xFFFF));
+								uint16_t count = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 6) & 0xFFFF));
+
+								if(fd == 1 && pc_type != X86_PCTYPE_NONE)
+								{
+									for(size_t offset = 0; offset < count; offset++)
+									{
+										unix_putchar(emu, x86_memory_read8(emu, emu->ds_cache.base + ((buf + offset) & 0xFFFF)));
+									}
+									_display_screen(emu);
+								}
+								else
+								{
+									char * buffer = malloc(count);
+									for(size_t offset = 0; offset < count; offset++)
+									{
+										buffer[offset] = x86_memory_read8(emu, emu->ds_cache.base + ((buf + offset) & 0xFFFF));
+									}
+									emu->rax = write(fd, buffer, count);
+								}
+							}
+							x80_return(emu);
+							break;
+						default:
+							fprintf(stderr, "UZI API call %04X\n", syscallnum);
+							exit(0);
+						}
+						break;
+					}
+					break;
+				}
 			}
 		}
 		x87_step(emu);
