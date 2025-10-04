@@ -1,5 +1,7 @@
 
-elf2elks: elf2elks.c
+all: elf2elks elf2uzi
+
+%: %.c
 	gcc -o $@ $<
 
 clean:
