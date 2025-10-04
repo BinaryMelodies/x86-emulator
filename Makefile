@@ -1,5 +1,5 @@
 
-all: x86emu images
+all: x86emu tests
 
 x86emu:
 	make -C src ../x86emu
