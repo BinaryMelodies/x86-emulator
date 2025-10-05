@@ -1486,11 +1486,11 @@ static inline void bios_screen_fix_cursor_location(x86_state_t * emu)
 	{
 		screen_cursor_y += screen_cursor_x / 80;
 		screen_cursor_x %= 80;
-		if(screen_cursor_y >= 25)
-		{
-			bios_screen_scroll(emu, screen_cursor_y - 24);
-			screen_cursor_y = 24;
-		}
+	}
+	if(screen_cursor_y >= 25)
+	{
+		bios_screen_scroll(emu, screen_cursor_y - 24);
+		screen_cursor_y = 24;
 	}
 }
 
