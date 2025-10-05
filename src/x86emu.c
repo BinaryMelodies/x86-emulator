@@ -3254,6 +3254,131 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 	return 0;
 }
 
+//// system specific routines
+
+static inline void x86_memory_write_address(x86_state_t * emu, code_size_t code_size, uint64_t start, uint64_t base, uint64_t index, uint64_t value)
+{
+	switch(code_size)
+	{
+	case CODE_8_BIT:
+	case CODE_16_BIT:
+		x86_memory_write16(emu, start + ((base + (index << 1)) & 0xFFFF), value);
+		break;
+	case CODE_32_BIT:
+		x86_memory_write32(emu, start + ((base + (index << 2)) & 0xFFFFFFFF), value);
+		break;
+	case CODE_64_BIT:
+		x86_memory_write64(emu, start + base + (index << 3), value);
+		break;
+	}
+}
+
+static uint64_t build_initial_stack(x86_state_t * emu, exec_mode_t exec_mode, uint64_t stack_segment_base, uint64_t stack, int argc, char ** argv, char ** envp)
+{
+	size_t envp_count;
+	size_t envp_content_size = 0;
+	for(envp_count = 0; envp[envp_count] != NULL; envp_count++)
+	{
+		envp_content_size += strlen(envp[envp_count]) + 1;
+	}
+
+	size_t argv_content_size = 0;
+	for(int i = 0; i < argc; i++)
+	{
+		argv_content_size += strlen(argv[i]) + 1;
+	}
+
+	uint64_t string_offset;
+	uint64_t argc_address;
+	uint64_t argv_contents;
+	uint64_t envp_contents;
+
+	// stack layout:
+	// argc argv[0] ... argv[argc - 1] NULL envp[0] ... envp[envp_count - 1] *argv[0] ... *envp[0]
+
+	code_size_t code_size = get_exec_mode_size(exec_mode);
+	uoff_t address_mask;
+
+	switch(code_size)
+	{
+	case CODE_8_BIT:
+	case CODE_16_BIT:
+		address_mask = 0xFFFF;
+
+		stack -= envp_content_size + argv_content_size;
+		string_offset = stack;
+		stack -= 2 * (3 + argc + envp_count);
+		stack &= 0xFFFE;
+
+		argc_address = stack;
+		argv_contents = stack + 2;
+		envp_contents = argv_contents + argc * 2 + 2;
+
+		if(code_size == CODE_8_BIT)
+		{
+			// UZI also pushes this value on the stack
+			stack = (stack - 2);
+			x86_memory_write16(emu, stack, argv_contents);
+		}
+		break;
+	case CODE_32_BIT:
+		address_mask = 0xFFFFFFFF;
+
+		stack -= envp_content_size + argv_content_size;
+		string_offset = stack;
+		stack -= 4 * (3 + argc + envp_count);
+		stack &= 0xFFFFFFFC;
+
+		argc_address = stack;
+		argv_contents = stack + 4;
+		envp_contents = argv_contents + argc * 4 + 4;
+		break;
+	case CODE_64_BIT:
+		address_mask = -1;
+
+		stack -= envp_content_size + argv_content_size;
+		string_offset = stack;
+		stack -= 8 * (3 + argc + envp_count);
+		stack &= ~0xF;
+
+		argc_address = stack;
+		argv_contents = stack + 8;
+		envp_contents = argv_contents + argc * 8 + 8;
+		break;
+	}
+
+	x86_memory_write_address(emu, code_size, stack_segment_base, argc_address, 0, argc);
+
+	for(int i = 0; i < argc; i++)
+	{
+		x86_memory_write_address(emu, code_size, stack_segment_base, argv_contents, i, string_offset);
+
+		size_t j = 0;
+		do
+		{
+			x86_memory_write8(emu, stack_segment_base + ((string_offset + j) & address_mask), argv[i][j]);
+		} while(argv[i][j++] != '\0');
+
+		string_offset += j;
+	}
+
+	for(size_t i = 0; i < envp_count; i++)
+	{
+		x86_memory_write_address(emu, code_size, stack_segment_base, envp_contents, i, string_offset);
+
+		size_t j = 0;
+		do
+		{
+			x86_memory_write8(emu, stack_segment_base + ((string_offset + j) & address_mask), envp[i][j]);
+		} while(envp[i][j++] != '\0');
+		string_offset += j;
+	}
+
+	x86_memory_write_address(emu, code_size, stack_segment_base, envp_contents, envp_count, 0);
+
+	return stack;
+}
+
 static void dos_putchar(x86_state_t * emu, int c)
 {
 	(void) emu;
@@ -3304,6 +3429,7 @@ static void unix_putchar(x86_state_t * emu, int c)
  */
 static uoff_t unix_write(x86_state_t * emu, uoff_t fd, uoff_t base, uoff_t address, uoff_t mask, uoff_t count)
 {
+//	printf("unix_write(%lX, %lX:%lX, %lX)\n", fd, base, address, count);
 	if(fd == 1 && pc_type != X86_PCTYPE_NONE)
 	{
 		for(size_t offset = 0; offset < count; offset++)
@@ -3527,7 +3653,7 @@ static inline uint16_t allocate_gdt_entry(x86_state_t * emu, uint32_t base, uint
 	return selector;
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char * argv[], char * envp[])
 {
 	x86_state_t emu[1];
 	bool option_debug = false;
@@ -3573,7 +3699,8 @@ int main(int argc, char * argv[])
 	uoff_t load_cs = 0;
 	uoff_t load_ip = 0;
 
-	for(int argi = 1; argi < argc; argi++)
+	int argi;
+	for(argi = 1; argi < argc; argi++)
 	{
 		if(argv[argi][0] == '-')
 		{
@@ -3991,6 +4118,7 @@ int main(int argc, char * argv[])
 		else
 		{
 			inputfile = argv[argi];
+			break;
 		}
 	}
 
@@ -4419,6 +4547,23 @@ int main(int argc, char * argv[])
 		}
 	}
 
+	if((system_type & (X86_SYSTEM_TYPE_LINUX | X86_SYSTEM_TYPE_UZI)))
+	{
+		if(!registers.ss_given)
+		{
+			// SS should be set anyway, but just in case
+			registers.ss = registers.ds_given ? registers.ds : registers.cs_given ? registers.cs : 0;
+		}
+
+		if(!registers.sp_given)
+		{
+			registers.sp_given = true;
+			registers.sp = 0;
+		}
+
+		registers.sp = build_initial_stack(emu, registers.exec_mode, registers.ss, registers.sp, argc - argi, argv + argi, envp);
+	}
+
 	if(pc_type == X86_PCTYPE_DEFAULT)
 	{
 		pc_type = X86_PCTYPE_IBM_PC_CGA;
@@ -4664,7 +4809,7 @@ int main(int argc, char * argv[])
 
 	fclose(input);
 
-	if(!option_debug)
+	if(!option_debug && pc_type != X86_PCTYPE_NONE)
 	{
 		kbd_init();
 	}
