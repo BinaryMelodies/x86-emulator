@@ -212,7 +212,7 @@ class Instruction:
 		result = []
 		if opdsM is not None:
 			kwds = self.kwds.copy()
-			kwds['opds'] = opdsM
+			kwds['opds'] = tuple(opdsM)
 			for syntax, alternative in alternatives.items():
 				assert alternatives[syntax][1] is not None
 				kwds[syntax] = (kwds[syntax][0], alternatives[syntax][1])
@@ -221,7 +221,7 @@ class Instruction:
 			result.append(None)
 		if opdsR is not None:
 			kwds = self.kwds.copy()
-			kwds['opds'] = opdsR
+			kwds['opds'] = tuple(opdsR)
 			for syntax, alternative in alternatives.items():
 				assert alternatives[syntax][0] is not None
 				kwds[syntax] = (kwds[syntax][0], alternatives[syntax][0])
@@ -540,6 +540,8 @@ def read_data(filename):
 				parts.pop(0)
 			else:
 				opds = tuple(opd.strip() for opd in parts.pop(0).split(','))
+				if opds == ('',):
+					opds = ()
 			mnem_opds[current_syntax] = mnem, opds
 			while len(parts) > 1 and parts[0] == '':
 				parts.pop(0)
@@ -1096,6 +1098,10 @@ OPERAND_CODE = {
 		'write':   "_write80fp(_seg, _off, $$)",
 		'format':  ("%s", ["$x87_address_text"]),
 	},
+	'mem80dec': {
+		'size':    '',
+		'format':  ("%s", ["$x87_address_text"]),
+	},
 	'M14/M28': {
 		'size':    '',
 		'format':  ("%s", ["$x87_address_text"]),
@@ -1272,6 +1278,10 @@ X80_OPERAND_CODE = {
 		'read':   "emu->bank[emu->af_bank].af",
 		'write':  "emu->bank[emu->af_bank].af = $$",
 		'format': ("af", []),
+	},
+	'PSW': {
+		# same as 'AF' but in Intel syntax
+		'format': ("psw", []),
 	},
 	'BC': {
 		'read':   "emu->bank[emu->main_bank].bc",
@@ -2146,13 +2156,14 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		assert False
 	elif mode == '8':
 		opds = []
-		for opd in entry.kwds['opds']:
-			if opd not in X80_OPERAND_CODE:
-				print("Unknown operand:", repr(opd))
+		for opd0 in entry.kwds['opds']:
+			if opd0 not in X80_OPERAND_CODE:
+				print("Unknown operand:", repr(opd0))
 				MISSING.add(entry.kwds['mnem']) # store operands for further study
 				print_file(f"{indent}/* TODO */;", file = file)
 				return True
-			opd = X80_OPERAND_CODE.get(opd, {})
+			opd = X80_OPERAND_CODE.get(opd0, {}).copy()
+			opd['original'] = opd0
 			opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 			opd = recursive_replace(opd, '$prs', parser_object)
 			opds.append(opd)
@@ -2187,8 +2198,9 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 					_opds = []
 
 					i = 0
-					for opd in entry.kwds[syntax][1]:
-						opd = X80_OPERAND_CODE.get(opd, {})
+					for opd0 in entry.kwds[syntax][1]:
+						opd = X80_OPERAND_CODE.get(opd0, {}).copy()
+						opd['original'] = opd0
 						if 'prepare' in opd:
 							opd = recursive_replace(opd, '$#', str(i))
 							i += 1
@@ -2200,7 +2212,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 				args = ""
 				for opd in _opds:
 					if 'format' not in opd:
-						continue # TODO
+						print(f"Undefined operand: {opd['original']}", file = sys.stderr)
+						assert False
 					fmt = opd['format']
 					if type(fmt) is dict:
 						fmt = fmt[mode]
@@ -2285,13 +2298,14 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 		return True
 	else:
 		opds = []
-		for opd in entry.kwds['opds']:
+		for opd0 in entry.kwds['opds']:
 			if mode != '87':
-				opd = OPERAND_CODE.get(opd, {})
+				opd = OPERAND_CODE.get(opd0, {}).copy()
 			else:
-				opd = X87_OPERAND_CODE.get(opd, {})
+				opd = X87_OPERAND_CODE.get(opd0, {}).copy()
 			if modrm in opd:
-				opd = opd[modrm]
+				opd = opd[modrm].copy()
+			opd['original'] = opd0
 			opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 			opd = recursive_replace(opd, '$prs', parser_object)
 			opd = recursive_replace(opd, '$x87_address_text', x87_address_text)
@@ -2380,13 +2394,14 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 						_mnem = entry.kwds[syntax][0].lower()
 						_opds = []
 						i = 0
-						for opd in entry.kwds[syntax][1]:
+						for opd0 in entry.kwds[syntax][1]:
 							if mode != '87':
-								opd = OPERAND_CODE.get(opd, {})
+								opd = OPERAND_CODE.get(opd0, {}).copy()
 							else:
-								opd = X87_OPERAND_CODE.get(opd, {})
+								opd = X87_OPERAND_CODE.get(opd0, {}).copy()
 							if modrm in opd:
-								opd = opd[modrm]
+								opd = opd[modrm].copy()
+							opd['original'] = opd0
 							opd = recursive_replace(opd, '$fetch()', fetch_suffix)
 							opd = recursive_replace(opd, '$prs', parser_object)
 							opd = recursive_replace(opd, '$x87_address_text', x87_address_text)
@@ -2399,7 +2414,8 @@ def print_instruction(path, indent, actual_range, entry, discriminator, index, f
 					args = ""
 					for opd in _opds:
 						if 'format' not in opd:
-							continue # TODO
+							print(f"Undefined operand: {opd['original']}", file = sys.stderr)
+							assert False
 						fmt = opd['format']
 						if type(fmt) is dict:
 							fmt = fmt[mode]

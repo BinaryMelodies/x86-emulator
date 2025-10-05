@@ -1649,7 +1649,7 @@ F1	i80+	POP	AF	intel:	POP	PSW
 F2	i80+	JP	P, Iw	intel:	JP	Iw
 F3	i80+	DI
 F4	i80+	CALL	P, Iw	intel:	CP	Iw
-F5	i80+	PUSH	AF	intel:	PUSH	PSw
+F5	i80+	PUSH	AF	intel:	PUSH	PSW
 F6	i80+	OR	Ib	intel:	ORI	Ib
 F7	i80+	RST	30h	intel:	RST	6
 
@@ -4763,7 +4763,7 @@ x87_signal_exceptions(emu);
 @instruction FBLD
 uint8_t bytes[10];
 x87_memory_segmented_read(emu, _seg, _off, _off, sizeof bytes, bytes);
-$st = x87_packed80_to_float80($0);
+$st = x87_packed80_to_float80(bytes);
 /* TODO */
 
 @instruction FBSTP
@@ -6650,6 +6650,9 @@ if(X80_CHECK_$0.cond(emu))
 {
 	$pc = (_uint16)$1;
 }
+
+@instruction Z80.JP|cnt=1 op0=(hl)
+$pc = $hl;
 
 @instruction Z80.JP|cnt=1
 $pc = (_uint16)$0;
