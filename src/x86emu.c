@@ -4376,7 +4376,7 @@ int main(int argc, char * argv[], char * envp[])
 					exe_fmt = FMT_PRL;
 					goto case_fmt_prl;
 				}
-				else if((c & 0xFF) == 0xC3)
+				else if((c & 0xFF) == 0xC9)
 				{
 					exe_fmt = FMT_CPM3;
 					goto case_fmt_cpm3;
