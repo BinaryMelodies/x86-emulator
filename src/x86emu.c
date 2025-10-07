@@ -3302,6 +3302,23 @@ static uint64_t build_initial_stack(x86_state_t * emu, exec_mode_t exec_mode, ui
 	switch(code_size)
 	{
 	case CODE_8_BIT:
+		// UZI stack layout:
+		// argv argc envp[0] ... envp[envp_count - 1] argv[0] ... argv[argc - 1] NULL *argv[0] ... *envp[0]
+
+		address_mask = 0xFFFF;
+
+		stack -= envp_content_size + argv_content_size;
+		string_offset = stack;
+		stack -= 2 * (4 + argc + envp_count);
+		stack &= 0xFFFE;
+
+		argc_address = stack + 2;
+		envp_contents = stack + 4;
+		argv_contents = envp_contents + envp_count * 2 + 2;
+
+		// UZI also pushes this value on the stack
+		x86_memory_write16(emu, stack, argv_contents);
+		break;
 	case CODE_16_BIT:
 		address_mask = 0xFFFF;
 
@@ -3313,13 +3330,6 @@ static uint64_t build_initial_stack(x86_state_t * emu, exec_mode_t exec_mode, ui
 		argc_address = stack;
 		argv_contents = stack + 2;
 		envp_contents = argv_contents + argc * 2 + 2;
-
-		if(code_size == CODE_8_BIT)
-		{
-			// UZI also pushes this value on the stack
-			stack = (stack - 2);
-			x86_memory_write16(emu, stack, argv_contents);
-		}
 		break;
 	case CODE_32_BIT:
 		address_mask = 0xFFFFFFFF;
