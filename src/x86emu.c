@@ -1576,60 +1576,40 @@ static int necpc98_convert_scancode(int k)
 	return 0;
 }
 
+#define DOS_KBD_BUFFER_SIZE 4096
+
 static struct
 {
-	bool shift, caps;
+	bool shift, caps, ctrl;
 	struct
 	{
-		size_t pointer, length, capacity;
-		char * data;
+		size_t pointer, length;
+		char data[DOS_KBD_BUFFER_SIZE];
+		bool line_ready;
 	} buffer;
-	enum
-	{
-		BUFFERING_MSDOS,
-		BUFFERING_UNIX,
-	} buffering;
 } dos_kbd_state;
-
-#define DOS_KBD_BUFFER_SIZE 16
 
 static void dos_putchar(int c);
 static void _dos_insert_key(int c)
 {
-	switch(dos_kbd_state.buffering)
+	if(dos_kbd_state.buffer.length >= sizeof dos_kbd_state.buffer.data)
 	{
-	case BUFFERING_MSDOS:
-		if(dos_kbd_state.buffer.data == NULL)
-		{
-			dos_kbd_state.buffer.data = malloc(DOS_KBD_BUFFER_SIZE);
-		}
-		else if(dos_kbd_state.buffer.length >= 16)
-		{
-			// make a beep sound
-			putchar('\a'); fflush(stdout);
-			return;
-		}
-
-		dos_kbd_state.buffer.data[(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length) % DOS_KBD_BUFFER_SIZE] = c;
-		dos_kbd_state.buffer.length ++;
-		break;
-	case BUFFERING_UNIX:
-		if(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length >= dos_kbd_state.buffer.capacity)
-		{
-			dos_kbd_state.buffer.capacity += 16;
-			dos_kbd_state.buffer.data = dos_kbd_state.buffer.data ? realloc(dos_kbd_state.buffer.data, dos_kbd_state.buffer.capacity) : malloc(dos_kbd_state.buffer.capacity);
-		}
-
-		if(c == '\r')
-			c = '\n';
-
-		dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length] = c;
-		if(c == '\n')
-			dos_putchar('\r');
-		dos_putchar(c);
-		dos_kbd_state.buffer.length ++;
-		break;
+		// make a beep sound
+		putchar('\a'); fflush(stdout);
+		return;
 	}
+
+	if(c == '\n')
+		dos_kbd_state.buffer.line_ready = true;
+
+	if(c == '\x4')
+	{
+		dos_kbd_state.buffer.line_ready = true;
+		return;
+	}
+
+	dos_kbd_state.buffer.data[(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length) % sizeof dos_kbd_state.buffer.data] = c;
+	dos_kbd_state.buffer.length ++;
 }
 
 static bool dos_key_available(void)
@@ -1639,12 +1619,7 @@ static bool dos_key_available(void)
 
 static bool dos_key_got_return(void)
 {
-	for(size_t i = dos_kbd_state.buffer.pointer; i < dos_kbd_state.buffer.length; i++)
-	{
-		if(dos_kbd_state.buffer.data[i] == '\n' || dos_kbd_state.buffer.data[i] == -1)
-			return true;
-	}
-	return false;
+	return dos_kbd_state.buffer.line_ready;
 }
 
 #if 0
@@ -1668,20 +1643,13 @@ static int dos_key_get(void)
 		int c = dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer] & 0xFF;
 		dos_kbd_state.buffer.pointer = (dos_kbd_state.buffer.pointer + 1) % sizeof dos_kbd_state.buffer.data;
 		dos_kbd_state.buffer.length --;
+		if(dos_kbd_state.buffer.length == 0)
+			dos_kbd_state.buffer.line_ready = false;
 		return c;
 	}
 	else
 	{
 		return -1;
-	}
-}
-
-static void dos_key_shift_buffer(void)
-{
-	if(dos_kbd_state.buffer.pointer != 0)
-	{
-		memmove(&dos_kbd_state.buffer.data[0], &dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer], dos_kbd_state.buffer.length);
-		dos_kbd_state.buffer.pointer = 0;
 	}
 }
 
@@ -1719,6 +1687,9 @@ static void _dos_process_char(x86_state_t * emu, unsigned c, bool press)
 	case KEY_SHIFT:
 		dos_kbd_state.shift = press;
 		break;
+	case KEY_CTRL:
+		dos_kbd_state.ctrl = press;
+		break;
 	case KEY_CAPS:
 		if(press)
 			dos_kbd_state.caps = !dos_kbd_state.caps;
@@ -1726,7 +1697,11 @@ static void _dos_process_char(x86_state_t * emu, unsigned c, bool press)
 	default:
 		if(press)
 		{
-			if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
+			if('a' <= c && c <= 'z' && dos_kbd_state.ctrl)
+			{
+				c -= '`';
+			}
+			else if('a' <= c && c <= 'z' && (dos_kbd_state.shift != dos_kbd_state.caps))
 			{
 				c += 'A' - 'a';
 			}
@@ -1736,7 +1711,6 @@ static void _dos_process_char(x86_state_t * emu, unsigned c, bool press)
 			}
 
 			_dos_insert_key(c);
-			_display_screen(emu);
 		}
 		break;
 	}
@@ -3530,7 +3504,6 @@ static uoff_t unix_read(x86_state_t * emu, uoff_t fd, uoff_t base, uoff_t addres
 				break;
 			}
 		}
-		dos_key_shift_buffer();
 		return offset;
 	}
 	else
@@ -4936,15 +4909,6 @@ int main(int argc, char * argv[], char * envp[])
 		uoff_t count;
 	} unix_read_wait_state;
 
-	if((system_type & (X86_SYSTEM_TYPE_LINUX | X86_SYSTEM_TYPE_UZI)))
-	{
-		dos_kbd_state.buffering = BUFFERING_UNIX;
-	}
-	else
-	{
-		dos_kbd_state.buffering = BUFFERING_MSDOS;
-	}
-
 	while(true)
 	{
 		if(option_debug && !continuous && emu->xip >= breakpoint)
@@ -5518,20 +5482,50 @@ int main(int argc, char * argv[], char * envp[])
 			}
 			if(key != 0)
 			{
-				if((key & MOD_SHIFT))
-					kbd_issue(emu, KEY_SHIFT, true);
-				if((key & MOD_CTRL))
-					kbd_issue(emu, KEY_CTRL, true);
-				if((key & MOD_ALT))
-					kbd_issue(emu, KEY_ALT, true);
-				kbd_issue(emu, key & 0xFF, true);
-				kbd_issue(emu, key & 0xFF, false);
-				if((key & MOD_ALT))
-					kbd_issue(emu, KEY_ALT, false);
-				if((key & MOD_CTRL))
-					kbd_issue(emu, KEY_CTRL, false);
-				if((key & MOD_SHIFT))
-					kbd_issue(emu, KEY_SHIFT, false);
+				if((system_type & (X86_SYSTEM_TYPE_LINUX | X86_SYSTEM_TYPE_UZI)))
+				{
+					unsigned c = key & 0xFF;
+					if(c == '\r')
+					{
+						c = '\n';
+					}
+
+					if((key & MOD_CTRL) && 'a' <= c && c <= 'z')
+					{
+						c -= '`';
+					}
+					else if((key & MOD_SHIFT) && 'a' <= c && c <= 'z')
+					{
+						c += 'A' - 'a';
+					}
+					else if((key & MOD_SHIFT) && c < sizeof _shifted && _shifted[c] != 0)
+					{
+						c = _shifted[c];
+					}
+
+					_dos_insert_key(c);
+					if(c == '\n')
+						dos_putchar('\r');
+					dos_putchar(c);
+					_display_screen(emu);
+				}
+				else
+				{
+					if((key & MOD_SHIFT))
+						kbd_issue(emu, KEY_SHIFT, true);
+					if((key & MOD_CTRL))
+						kbd_issue(emu, KEY_CTRL, true);
+					if((key & MOD_ALT))
+						kbd_issue(emu, KEY_ALT, true);
+					kbd_issue(emu, key & 0xFF, true);
+					kbd_issue(emu, key & 0xFF, false);
+					if((key & MOD_ALT))
+						kbd_issue(emu, KEY_ALT, false);
+					if((key & MOD_CTRL))
+						kbd_issue(emu, KEY_CTRL, false);
+					if((key & MOD_SHIFT))
+						kbd_issue(emu, KEY_SHIFT, false);
+				}
 			}
 		}
 
