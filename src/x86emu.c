@@ -1382,10 +1382,8 @@ static void _x80_port_write(x80_state_t * emu, uint16_t port, uint8_t value)
 static uint8_t screen_cursor_x = 0, screen_cursor_y = 0;
 //static uint8_t screen_attribute; // TODO
 
-static inline void bios_screen_scroll(x86_state_t * emu, int lines)
+static inline void bios_screen_scroll(int lines)
 {
-	(void) emu;
-
 	if(lines == 0)
 		return;
 	else if(lines > 25)
@@ -1478,10 +1476,8 @@ static inline void bios_screen_scroll(x86_state_t * emu, int lines)
 	}
 }
 
-static inline void bios_screen_fix_cursor_location(x86_state_t * emu)
+static inline void bios_screen_fix_cursor_location(void)
 {
-	(void) emu;
-
 	if(screen_cursor_x >= 80)
 	{
 		screen_cursor_y += screen_cursor_x / 80;
@@ -1489,15 +1485,13 @@ static inline void bios_screen_fix_cursor_location(x86_state_t * emu)
 	}
 	if(screen_cursor_y >= 25)
 	{
-		bios_screen_scroll(emu, screen_cursor_y - 24);
+		bios_screen_scroll(screen_cursor_y - 24);
 		screen_cursor_y = 24;
 	}
 }
 
-static void bios_screen_putchar(x86_state_t * emu, int c)
+static void bios_screen_putchar(int c)
 {
-	(void) emu;
-
 	switch(pc_type)
 	{
 	case X86_PCTYPE_NONE:
@@ -1510,29 +1504,29 @@ static void bios_screen_putchar(x86_state_t * emu, int c)
 	case X86_PCTYPE_IBM_PCJR:
 		{
 			uint8_t * memory = *_get_page(pc_type == X86_PCTYPE_IBM_PC_MDA ? 0xB0000 : 0xB8000);
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 			memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
 			memory[screen_cursor_y * 160 + screen_cursor_x * 2 + 1] = 0x07;
 			screen_cursor_x ++;
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 		}
 		break;
 	case X86_PCTYPE_NEC_PC98:
 		{
 			uint8_t * char_memory = *_get_page(0xA0000);
 			uint8_t * attr_memory = *_get_page(0xA2000);
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 			char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
 			attr_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = 0xE1;
 			screen_cursor_x ++;
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 		}
 		break;
 	case X86_PCTYPE_NEC_PC88_VA:
 		{
 			uint8_t * char_memory = *_get_page(0xA6000);
 			uint8_t * attr_memory = necpc88va_v3_memory_mode ? *_get_page(0xAE000) : NULL;
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 			if(!necpc88va_v3_memory_mode)
 			{
 				char_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = c;
@@ -1544,16 +1538,16 @@ static void bios_screen_putchar(x86_state_t * emu, int c)
 				attr_memory[screen_cursor_y * 160 + screen_cursor_x * 2] = 0x07;
 			}
 			screen_cursor_x ++;
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 		}
 		break;
 	case X86_PCTYPE_APRICOT:
 		{
 			uint16_t * memory = (uint16_t *)*_get_page(0xF0000);
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 			memory[screen_cursor_y * 80 + screen_cursor_x] = c + 0x40;
 			screen_cursor_x ++;
-			bios_screen_fix_cursor_location(emu);
+			bios_screen_fix_cursor_location();
 		}
 		break;
 	default:
@@ -1587,27 +1581,70 @@ static struct
 	bool shift, caps;
 	struct
 	{
-		size_t pointer, length;
-		char data[16];
+		size_t pointer, length, capacity;
+		char * data;
 	} buffer;
+	enum
+	{
+		BUFFERING_MSDOS,
+		BUFFERING_UNIX,
+	} buffering;
 } dos_kbd_state;
 
+#define DOS_KBD_BUFFER_SIZE 16
+
+static void dos_putchar(int c);
 static void _dos_insert_key(int c)
 {
-	if(dos_kbd_state.buffer.length >= sizeof dos_kbd_state.buffer.data)
+	switch(dos_kbd_state.buffering)
 	{
-		// make a beep sound
-		putchar('\a'); fflush(stdout);
-		return;
-	}
+	case BUFFERING_MSDOS:
+		if(dos_kbd_state.buffer.data == NULL)
+		{
+			dos_kbd_state.buffer.data = malloc(DOS_KBD_BUFFER_SIZE);
+		}
+		else if(dos_kbd_state.buffer.length >= 16)
+		{
+			// make a beep sound
+			putchar('\a'); fflush(stdout);
+			return;
+		}
 
-	dos_kbd_state.buffer.data[(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length) % sizeof dos_kbd_state.buffer.data] = c;
-	dos_kbd_state.buffer.length ++;
+		dos_kbd_state.buffer.data[(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length) % DOS_KBD_BUFFER_SIZE] = c;
+		dos_kbd_state.buffer.length ++;
+		break;
+	case BUFFERING_UNIX:
+		if(dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length >= dos_kbd_state.buffer.capacity)
+		{
+			dos_kbd_state.buffer.capacity += 16;
+			dos_kbd_state.buffer.data = dos_kbd_state.buffer.data ? realloc(dos_kbd_state.buffer.data, dos_kbd_state.buffer.capacity) : malloc(dos_kbd_state.buffer.capacity);
+		}
+
+		if(c == '\r')
+			c = '\n';
+
+		dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer + dos_kbd_state.buffer.length] = c;
+		if(c == '\n')
+			dos_putchar('\r');
+		dos_putchar(c);
+		dos_kbd_state.buffer.length ++;
+		break;
+	}
 }
 
 static bool dos_key_available(void)
 {
 	return dos_kbd_state.buffer.length > 0;
+}
+
+static bool dos_key_got_return(void)
+{
+	for(size_t i = dos_kbd_state.buffer.pointer; i < dos_kbd_state.buffer.length; i++)
+	{
+		if(dos_kbd_state.buffer.data[i] == '\n' || dos_kbd_state.buffer.data[i] == -1)
+			return true;
+	}
+	return false;
 }
 
 #if 0
@@ -1636,6 +1673,15 @@ static int dos_key_get(void)
 	else
 	{
 		return -1;
+	}
+}
+
+static void dos_key_shift_buffer(void)
+{
+	if(dos_kbd_state.buffer.pointer != 0)
+	{
+		memmove(&dos_kbd_state.buffer.data[0], &dos_kbd_state.buffer.data[dos_kbd_state.buffer.pointer], dos_kbd_state.buffer.length);
+		dos_kbd_state.buffer.pointer = 0;
 	}
 }
 
@@ -1690,6 +1736,7 @@ static void _dos_process_char(x86_state_t * emu, unsigned c, bool press)
 			}
 
 			_dos_insert_key(c);
+			_display_screen(emu);
 		}
 		break;
 	}
@@ -3389,26 +3436,24 @@ static uint64_t build_initial_stack(x86_state_t * emu, exec_mode_t exec_mode, ui
 	return stack;
 }
 
-static void dos_putchar(x86_state_t * emu, int c)
+static void dos_putchar(int c)
 {
-	(void) emu;
-
 	switch(c)
 	{
 	case 0x0A:
 		if(pc_type == X86_PCTYPE_NONE)
-			bios_screen_putchar(emu, c);
+			bios_screen_putchar(c);
 		else
 			screen_cursor_y ++;
 		break;
 	case 0x0D:
 		if(pc_type == X86_PCTYPE_NONE)
-			bios_screen_putchar(emu, c);
+			bios_screen_putchar(c);
 		else
 			screen_cursor_x = 0;
 		break;
 	default:
-		bios_screen_putchar(emu, c);
+		bios_screen_putchar(c);
 		break;
 	}
 }
@@ -3427,7 +3472,7 @@ static void unix_putchar(x86_state_t * emu, int c)
 		screen_cursor_x = 0;
 		break;
 	default:
-		bios_screen_putchar(emu, c);
+		bios_screen_putchar(c);
 		break;
 	}
 }
@@ -3457,6 +3502,45 @@ static uoff_t unix_write(x86_state_t * emu, uoff_t fd, uoff_t base, uoff_t addre
 			buffer[offset] = x86_memory_read8(emu, base + ((address + offset) & mask));
 		}
 		ssize_t result = write(fd, buffer, count);
+		free(buffer);
+		return result;
+	}
+}
+
+static bool unix_read_needs_wait(uoff_t fd)
+{
+	return fd == 0 && !dos_key_got_return();
+}
+
+static uoff_t unix_read(x86_state_t * emu, uoff_t fd, uoff_t base, uoff_t address, uoff_t mask, uoff_t count)
+{
+	if(fd == 0)
+	{
+		size_t offset;
+		for(offset = 0; offset < count; offset++)
+		{
+			int c = dos_key_get();
+//			printf("<=[%x]\n", c);
+			if(c == -1)
+				break;
+			x86_memory_write8(emu, base + ((address + offset) & mask), c);
+			if(c == '\n')
+			{
+				offset++;
+				break;
+			}
+		}
+		dos_key_shift_buffer();
+		return offset;
+	}
+	else
+	{
+		char * buffer = malloc(count);
+		ssize_t result = read(fd, buffer, count);
+		for(size_t offset = 0; offset < count && (ssize_t)offset < result; offset++)
+		{
+			x86_memory_write8(emu, base + ((address + offset) & mask), buffer[offset]);
+		}
 		free(buffer);
 		return result;
 	}
@@ -4821,7 +4905,7 @@ int main(int argc, char * argv[], char * envp[])
 
 	fclose(input);
 
-	if(!option_debug && pc_type != X86_PCTYPE_NONE)
+	if(!option_debug)
 	{
 		kbd_init();
 	}
@@ -4840,7 +4924,26 @@ int main(int argc, char * argv[], char * envp[])
 		WAIT_MSDOS_21_01, // waiting in INT 0x21/AH=0x01
 		WAIT_MSDOS_21_07, // waiting in INT 0x21/AH=0x07
 		WAIT_MSDOS_21_08, // waiting in INT 0x21/AH=0x08
+		WAIT_LINUX_READ,
 	} wait_for_interrupt = WAIT_NOTHING;
+
+	struct
+	{
+		code_size_t code_size;
+		uoff_t fd;
+		uoff_t base;
+		uoff_t offset;
+		uoff_t count;
+	} unix_read_wait_state;
+
+	if((system_type & (X86_SYSTEM_TYPE_LINUX | X86_SYSTEM_TYPE_UZI)))
+	{
+		dos_kbd_state.buffering = BUFFERING_UNIX;
+	}
+	else
+	{
+		dos_kbd_state.buffering = BUFFERING_MSDOS;
+	}
 
 	while(true)
 	{
@@ -4963,7 +5066,7 @@ int main(int argc, char * argv[], char * envp[])
 							wait_for_interrupt = WAIT_MSDOS_21_01;
 							break;
 						case 0x02:
-							dos_putchar(emu, emu->dl);
+							dos_putchar(emu->dl);
 							_display_screen(emu);
 							if(is_cpu_interrupt)
 								x86_return_interrupt16(emu);
@@ -4971,7 +5074,7 @@ int main(int argc, char * argv[], char * envp[])
 						case 0x06:
 							if(emu->dl != 0xFF)
 							{
-								dos_putchar(emu, emu->dl);
+								dos_putchar(emu->dl);
 								_display_screen(emu);
 							}
 							else
@@ -5002,7 +5105,7 @@ int main(int argc, char * argv[], char * envp[])
 								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
 								if(value == '$')
 									break;
-								dos_putchar(emu, value);
+								dos_putchar(value);
 							}
 							_display_screen(emu);
 							if(is_cpu_interrupt)
@@ -5040,6 +5143,21 @@ int main(int argc, char * argv[], char * envp[])
 							case X86_32_SYS_EXIT:
 								exit(emu->bx);
 								break;
+							case X86_32_SYS_READ:
+								if(unix_read_needs_wait(emu->bx))
+								{
+									unix_read_wait_state.code_size = CODE_16_BIT;
+									unix_read_wait_state.fd = emu->bx;
+									unix_read_wait_state.base = emu->ds_cache.base;
+									unix_read_wait_state.offset = emu->cx;
+									unix_read_wait_state.count = emu->dx;
+									wait_for_interrupt = WAIT_LINUX_READ;
+								}
+								else
+								{
+									emu->ax = unix_read(emu, emu->bx, emu->ds_cache.base, emu->cx, 0xFFFF, emu->dx);
+								}
+								break;
 							case X86_32_SYS_WRITE:
 								emu->ax = unix_write(emu, emu->bx, emu->ds_cache.base, emu->cx, 0xFFFF, emu->dx);
 								break;
@@ -5055,6 +5173,21 @@ int main(int argc, char * argv[], char * envp[])
 							{
 							case X86_32_SYS_EXIT:
 								exit(emu->ebx);
+								break;
+							case X86_32_SYS_READ:
+								if(unix_read_needs_wait(emu->ebx))
+								{
+									unix_read_wait_state.code_size = CODE_32_BIT;
+									unix_read_wait_state.fd = emu->ebx;
+									unix_read_wait_state.base = 0;
+									unix_read_wait_state.offset = emu->ecx;
+									unix_read_wait_state.count = emu->edx;
+									wait_for_interrupt = WAIT_LINUX_READ;
+								}
+								else
+								{
+									emu->eax = unix_read(emu, emu->ebx, 0, emu->ecx, 0xFFFFFFFF, emu->edx);
+								}
 								break;
 							case X86_32_SYS_WRITE:
 								emu->eax = unix_write(emu, emu->ebx, 0, emu->ecx, 0xFFFFFFFF, emu->edx);
@@ -5085,7 +5218,7 @@ int main(int argc, char * argv[], char * envp[])
 							wait_for_interrupt = WAIT_CPM86_E0_01;
 							break;
 						case 0x02:
-							dos_putchar(emu, emu->dl);
+							dos_putchar(emu->dl);
 							_display_screen(emu);
 							if(is_cpu_interrupt)
 								x86_return_interrupt16(emu);
@@ -5093,7 +5226,7 @@ int main(int argc, char * argv[], char * envp[])
 						case 0x06:
 							if(emu->dl != 0xFF)
 							{
-								dos_putchar(emu, emu->dl);
+								dos_putchar(emu->dl);
 								_display_screen(emu);
 							}
 							else
@@ -5117,7 +5250,7 @@ int main(int argc, char * argv[], char * envp[])
 								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->dx + offset) & 0xFFFF));
 								if(value == '$')
 									break;
-								dos_putchar(emu, value);
+								dos_putchar(value);
 							}
 							_display_screen(emu);
 							if(is_cpu_interrupt)
@@ -5184,6 +5317,21 @@ int main(int argc, char * argv[], char * envp[])
 					case X86_64_SYS_EXIT:
 						exit(emu->rdi);
 						break;
+					case X86_64_SYS_READ:
+						if(unix_read_needs_wait(emu->rdi))
+						{
+							unix_read_wait_state.code_size = CODE_32_BIT;
+							unix_read_wait_state.fd = emu->rdi;
+							unix_read_wait_state.base = 0;
+							unix_read_wait_state.offset = emu->rsi;
+							unix_read_wait_state.count = emu->rdx;
+							wait_for_interrupt = WAIT_LINUX_READ;
+						}
+						else
+						{
+							emu->rax = unix_read(emu, emu->rdi, 0, emu->rsi, -1, emu->rdx);
+						}
+						break;
 					case X86_64_SYS_WRITE:
 						emu->rax = unix_write(emu, emu->rdi, 0, emu->rsi, -1, emu->rdx);
 						break;
@@ -5233,14 +5381,14 @@ int main(int argc, char * argv[], char * envp[])
 							wait_for_interrupt = WAIT_CPM80_0005_01;
 							break;
 						case 0x02:
-							dos_putchar(emu, emu->x80.e);
+							dos_putchar(emu->x80.e);
 							_display_screen(emu);
 							x80_return(emu);
 							break;
 						case 0x06:
 							if(emu->x80.e != 0xFF)
 							{
-								dos_putchar(emu, emu->x80.e);
+								dos_putchar(emu->x80.e);
 								_display_screen(emu);
 							}
 							else
@@ -5264,7 +5412,7 @@ int main(int argc, char * argv[], char * envp[])
 								uint8_t value = x86_memory_read8(emu, emu->ds_cache.base + ((emu->x80.de + offset) & 0xFFFF));
 								if(value == '$')
 									break;
-								dos_putchar(emu, value);
+								dos_putchar(value);
 							}
 							_display_screen(emu);
 							x80_return(emu);
@@ -5298,6 +5446,28 @@ int main(int argc, char * argv[], char * envp[])
 						{
 						case 0x00:
 							exit(x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 6) & 0xFFFF)));
+							break;
+						case 0x07:
+							{
+								uint16_t fd = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 10) & 0xFFFF));
+								uint16_t buf = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 8) & 0xFFFF));
+								uint16_t count = x86_memory_read16(emu, emu->ds_cache.base + ((emu->x80.sp + 6) & 0xFFFF));
+
+								if(unix_read_needs_wait(fd))
+								{
+									unix_read_wait_state.code_size = CODE_8_BIT;
+									unix_read_wait_state.fd = fd;
+									unix_read_wait_state.base = emu->ds_cache.base;
+									unix_read_wait_state.offset = buf;
+									unix_read_wait_state.count = count;
+									wait_for_interrupt = WAIT_LINUX_READ;
+								}
+								else
+								{
+									emu->x80.hl = unix_read(emu, fd, emu->ds_cache.base, buf, 0xFFFF, count);
+								}
+							}
+							x80_return(emu);
 							break;
 						case 0x08:
 							{
@@ -5348,7 +5518,6 @@ int main(int argc, char * argv[], char * envp[])
 			}
 			if(key != 0)
 			{
-//fprintf(stderr, "[%04X]\n", key);
 				if((key & MOD_SHIFT))
 					kbd_issue(emu, KEY_SHIFT, true);
 				if((key & MOD_CTRL))
@@ -5396,7 +5565,6 @@ int main(int argc, char * argv[], char * envp[])
 			}
 		}
 
-
 		// otherwise, the emulated system handles it
 		switch(pc_type)
 		{
@@ -5435,7 +5603,7 @@ int main(int argc, char * argv[], char * envp[])
 			if(dos_key_available())
 			{
 				emu->x80.a = dos_key_get();
-				dos_putchar(emu, emu->x80.a);
+				dos_putchar(emu->x80.a);
 				_display_screen(emu);
 				emu->x80.l = emu->x80.a;
 				emu->x80.h = emu->x80.b;
@@ -5447,7 +5615,7 @@ int main(int argc, char * argv[], char * envp[])
 			if(dos_key_available())
 			{
 				emu->al = dos_key_get();
-				dos_putchar(emu, emu->al);
+				dos_putchar(emu->al);
 				_display_screen(emu);
 				emu->bx = emu->ax;
 				wait_for_interrupt = WAIT_NOTHING;
@@ -5458,7 +5626,7 @@ int main(int argc, char * argv[], char * envp[])
 			if(dos_key_available())
 			{
 				emu->al = dos_key_get();
-				dos_putchar(emu, emu->al);
+				dos_putchar(emu->al);
 				_display_screen(emu);
 				wait_for_interrupt = WAIT_NOTHING;
 				x86_return_interrupt16(emu);
@@ -5472,6 +5640,47 @@ int main(int argc, char * argv[], char * envp[])
 				_display_screen(emu);
 				wait_for_interrupt = WAIT_NOTHING;
 				x86_return_interrupt16(emu);
+			}
+			break;
+		case WAIT_LINUX_READ:
+			if(!unix_read_needs_wait(unix_read_wait_state.fd))
+			{
+				uoff_t mask;
+
+				switch(unix_read_wait_state.code_size)
+				{
+				case CODE_8_BIT:
+				case CODE_16_BIT:
+				default:
+					mask = 0xFFFF;
+					break;
+				case CODE_32_BIT:
+					mask = 0xFFFFFFFF;
+					break;
+				case CODE_64_BIT:
+					mask = -1;
+					break;
+				}
+
+				uoff_t result = unix_read(emu, unix_read_wait_state.fd, unix_read_wait_state.base, unix_read_wait_state.offset, mask, unix_read_wait_state.count);
+
+				switch(unix_read_wait_state.code_size)
+				{
+				case CODE_8_BIT:
+					emu->x80.hl = result;
+					break;
+				case CODE_16_BIT:
+					emu->ax = result;
+					break;
+				case CODE_32_BIT:
+					emu->eax = result;
+					break;
+				case CODE_64_BIT:
+					emu->rax = result;
+					break;
+				}
+
+				wait_for_interrupt = WAIT_NOTHING;
 			}
 			break;
 		}

@@ -1,6 +1,6 @@
 
-all: hello.32.elf hello.64.elf env.32.elf env.64.elf
-optional: hello.16.bin hello.16.com.bin env.16.bin env.16.com.bin
+all: hello.32.elf hello.64.elf env.32.elf env.64.elf cat.32.elf cat.64.elf
+optional: hello.16.bin hello.16.com.bin env.16.bin env.16.com.bin cat.16.bin cat.16.com.bin
 
 clean:
 	rm -rf *.bin *.elf
