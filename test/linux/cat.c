@@ -1,7 +1,7 @@
 
 #include "system.h"
 
-int main(int argc, char * argv[], char * envp)
+int main()
 {
 	char c;
 	while(read(0, &c, 1) == 1)
