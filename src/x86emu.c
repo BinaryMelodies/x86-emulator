@@ -3446,7 +3446,9 @@ static uoff_t unix_write(x86_state_t * emu, uoff_t fd, uoff_t base, uoff_t addre
 		{
 			buffer[offset] = x86_memory_read8(emu, base + ((address + offset) & mask));
 		}
-		return write(fd, buffer, count);
+		ssize_t result = write(fd, buffer, count);
+		free(buffer);
+		return result;
 	}
 }
 
