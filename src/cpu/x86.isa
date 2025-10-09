@@ -6247,7 +6247,7 @@ $af = _add_auxiliary(x, y, z);
 
 @instruction Z80.ADD|op=w
 _uint16 x = $0, y = $1;
-_uint16 z = x + y + $cf;
+_uint16 z = x + y;
 $0 = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
@@ -6270,7 +6270,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 else
 {
 	$sf = _sign8(z);
-	$af = (x | y) >> 3;
+	$af = ((x | y) >> 3) & 1;
 }
 $zf = _zero8(z);
 $cf = 0;
@@ -6400,8 +6400,9 @@ if(emu->cpu_type == X80_CPU_Z80)
 }
 else
 {
+	$sf = _sign8(z);
 	$pf = _parity(z);
-	$af = _add_auxiliary(x, y, z);
+	$af = _add_auxiliary(x, ~y, z);
 }
 $cf = _sub_carry8(x, y, z);
 $zf = _zero8(z);
@@ -6470,32 +6471,118 @@ if(emu->cpu_type == X80_CPU_Z80)
 }
 
 @instruction Z80.DAA
-if($a > 0x99 || $cf)
+uint8_t d;
+if($cf)
 {
-	$a = $a + (emu->cpu_type == X80_CPU_Z80 && $nf ? -0x60 : 0x60);
-	$cf = X86_FL_CF;
-}
-if(($a & 0x0F) > 0x09 || $af)
-{
-	if(emu->cpu_type == X80_CPU_Z80)
+	if(($a & 0x0F) < 0x0A && !$af)
 	{
-		if($nf)
-		{
-			if($af && ($a & 0x0F) >= 0x06)
-				$af = 0;
-		}
-		else
-		{
-			$af = ($a & 0x0F) > 0x09 ? 1 : 0;
-		}
-		$a = $a + 0x06;
+		d = 0x60;
 	}
 	else
 	{
-		$af = X86_FL_AF;
-		$a = $a + (emu->cpu_type == X80_CPU_Z80 && $nf ? -0x06 : 0x06);
+		d = 0x66;
 	}
 }
+else
+{
+	if(($a & 0x0F) < 0x0A)
+	{
+		if($a < 0xA0)
+		{
+			if($af)
+			{
+				d = 0x06;
+			}
+			else
+			{
+				d = 0x00;
+			}
+		}
+		else
+		{
+			if($af)
+			{
+				d = 0x66;
+			}
+			else
+			{
+				d = 0x60;
+			}
+		}
+	}
+	else
+	{
+		if($a < 0x90)
+		{
+			d = 0x06;
+		}
+		else
+		{
+			d = 0x66;
+		}
+	}
+	if($a > 0x99)
+	{
+		$cf = 1;
+	}
+}
+
+if(emu->cpu_type == X80_CPU_Z80 && $nf)
+{
+	d = $a - d;
+}
+else
+{
+	d = $a + d;
+}
+
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	$f = ($f & ~0x13) | (d & 0xA8);
+}
+else
+{
+	$sf = _sign8(d);
+}
+
+$pf = _parity(d);
+$zf = _zero8(d);
+
+if(emu->cpu_type == X80_CPU_Z80)
+{
+	if($nf)
+		$af = ($a & 0x0F) <= 0x05;
+	else
+		$af = ($a & 0x0F) >= 0x0A;
+}
+else
+{
+	$af = ($a & 0x0F) >= 0x0A;
+}
+
+if(emu->cpu_type == X80_CPU_I85)
+{
+	// overflow flag
+	if(($a & 0xF0) == 0x70 && (d & 0xF0) == 0x80)
+	{
+		$f |= 2;
+	}
+	else
+	{
+		$f &= ~2;
+	}
+
+	if(!($f & 2) ^ !$sf)
+	{
+		$f |= 0x20;
+	}
+	else
+	{
+		$f &= ~0x20;
+	}
+}
+
+$a = d;
 
 @instruction Z80.DEC|op=b
 _uint8 x = $0;
@@ -6511,7 +6598,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 else
 {
 	$pf = _parity(z);
-	$af = _add_auxiliary(x, 0, z);
+	$af = _add_auxiliary(x, ~0, z);
 	$sf = _sign8(z);
 }
 $zf = _zero8(z);
@@ -6683,6 +6770,9 @@ else
 	$zf = _zero8($a);
 }
 
+@instruction Z80.LD|op0=bc|op0=de|op0=hl|op0=sp|op0=ix|op0=iy|op1=bc|op1=de|op1=hl|op1=sp|op1=ix|op1=iy
+$0.w = $1.w;
+
 @instruction Z80.LD
 $0 = $1;
 
@@ -6749,6 +6839,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 }
 else
 {
+	$sf = _sign8(z);
 	$cf = 0;
 	$af = 0;
 }
@@ -6910,12 +7001,12 @@ if(emu->cpu_type == X80_CPU_Z80)
 }
 else
 {
-	$af = _add_auxiliary(x, y, z);
+	$af = _add_auxiliary(x, ~y, z);
 	$sf = _sign8(z);
 	$pf = _parity(z);
 }
 $zf = _zero8(z);
-$cf = _add_carry8(x, y, z);
+$cf = _sub_carry8(x, y, z);
 
 @instruction Z80.SBC|op=w
 _uint16 x = $0, y = $1;
@@ -6950,12 +7041,12 @@ if(emu->cpu_type == X80_CPU_Z80)
 }
 else
 {
-	$af = _add_auxiliary(x, y, z);
+	$af = _add_auxiliary(x, ~y, z);
 	$sf = _sign8(z);
 	$pf = _parity(z);
 }
 $zf = _zero8(z);
-$cf = _add_carry8(x, y, z);
+$cf = _sub_carry8(x, y, z);
 
 @instruction Z80.XOR
 _uint8 x = $a, y = $0;
@@ -6967,6 +7058,7 @@ if(emu->cpu_type == X80_CPU_Z80)
 }
 else
 {
+	$sf = _sign8(z);
 	$cf = 0;
 	$af = 0;
 	$zf = _zero8(z);

@@ -1276,7 +1276,7 @@ X80_OPERAND_CODE = {
 	},
 	'AF': {
 		'read':   "emu->bank[emu->af_bank].af",
-		'write':  "emu->bank[emu->af_bank].af = $$",
+		'write':  "emu->bank[emu->af_bank].af = _flags80($$)",
 		'format': ("af", []),
 	},
 	'PSW': {
@@ -1335,8 +1335,8 @@ X80_OPERAND_CODE = {
 		'format':  ("(hl)", []),
 	},
 	'(SP)': {
-		'read':    "_read80b(emu->sp)",
-		'write':   "_write80b(emu->sp, $$)",
+		'read':    "_read80w(emu->sp)",
+		'write':   "_write80w(emu->sp, $$)",
 		'format':  ("(sp)", []),
 	},
 	'(Ib)': {
@@ -1746,6 +1746,8 @@ def gen_code80(line_infile_code, *ops, indent = '', **kwds):
 	for i, op in enumerate(ops):
 		replacements[f'${i}'] = replace(op.get('read', '/*TODO*/'), registers80)
 		replacements[f'${i}='] = replace(op.get('write', '/*TODO*/'), registers80)
+		replacements[f'${i}.w'] = replace(op.get('read', '/*TODO*/').replace('80b', '80w'), registers80)
+		replacements[f'${i}.w='] = replace(op.get('write', '/*TODO*/').replace('80b', '80w'), registers80)
 		if 'condition' in op:
 			replacements[f'${i}.cond'] = op.get('condition')
 

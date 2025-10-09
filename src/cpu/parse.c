@@ -1284,6 +1284,26 @@ static inline void x86_undefined_instruction(x86_state_t * emu)
 #define _pop80() x80_pop16(emu)
 #define _push80(val) x80_push16(emu, (val))
 
+static const uint16_t _af_mask80[] =
+{
+	[X80_CPU_I80]     = 0xFFD7,
+//	[X80_CPU_V20]     = 0xFFD7,
+	[X80_CPU_I85]     = 0xFFF7,
+	[X80_CPU_Z80]     = 0xFFFF,
+//	[X80_CPU_UPD9002] = 0xFFFF, // TODO: this is an assumption (like for Z80)
+};
+
+static const uint16_t _af_ones80[] =
+{
+	[X80_CPU_I80]     = 0x0002,
+//	[X80_CPU_V20]     = 0x0002,
+	[X80_CPU_I85]     = 0x0000,
+	[X80_CPU_Z80]     = 0x0000,
+//	[X80_CPU_UPD9002] = 0x0000, // TODO: this is an assumption (like for Z80)
+};
+
+#define _flags80(val) (((val) & _af_mask80[(emu)->cpu_type]) | _af_ones80[(emu)->cpu_type])
+
 // reports any unhandled x87 exceptions, typically executed before non-asynchronous instructions (those that have an FN* form) on integrated FPUs and WAIT
 #define _x87_int() \
 	do \
