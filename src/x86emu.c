@@ -2065,6 +2065,19 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
 		break;
 	case EXEC_EM80:
+		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
+		{
+	case_exec_x80:
+			// place CPU in infinite loop
+			emu->xip = 0;
+			emu->sr[X86_R_CS].selector = 0x1000;
+			emu->sr[X86_R_CS].base = 0x1000 << 4;
+			x86_memory_write8_external(emu, 0x10000, 0xF4); // hlt
+			x86_memory_write8_external(emu, 0x10001, 0xEB); // jmp
+			x86_memory_write8_external(emu, 0x10002, 0xFD); // -3
+			break;
+		}
+
 		// make the segment 16-bit (286)
 		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
 		{
@@ -2169,6 +2182,11 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 		emu->efer |= X86_EFER_LMA | X86_EFER_LME;
 		break;
 	case EXEC_FEM80:
+		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
+		{
+			goto case_exec_x80;
+		}
+
 		// make the segment 16-bit (286)
 		for(x86_segnum_t segnum = X86_R_ES; segnum <= X86_R_DS2; segnum++)
 		{
@@ -4265,7 +4283,7 @@ int main(int argc, char * argv[], char * envp[])
 	emu->port_write = _port_write;
 
 	emu->parser->use_nec_syntax = x86_is_nec(emu);
-	emu->x80.parser->use_intel8080_syntax = emu->cpu_type == X86_CPU_V20;
+	emu->x80.parser->use_intel8080_syntax = emu->x80.cpu_type == X80_CPU_I80;
 
 //printf("ok %d\n", emu->x80.cpu_method);
 
@@ -4281,6 +4299,9 @@ int main(int argc, char * argv[], char * envp[])
 		emu->x80.port_write = _x80_port_write;
 
 		x80_reset(&emu->x80, true);
+
+		registers.cs_given = registers.ds_given = registers.ss_given = true;
+		registers.cs = registers.ds = registers.ss = 0;
 	}
  
 	FILE * input;
@@ -4679,28 +4700,37 @@ int main(int argc, char * argv[], char * envp[])
 
 	case EXEC_EM80:
 	case EXEC_FEM80:
-		if(!registers.cs_given)
+		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 		{
-			registers.cs = registers.ip & ~0xFFFF;
-			registers.ip &= 0xFFFF;
+			emu->x80.pc = registers.ip & 0xFFFF;
+			if(registers.sp_given)
+				emu->x80.sp = registers.sp;
 		}
+		else
+		{
+			if(!registers.cs_given)
+			{
+				registers.cs = registers.ip & ~0xFFFF;
+				registers.ip &= 0xFFFF;
+			}
 
-		emu->x80.pc = emu->xip = registers.ip & 0xFFFF;
-		emu->sr[X86_R_CS].selector = registers.cs >> 4;
-		emu->sr[X86_R_CS].base = registers.cs;
-		if(!registers.ss_given)
-			registers.ss = registers.ds_given ? registers.ds : registers.cs;
-		emu->sr[X86_R_SS].selector = registers.ss >> 4;
-		emu->sr[X86_R_SS].base = registers.ss;
-		if(!registers.ds_given)
-			registers.ds = registers.ss_given ? registers.ss : registers.cs;
-		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
-		{
-			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 8 : registers.ds >> 4;
-			emu->sr[segnum].base = registers.ds;
+			emu->x80.pc = emu->xip = registers.ip & 0xFFFF;
+			emu->sr[X86_R_CS].selector = registers.cs >> 4;
+			emu->sr[X86_R_CS].base = registers.cs;
+			if(!registers.ss_given)
+				registers.ss = registers.ds_given ? registers.ds : registers.cs;
+			emu->sr[X86_R_SS].selector = registers.ss >> 4;
+			emu->sr[X86_R_SS].base = registers.ss;
+			if(!registers.ds_given)
+				registers.ds = registers.ss_given ? registers.ss : registers.cs;
+			for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
+			{
+				emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 8 : registers.ds >> 4;
+				emu->sr[segnum].base = registers.ds;
+			}
+			if(registers.sp_given)
+				emu->x80.sp = emu->gpr[X86_R_BP] = registers.sp;
 		}
-		if(registers.sp_given)
-			emu->x80.sp = emu->gpr[X86_R_BP] = registers.sp;
 		break;
 
 	case EXEC_PM16:
@@ -5315,12 +5345,13 @@ int main(int argc, char * argv[], char * envp[])
 				fprintf(stderr, "Captured far SYSRET\n");
 				exit(0);
 			}
+
 			if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 			{
 				x80_step(&emu->x80, NULL);
 			}
 
-			if(x86_is_emulation_mode(emu))
+			if(x86_is_emulation_mode(emu) || emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 			{
 				switch(emu->x80.pc)
 				{
