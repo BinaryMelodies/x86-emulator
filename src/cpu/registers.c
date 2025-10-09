@@ -2630,15 +2630,9 @@ static inline uint8_t x86_cyrix_register_get(x86_state_t * emu, uint8_t number)
 		else
 			return emu->rcr[5];
 	case 0xE2:
-		if(emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_III && (emu->ccr[3] & 0x20) != 0)
-			return emu->rcr[14];
-		else
-			return emu->rcr[6];
+		return emu->rcr[6];
 	case 0xE3:
-		if(emu->cpu_traits.cpu_subtype == X86_CPU_CYRIX_III && (emu->ccr[3] & 0x20) != 0)
-			return emu->rcr[15];
-		else
-			return emu->rcr[7];
+		return emu->rcr[7];
 	case 0xE8:
 		// 5x86, MediaGX, 6x86, M2
 		return emu->ccr[4];
