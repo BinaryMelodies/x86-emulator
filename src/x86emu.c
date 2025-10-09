@@ -4316,7 +4316,7 @@ int main(int argc, char * argv[], char * envp[])
 		emu->x87.fpu_subtype = 0;
 	}
 
-	if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+	if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002 || emu->cpu_type == X86_CPU_EXTENDED)
 	{
 		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 		{
