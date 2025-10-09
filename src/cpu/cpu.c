@@ -385,6 +385,11 @@ void x86_reset(x86_state_t * emu, bool reset)
 		emu->x80.cpu_method = X80_CPUMETHOD_EMULATED;
 	}
 
+	if(emu->x80.cpu_method == X80_CPUMETHOD_EMULATED)
+	{
+		x80_reset(&emu->x80, reset);
+	}
+
 	if(emu->cpu_type == X86_CPU_V25 && emu->cpu_traits.cpu_subtype == X86_CPU_V25_V25S)
 	{
 		for(int i = 0; i < 256; i++)
