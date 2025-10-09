@@ -4351,7 +4351,7 @@ int main(int argc, char * argv[], char * envp[])
 		registers.cs_given = registers.ds_given = registers.ss_given = true;
 		registers.cs = registers.ds = registers.ss = 0;
 	}
- 
+
 	FILE * input;
 
 	input = fopen(inputfile, "rb");
@@ -4722,7 +4722,7 @@ int main(int argc, char * argv[], char * envp[])
 	{
 		_dos_kbd_int_handler = true;
 	}
- 
+
 	registers.exec_mode = set_exec_mode(emu, registers.exec_mode);
 
 	uint16_t selector;
