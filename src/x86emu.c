@@ -1956,7 +1956,9 @@ typedef enum exec_mode_t
 	EXEC_LM64,
 	// full Z80 emulation mode (µPD9002 only)
 	EXEC_FEM80,
-	// 8089 emulation
+	// 8080/Z80 emulation (main CPU placed in infinite loop)
+	EXEC_X80,
+	// 8089 emulation (main CPU placed in infinite loop)
 	EXEC_I89,
 } exec_mode_t;
 #define EXEC_DEFAULT ((exec_mode_t)0)
@@ -1975,6 +1977,7 @@ static inline code_size_t get_exec_mode_size(exec_mode_t exec_mode)
 	{
 	case EXEC_EM80:
 	case EXEC_FEM80:
+	case EXEC_X80:
 		return CODE_8_BIT;
 	case EXEC_RM16:
 	case EXEC_PM16:
@@ -2067,15 +2070,7 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 	case EXEC_EM80:
 		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 		{
-	case_exec_x80:
-			// place CPU in infinite loop
-			emu->xip = 0;
-			emu->sr[X86_R_CS].selector = 0x1000;
-			emu->sr[X86_R_CS].base = 0x1000 << 4;
-			x86_memory_write8_external(emu, 0x10000, 0xF4); // hlt
-			x86_memory_write8_external(emu, 0x10001, 0xEB); // jmp
-			x86_memory_write8_external(emu, 0x10002, 0xFD); // -3
-			break;
+			goto case_exec_x80;
 		}
 
 		// make the segment 16-bit (286)
@@ -2204,6 +2199,17 @@ static exec_mode_t set_exec_mode(x86_state_t * emu, exec_mode_t exec_mode)
 		emu->cr[0] &= ~X86_CR0_PE;
 		// turn off long mode (x64)
 		emu->efer &= ~(X86_EFER_LMA | X86_EFER_LME);
+		break;
+	case EXEC_X80:
+	case_exec_x80:
+		// place CPU in infinite loop
+		emu->xip = 0;
+		emu->sr[X86_R_CS].selector = 0x1000;
+		emu->sr[X86_R_CS].base = 0x1000 << 4;
+		x86_memory_write8_external(emu, 0x10000, 0xF4); // hlt
+		x86_memory_write8_external(emu, 0x10001, 0xEB); // jmp
+		x86_memory_write8_external(emu, 0x10002, 0xFD); // -3
+		exec_mode = EXEC_X80;
 		break;
 	case EXEC_I89:
 		setup_x89(emu, 0x00500);
@@ -2342,7 +2348,7 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	if(!registers->cs_given)
 	{
 		registers->cs_given = true;
-		registers->cs = 0x0100 << 4;
+		registers->cs = registers->exec_mode != EXEC_X80 ? 0x0100 << 4 : 0;
 	}
 	if(!registers->ip_given)
 	{
@@ -2396,7 +2402,7 @@ uaddr_t load_com(x86_state_t * emu, FILE * input, long file_offset, struct load_
 		x86_memory_write8(emu, address++, c);
 	}
 
-	if(registers->exec_mode != EXEC_EM80 && registers->exec_mode != EXEC_FEM80)
+	if(registers->exec_mode != EXEC_EM80 && registers->exec_mode != EXEC_FEM80 && registers->exec_mode != EXEC_X80)
 	{
 		registers->exec_mode = EXEC_RM16;
 		system_type |= X86_SYSTEM_TYPE_MSDOS;
@@ -2445,7 +2451,7 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	if(!registers->cs_given)
 	{
 		registers->cs_given = true;
-		registers->cs = 0x0100 << 4;
+		registers->cs = registers->exec_mode != EXEC_X80 ? 0x0100 << 4 : 0;
 	}
 	if(!registers->ip_given)
 	{
@@ -2491,7 +2497,12 @@ uaddr_t load_prl(x86_state_t * emu, FILE * input, long file_offset, struct load_
 	load_prl_body(emu, input, file_offset + 0x100L, address, registers->ip, image_size);
 
 	if(registers->exec_mode == EXEC_DEFAULT)
-		registers->exec_mode = EXEC_EM80;
+	{
+		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+			registers->exec_mode = EXEC_EM80;
+		else
+			registers->exec_mode = EXEC_X80;
+	}
 
 	system_type |= X86_SYSTEM_TYPE_CPM80;
 
@@ -2504,7 +2515,7 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 	if(!registers->cs_given)
 	{
 		registers->cs_given = true;
-		registers->cs = 0x0100 << 4;
+		registers->cs = registers->exec_mode != EXEC_X80 ? 0x0100 << 4 : 0;
 	}
 	if(!registers->ip_given)
 	{
@@ -2583,7 +2594,12 @@ uaddr_t load_cpm3(x86_state_t * emu, FILE * input, long file_offset, struct load
 	}
 
 	if(registers->exec_mode == EXEC_DEFAULT)
-		registers->exec_mode = EXEC_EM80;
+	{
+		if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+			registers->exec_mode = EXEC_EM80;
+		else
+			registers->exec_mode = EXEC_X80;
+	}
 
 	system_type |= X86_SYSTEM_TYPE_CPM80;
 
@@ -3167,7 +3183,12 @@ uaddr_t load_elf(x86_state_t * emu, FILE * input_file, long file_offset, struct 
 	case EM_Z80:
 		// 8-bit
 		if(registers->exec_mode == EXEC_DEFAULT)
-			registers->exec_mode = EXEC_EM80;
+		{
+			if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+				registers->exec_mode = EXEC_EM80;
+			else
+				registers->exec_mode = EXEC_X80;
+		}
 		break;
 	default:
 		fprintf(stderr, "Invalid machine type\n");
@@ -3957,6 +3978,15 @@ int main(int argc, char * argv[], char * envp[])
 				{
 					registers.exec_mode = EXEC_FEM80;
 				}
+				else if(strcasecmp(arg, "x80") == 0
+				|| strcasecmp(arg, "i80") == 0
+				|| strcasecmp(arg, "i8080") == 0
+				|| strcasecmp(arg, "80") == 0
+				|| strcasecmp(arg, "8080") == 0
+				|| strcasecmp(arg, "z80") == 0)
+				{
+					registers.exec_mode = EXEC_X80;
+				}
 				else if(strcasecmp(arg, "8089") == 0
 				|| strcasecmp(arg, "i8089") == 0
 				|| strcasecmp(arg, "89") == 0
@@ -4100,7 +4130,16 @@ int main(int argc, char * argv[], char * envp[])
 				{
 					system_type |= X86_SYSTEM_TYPE_UZI;
 					if(registers.exec_mode == EXEC_DEFAULT)
-						registers.exec_mode = EXEC_EM80;
+					{
+						if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+						{
+							registers.exec_mode = EXEC_EM80;
+						}
+						else
+						{
+							registers.exec_mode = EXEC_X80;
+						}
+					}
 				}
 				else
 				{
@@ -4232,20 +4271,20 @@ int main(int argc, char * argv[], char * envp[])
 		case X86_PCTYPE_IBM_PC_MDA:
 		case X86_PCTYPE_IBM_PC_CGA:
 		case X86_PCTYPE_IBM_PCJR:
-			cpu_version = X86_CPU_TYPE_8088;
+			cpu_version = registers.exec_mode == EXEC_EM80 ? X86_CPU_TYPE_V20 : X86_CPU_TYPE_8088;
 			break;
 		case X86_PCTYPE_NEC_PC98:
-			cpu_version = X86_CPU_TYPE_8086;
+			cpu_version = registers.exec_mode == EXEC_EM80 ? X86_CPU_TYPE_V30 : X86_CPU_TYPE_8086;
 			break;
 		case X86_PCTYPE_NEC_PC88_VA:
 			cpu_version = X86_CPU_TYPE_UPD9002;
 			break;
 		case X86_PCTYPE_APRICOT:
-			cpu_version = X86_CPU_TYPE_8086;
+			cpu_version = registers.exec_mode == EXEC_EM80 ? X86_CPU_TYPE_V30 : X86_CPU_TYPE_8086;
 			emu->x89.present = true;
 			break;
 		case X86_PCTYPE_TANDY2000:
-			cpu_version = X86_CPU_TYPE_80186;
+			cpu_version = registers.exec_mode == EXEC_EM80 ? X86_CPU_TYPE_V30 : X86_CPU_TYPE_80186;
 			break;
 		case X86_PCTYPE_DEC_RAINBOW:
 			cpu_version = X86_CPU_TYPE_8088;
@@ -4275,6 +4314,15 @@ int main(int argc, char * argv[], char * envp[])
 	{
 		emu->x87.fpu_type = emu->cpu_traits.default_fpu;
 		emu->x87.fpu_subtype = 0;
+	}
+
+	if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+	{
+		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
+		{
+			fprintf(stderr, "Emulating separate 8080/8085/Z80 alongside V20/µPD9002 not supported\n");
+			exit(1);
+		}
 	}
 
 	emu->memory_read = _memory_read;
@@ -4333,9 +4381,9 @@ int main(int argc, char * argv[], char * envp[])
 			if(strlen(inputfile) >= 3)
 			{
 				if(strcasecmp(inputfile + strlen(inputfile) - 4, ".com") == 0
-				|| ((registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".prl") == 0)
-				|| (!(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".exe") == 0)
-				|| (!(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80) && strcasecmp(inputfile + strlen(inputfile) - 4, ".cmd") == 0))
+				|| ((get_exec_mode_size(registers.exec_mode) == CODE_8_BIT) && strcasecmp(inputfile + strlen(inputfile) - 4, ".prl") == 0)
+				|| (!(get_exec_mode_size(registers.exec_mode) == CODE_8_BIT) && strcasecmp(inputfile + strlen(inputfile) - 4, ".exe") == 0)
+				|| (!(get_exec_mode_size(registers.exec_mode) == CODE_8_BIT) && strcasecmp(inputfile + strlen(inputfile) - 4, ".cmd") == 0))
 				{
 					load_mode = LOAD_RUN;
 					goto case_load_run;
@@ -4347,7 +4395,7 @@ int main(int argc, char * argv[], char * envp[])
 		break;
 
 	case LOAD_INIT:
-		if(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80)
+		if(get_exec_mode_size(registers.exec_mode) == CODE_8_BIT)
 		{
 			registers.ip_given = true;
 			registers.ip = 0x0000;
@@ -4458,7 +4506,7 @@ int main(int argc, char * argv[], char * envp[])
 		switch(exe_fmt)
 		{
 		case FMT_AUTO:
-			if(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80)
+			if(registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80 || registers.exec_mode == EXEC_X80)
 			{
 				int c = fgetc(input);
 				if(c == 0)
@@ -4566,11 +4614,20 @@ int main(int argc, char * argv[], char * envp[])
 				}
 				else
 				{
-					if((system_type & X86_SYSTEM_TYPE_UZI) && (registers.exec_mode == EXEC_DEFAULT || registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80))
+					if((system_type & X86_SYSTEM_TYPE_UZI) && (registers.exec_mode == EXEC_DEFAULT || registers.exec_mode == EXEC_EM80 || registers.exec_mode == EXEC_FEM80 || registers.exec_mode == EXEC_X80))
 					{
 						exe_fmt = FMT_COM;
 						if(registers.exec_mode == EXEC_DEFAULT)
-							registers.exec_mode = EXEC_EM80;
+						{
+							if(emu->cpu_type == X86_CPU_V20 || emu->cpu_type == X86_CPU_UPD9002)
+							{
+								registers.exec_mode = EXEC_EM80;
+							}
+							else
+							{
+								registers.exec_mode = EXEC_X80;
+							}
+						}
 					}
 
 					if(exe_fmt == FMT_COM)
@@ -4698,39 +4755,41 @@ int main(int argc, char * argv[], char * envp[])
 			emu->gpr[X86_R_SP] = registers.sp;
 		break;
 
+	case EXEC_X80:
+	case_exec_x80:
+		emu->x80.pc = registers.ip & 0xFFFF;
+		if(registers.sp_given)
+			emu->x80.sp = registers.sp;
+		break;
 	case EXEC_EM80:
 	case EXEC_FEM80:
 		if(emu->x80.cpu_method == X80_CPUMETHOD_SEPARATE)
 		{
-			emu->x80.pc = registers.ip & 0xFFFF;
-			if(registers.sp_given)
-				emu->x80.sp = registers.sp;
+			goto case_exec_x80;
 		}
-		else
-		{
-			if(!registers.cs_given)
-			{
-				registers.cs = registers.ip & ~0xFFFF;
-				registers.ip &= 0xFFFF;
-			}
 
-			emu->x80.pc = emu->xip = registers.ip & 0xFFFF;
-			emu->sr[X86_R_CS].selector = registers.cs >> 4;
-			emu->sr[X86_R_CS].base = registers.cs;
-			if(!registers.ss_given)
-				registers.ss = registers.ds_given ? registers.ds : registers.cs;
-			emu->sr[X86_R_SS].selector = registers.ss >> 4;
-			emu->sr[X86_R_SS].base = registers.ss;
-			if(!registers.ds_given)
-				registers.ds = registers.ss_given ? registers.ss : registers.cs;
-			for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
-			{
-				emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 8 : registers.ds >> 4;
-				emu->sr[segnum].base = registers.ds;
-			}
-			if(registers.sp_given)
-				emu->x80.sp = emu->gpr[X86_R_BP] = registers.sp;
+		if(!registers.cs_given)
+		{
+			registers.cs = registers.ip & ~0xFFFF;
+			registers.ip &= 0xFFFF;
 		}
+
+		emu->x80.pc = emu->xip = registers.ip & 0xFFFF;
+		emu->sr[X86_R_CS].selector = registers.cs >> 4;
+		emu->sr[X86_R_CS].base = registers.cs;
+		if(!registers.ss_given)
+			registers.ss = registers.ds_given ? registers.ds : registers.cs;
+		emu->sr[X86_R_SS].selector = registers.ss >> 4;
+		emu->sr[X86_R_SS].base = registers.ss;
+		if(!registers.ds_given)
+			registers.ds = registers.ss_given ? registers.ss : registers.cs;
+		for(x86_segnum_t segnum = X86_R_DS; segnum <= X86_R_DS2; segnum++)
+		{
+			emu->sr[segnum].selector = X86_R_DS3 <= segnum ? registers.ds >> 8 : registers.ds >> 4;
+			emu->sr[segnum].base = registers.ds;
+		}
+		if(registers.sp_given)
+			emu->x80.sp = emu->gpr[X86_R_BP] = registers.sp;
 		break;
 
 	case EXEC_PM16:
