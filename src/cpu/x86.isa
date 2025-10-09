@@ -6219,7 +6219,7 @@ $af = _add_auxiliary(x, y, z);
 _uint16 x = $0, y = $1;
 _uint16 z = x + y + $cf;
 $0 = z;
-$f = z;
+$f = z >> 8;
 $nf = 0;
 $pf = _add_overflow16(x, y, z);
 $zf = _zero16(z);
@@ -6251,7 +6251,7 @@ _uint16 z = x + y;
 $0 = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
-	$f = ($f & ~0x28) | (z & 0x28);
+	$f = ($f & ~0x28) | ((z >> 8) & 0x28);
 	$nf = 0;
 	$af = _add_auxiliaryh(x, y, z);
 }
@@ -6393,7 +6393,7 @@ _uint8 x = $a, y = $0;
 _uint8 z = x - y;
 if(emu->cpu_type == X80_CPU_Z80)
 {
-	$f = (x & 0x80) | (y & 0x28);
+	$f = (z & 0x80) | (y & 0x28);
 	$nf = X86_FL_NF;
 	$pf = _sub_overflow8(x, y, z);
 	$af = _sub_auxiliary(x, y, z);
@@ -6666,7 +6666,6 @@ $0 = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = ($f & 0x01) | (z & 0xA8);
-	$nf = X86_FL_NF;
 	$pf = _add_overflow8(x, 0, z);
 }
 else
@@ -6782,7 +6781,8 @@ _write80b($de, x);
 $de ++;
 $hl ++;
 $bc --;
-$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$f = ($f & 0xC1) | ((x + $a) & 0x08);
+$f = $f | (((x + $a) << 4) & 0x20);
 $pf = $bc != 0;
 
 @instruction Z80.LDIR
@@ -6791,7 +6791,8 @@ _write80b($de, x);
 $de ++;
 $hl ++;
 $bc --;
-$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$f = ($f & 0xC1) | ((x + $a) & 0x08);
+$f = $f | (((x + $a) << 4) & 0x20);
 $pf = $bc != 0;
 if($bc != 0)
 	$pc = $old_pc;
@@ -6802,7 +6803,8 @@ _write80b($de, x);
 $de --;
 $hl --;
 $bc --;
-$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$f = ($f & 0xC1) | ((x + $a) & 0x08);
+$f = $f | (((x + $a) << 4) & 0x20);
 $pf = $bc != 0;
 
 @instruction Z80.LDDR
@@ -6811,7 +6813,8 @@ _write80b($de, x);
 $de --;
 $hl --;
 $bc --;
-$f = ($f & 0xEC) | ((x + $a) & 0x28);
+$f = ($f & 0xC1) | ((x + $a) & 0x08);
+$f = $f | (((x + $a) << 4) & 0x20);
 $pf = $bc != 0;
 if($bc != 0)
 	$pc = $old_pc;
@@ -6995,7 +6998,7 @@ $0 = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = z;
-	$nf = 0;
+	$nf = X86_FL_NF;
 	$af = _sub_auxiliary(x, y, z);
 	$pf = _sub_overflow8(x, y, z);
 }
@@ -7010,10 +7013,10 @@ $cf = _sub_carry8(x, y, z);
 
 @instruction Z80.SBC|op=w
 _uint16 x = $0, y = $1;
-_uint16 z = x + y + $cf;
+_uint16 z = x - y - $cf;
 $0 = z;
-$f = z;
-$nf = 0;
+$f = z >> 8;
+$nf = X86_FL_NF;
 $pf = _sub_overflow16(x, y, z);
 $zf = _zero16(z);
 $cf = _sub_carry16(x, y, z);
@@ -7035,7 +7038,7 @@ $a = z;
 if(emu->cpu_type == X80_CPU_Z80)
 {
 	$f = z;
-	$nf = 0;
+	$nf = X86_FL_NF;
 	$af = _sub_auxiliary(x, y, z);
 	$pf = _sub_overflow8(x, y, z);
 }
@@ -7061,8 +7064,8 @@ else
 	$sf = _sign8(z);
 	$cf = 0;
 	$af = 0;
-	$zf = _zero8(z);
 }
+$zf = _zero8(z);
 $pf = _parity(z);
 
 @instruction Z80.RIM
